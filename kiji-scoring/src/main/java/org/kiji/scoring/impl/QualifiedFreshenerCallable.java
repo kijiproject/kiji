@@ -18,6 +18,7 @@
  */
 package org.kiji.scoring.impl;
 
+import java.io.IOException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
@@ -37,13 +38,13 @@ import org.kiji.scoring.impl.MultiBufferedWriter.SingleBuffer;
  * request. Returns a boolean indicating whether any writes were committed.
  *
  * <p>
- *   This class is package private to be used by InternalFreshKijiTableReader. It should not be used
+ *   This class is package private to be used by FresheningRequestContext. It should not be used
  *   elsewhere.
  * </p>
  */
 @ApiAudience.Private
-final class FreshenerCallable implements Callable<Boolean> {
-  private static final Logger LOG = LoggerFactory.getLogger(FreshenerCallable.class);
+final class QualifiedFreshenerCallable implements Callable<Boolean> {
+  private static final Logger LOG = LoggerFactory.getLogger(QualifiedFreshenerCallable.class);
 
   /**
    * Return value if the completion of this Freshener caused a write to Kiji which indicates to
@@ -65,25 +66,52 @@ final class FreshenerCallable implements Callable<Boolean> {
 
   private final FresheningRequestContext mRequestContext;
   private final KijiColumnName mAttachedColumn;
-  private final Future<KijiRowData> mRowDataToCheckFuture;
+  private final Future<KijiRowData> mClientDataFuture;
 
   /**
-   * Initialize a new FreshenerCallable.
+   * Initialize a new QualifiedFreshenerCallable.
    *
    * @param requestContext all state necessary to perform freshening specific to this request.
    * @param attachedColumn the column to which this Freshener is attached.
-   * @param rowDataToCheckFuture asynchronously collected KijiRowData to be checked by
+   * @param clientDataFuture asynchronously collected KijiRowData, possibly will be checked by
    *     {@link org.kiji.scoring.KijiFreshnessPolicy#isFresh(org.kiji.schema.KijiRowData,
    *     org.kiji.scoring.FreshenerContext)}
    */
-  public FreshenerCallable(
+  public QualifiedFreshenerCallable(
       final FresheningRequestContext requestContext,
       final KijiColumnName attachedColumn,
-      final Future<KijiRowData> rowDataToCheckFuture
+      final Future<KijiRowData> clientDataFuture
   ) {
     mRequestContext = requestContext;
     mAttachedColumn = attachedColumn;
-    mRowDataToCheckFuture = rowDataToCheckFuture;
+    mClientDataFuture = clientDataFuture;
+  }
+
+  /**
+   * Get the KijiRowData to check for freshness.
+   *
+   * @param freshener Freshener attached to the qualified column of this callable.
+   * @param context Context for the Freshener.
+   * @return Asynchronously retrieved KijiRowData to check for freshness.
+   * @throws IOException in case of an error retrieving the KijiRowData.
+   */
+  private Future<KijiRowData> getDataToCheck(
+      final Freshener freshener,
+      final FreshenerContext context
+  ) throws IOException {
+    if (freshener.getFreshnessPolicy().shouldUseClientDataRequest(context)) {
+      return mClientDataFuture;
+    } else {
+      final KijiTableReader reader = ScoringUtils.getPooledReader(mRequestContext.getReaderPool());
+      try {
+        return ScoringUtils.getFuture(mRequestContext.getExecutorService(), new TableReadCallable(
+            mRequestContext.getReaderPool(),
+            mRequestContext.getEntityId(),
+            freshener.getFreshnessPolicy().getDataRequest(context)));
+      } finally {
+        reader.close();
+      }
+    }
   }
 
   /** {@inheritDoc} */
@@ -92,15 +120,21 @@ final class FreshenerCallable implements Callable<Boolean> {
     final Freshener freshener = mRequestContext.getFresheners().get(mAttachedColumn);
     try {
       final FreshenerContext freshenerContext =
-          mRequestContext.getFreshenerContexts().get(mAttachedColumn);
-      final KijiRowData dataToCheck = ScoringUtils.getFromFuture(mRowDataToCheckFuture);
+          InternalFreshenerContext.create(
+              mRequestContext.getClientDataRequest(),
+              mAttachedColumn,
+              freshener.getParameters(),
+              mRequestContext.getParameterOverrides(),
+              freshener.getKVStoreReaderFactory());
+      final KijiRowData dataToCheck = ScoringUtils.getFromFuture(
+          getDataToCheck(freshener, freshenerContext));
       final boolean isFresh = freshener.getFreshnessPolicy().isFresh(dataToCheck, freshenerContext);
       if (isFresh) {
         LOG.debug(
             "{} Freshener attached to: {} returned fresh and will not run its ScoreFunction",
             mRequestContext.getRequestId(), mAttachedColumn);
         if (!mRequestContext.allowsPartial()
-            && 0 == mRequestContext.finishFreshener(mAttachedColumn, false)) {
+            && 0 == mRequestContext.finishFreshener(mAttachedColumn, DID_NOT_WRITE)) {
           // If this is the last thread, check for writes, flush, and indicate that data was
           // written
           if (mRequestContext.hasReceivedWrites()) {
@@ -142,8 +176,7 @@ final class FreshenerCallable implements Callable<Boolean> {
             mAttachedColumn.getQualifier(),
             score.getTimestamp(),
             score.getValue());
-        mRequestContext.freshenerWrote();
-        final int remainingFresheners = mRequestContext.finishFreshener(mAttachedColumn, true);
+        final int remainingFresheners = mRequestContext.finishFreshener(mAttachedColumn, WROTE);
         if (mRequestContext.allowsPartial()) {
           // If partial freshening is enabled, flush the buffer immediately and indicate that data
           // was written.

@@ -48,9 +48,9 @@ final class FutureAggregatingCallable<T> implements Callable<List<T>> {
    * @param futures asynchronously calculated values to be collected.
    */
   public FutureAggregatingCallable(
-      final ImmutableList<Future<T>> futures
+      final List<Future<T>> futures
   ) {
-    mFutures = futures;
+    mFutures = ImmutableList.copyOf(futures);
   }
 
   /** {@inheritDoc} */

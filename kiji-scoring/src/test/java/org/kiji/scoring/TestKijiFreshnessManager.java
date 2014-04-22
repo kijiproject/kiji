@@ -180,13 +180,13 @@ public class TestKijiFreshnessManager {
 
     try {
       mFreshManager.registerFreshener("user",
-          new KijiColumnName("networks"), POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+          new KijiColumnName("info"), POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
       fail("registerFreshener should have thrown FreshenerValidationException because the column "
           + "is not fully qualified.");
     } catch (FreshenerValidationException fve) {
       assertEquals(1, fve.getExceptions().size());
       assertTrue(
-          fve.getExceptions().containsKey(ValidationFailure.ATTACHMENT_COLUMN_NOT_QUALIFIED));
+          fve.getExceptions().containsKey(ValidationFailure.GROUP_FAMILY_ATTACHMENT));
     }
 
     mFreshManager.registerFreshener(

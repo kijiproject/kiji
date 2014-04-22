@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -45,9 +46,9 @@ import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiColumnName;
-import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableNotFoundException;
 import org.kiji.schema.KijiURI;
+import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout.FamilyLayout;
 import org.kiji.schema.util.ProtocolVersion;
 import org.kiji.scoring.avro.KijiFreshenerRecord;
@@ -71,7 +72,7 @@ public final class KijiFreshnessManager implements Closeable {
 
   /** Enumeration of possible Validation failure causes. */
   public static enum ValidationFailure {
-    ATTACHMENT_COLUMN_NOT_QUALIFIED,
+    GROUP_FAMILY_ATTACHMENT,
     BAD_POLICY_NAME,
     BAD_SCORE_FUNCTION_NAME,
     FRESHENER_ALREADY_ATTACHED,
@@ -242,8 +243,7 @@ public final class KijiFreshnessManager implements Closeable {
   private static boolean isKFMMetaTableKey(
       final String metaTableKey
   ) {
-    return metaTableKey.startsWith(METATABLE_KEY_PREFIX)
-        && metaTableKey.substring(METATABLE_KEY_PREFIX.length()).contains(":");
+    return metaTableKey.startsWith(METATABLE_KEY_PREFIX);
   }
 
   /**
@@ -414,12 +414,6 @@ public final class KijiFreshnessManager implements Closeable {
 
     final Map<ValidationFailure, Exception> failures = Maps.newHashMap();
 
-    if (!columnName.isFullyQualified()) {
-      failures.put(ValidationFailure.ATTACHMENT_COLUMN_NOT_QUALIFIED,
-          new IllegalArgumentException(String.format(
-              "Attachment column must be fully qualified. Found: %s", columnName)));
-    }
-
     if (!isValidClassName(policyClass)) {
       failures.put(ValidationFailure.BAD_POLICY_NAME, new IllegalArgumentException(String.format(
           "KijiFreshnessPolicy class name is not a valid Java identifier. Found: %s",
@@ -432,25 +426,25 @@ public final class KijiFreshnessManager implements Closeable {
           scoreFunctionClass)));
     }
 
-    final KijiTable table = mKiji.openTable(tableName);
-    try {
-      final Map<String, FamilyLayout> familyMap = table.getLayout().getFamilyMap();
-      if (familyMap.containsKey(columnName.getFamily())) {
-        if (familyMap.get(columnName.getFamily()).isGroupType()) {
-          if (!table.getLayout().getColumnNames().contains(columnName)) {
+    final KijiTableLayout layout = mKiji.getMetaTable().getTableLayout(tableName);
+    final KijiURI tableUri = KijiURI.newBuilder(mKiji.getURI()).withTableName(tableName).build();
+    final Map<String, FamilyLayout> familyMap = layout.getFamilyMap();
+    if (familyMap.containsKey(columnName.getFamily())) {
+      if (familyMap.get(columnName.getFamily()).isGroupType()) {
+        if (!columnName.isFullyQualified()) {
+          failures.put(ValidationFailure.GROUP_FAMILY_ATTACHMENT, new IllegalArgumentException(
+              String.format("Column: %s is a group-type family.", columnName)));
+        } else {
+          if (!layout.getColumnNames().contains(columnName)) {
             failures.put(ValidationFailure.NO_COLUMN_IN_TABLE, new IllegalArgumentException(
-                String.format("Column: %s not found in table: %s", columnName, table.getURI())));
+                String.format("Column: %s not found in table: %s", columnName, tableUri)));
           }
         }
-      } else {
-        failures.put(ValidationFailure.NO_COLUMN_IN_TABLE, new IllegalArgumentException(
-            String.format("Family of column: %s not found in table: %s",
-            columnName, table.getURI())));
       }
-
-
-    } finally {
-      table.release();
+    } else {
+      failures.put(ValidationFailure.NO_COLUMN_IN_TABLE, new IllegalArgumentException(
+          String.format("Family of column: %s not found in table: %s",
+          columnName, tableUri)));
     }
 
     return failures;
@@ -477,9 +471,28 @@ public final class KijiFreshnessManager implements Closeable {
     final Map<ValidationFailure, Exception> failures = Maps.newHashMap();
 
     final Set<String> keySet = mKiji.getMetaTable().keySet(tableName);
-    if (keySet.contains(toMetaTableKey(columnName))) {
-      failures.put(ValidationFailure.FRESHENER_ALREADY_ATTACHED, new IllegalArgumentException(
-          String.format("A Freshener is already attached to column: %s", columnName)));
+    if (columnName.isFullyQualified()) {
+      final KijiColumnName family = new KijiColumnName(columnName.getFamily(), null);
+      if (keySet.contains(toMetaTableKey(columnName))) {
+        failures.put(ValidationFailure.FRESHENER_ALREADY_ATTACHED, new IllegalArgumentException(
+            String.format("A Freshener is already attached to column: %s", columnName)));
+      } else if (keySet.contains(toMetaTableKey(family))) {
+        failures.put(ValidationFailure.FRESHENER_ALREADY_ATTACHED, new IllegalArgumentException(
+            String.format("A Freshener is already attached to family: %s", family)));
+      }
+    } else {
+      final String metaTableKeyPrefix = toMetaTableKey(columnName);
+      final Set<KijiColumnName> attachedColumns = Sets.newHashSet();
+      for (String key : keySet) {
+        if (key.startsWith(metaTableKeyPrefix)) {
+          attachedColumns.add(fromMetaTableKey(key));
+        }
+      }
+      if (!attachedColumns.isEmpty()) {
+        failures.put(ValidationFailure.FRESHENER_ALREADY_ATTACHED, new IllegalArgumentException(
+            String.format("A Freshener is already attached to qualified column(s): %s",
+            Joiner.on(", ").join(attachedColumns))));
+      }
     }
 
     return failures;
@@ -526,10 +539,12 @@ public final class KijiFreshnessManager implements Closeable {
           "Record version: %s is above the maximum allowed version: %s", record.getRecordVersion(),
           MAX_FRESHENER_RECORD_VER)));
     }
-    if (!columnName.isFullyQualified()) {
-      failures.put(ValidationFailure.ATTACHMENT_COLUMN_NOT_QUALIFIED, new IllegalArgumentException(
-          String.format("Attachment column: '%s' is not fully qualified. Fresheners may only be "
-          + "attached to fully qualified columns.", columnName)));
+
+    final KijiTableLayout layout = mKiji.getMetaTable().getTableLayout(tableName);
+    if (!columnName.isFullyQualified()
+        && layout.getFamilyMap().get(columnName.getFamily()).isGroupType()) {
+      failures.put(ValidationFailure.GROUP_FAMILY_ATTACHMENT, new IllegalArgumentException(
+          String.format("Column: %s is a group-type family.", columnName)));
     }
 
     failures.putAll(validateWithStrings(

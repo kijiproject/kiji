@@ -21,6 +21,7 @@ package org.kiji.scoring.impl;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -28,12 +29,17 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory;
+import org.kiji.schema.KijiColumnName;
+import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiDataRequest.Column;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableReaderPool;
 import org.kiji.schema.RuntimeInterruptedException;
@@ -200,5 +206,26 @@ public final class ScoringUtils {
         throw new RuntimeException(e);
       }
     }
+  }
+
+  /**
+   * Get the requested qualifiers from a particular map-type family in a given KijiDataRequest.
+   *
+   * @param clientRequest Request from which to get qualifiers.
+   * @param family Family from which to get qualifiers.
+   * @return The set of requested qualified columns from the given family and KijiDataRequest.
+   */
+  public static Set<KijiColumnName> getMapFamilyQualifiers(
+      final KijiDataRequest clientRequest,
+      final KijiColumnName family
+  ) {
+    final Set<KijiColumnName> collectedQualifiers = Sets.newHashSet();
+    for (Column column : clientRequest.getColumns()) {
+      if (column.getColumnName().isFullyQualified()
+          && Objects.equal(column.getColumnName().getFamily(), family.getFamily())) {
+        collectedQualifiers.add(column.getColumnName());
+      }
+    }
+    return collectedQualifiers;
   }
 }

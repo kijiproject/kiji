@@ -114,20 +114,6 @@ import org.kiji.scoring.statistics.FreshenerSingleRunStatistics;
  *       {@link #rereadFreshenerRecords(java.util.List)}.
  *     </li>
  *     <li>
- *       {@link FresheningRequestContext}: Context created for each freshening request to maintain
- *       isolation of state. This context is built by filtering immutable reader state and state
- *       from a snapshot of the RereadableState along with request time values such as the client's
- *       data request and any optional parameters.
- *     </li>
- *     <li>
- *       {@link Freshener}: Immutable container representing a single Freshener attachment.
- *     </li>
- *     <li>
- *       {@link FreshenerCallable}: Callable responsible for running a Freshener asynchronously in a
- *       Future. Returns a boolean which indicates whether the Freshener committed any writes to
- *       Kiji.
- *     </li>
- *     <li>
  *       {@link StatisticsGathererThread}: Optionally collects performance metrics from completed
  *       Fresheners and aggregates them by Freshener run. These statistics can be accessed via
  *       {@link #getStatistics()}. This option is controlled via FreshKijiTableReader
@@ -411,12 +397,25 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
           final KijiFreshenerRecord record = allRecords.get(column);
           if (null != record) {
             collectedRecords.put(column, record);
+          } else {
+            // check the family.
+            final KijiColumnName family = new KijiColumnName(column.getFamily(), null);
+            final KijiFreshenerRecord familyRecord = allRecords.get(family);
+            if (null != familyRecord) {
+              collectedRecords.put(family, familyRecord);
+            }
           }
         } else {
-          // For families, collect all records for columns in that family.
-          for (Map.Entry<KijiColumnName, KijiFreshenerRecord> recordEntry : allRecords.entrySet()) {
-            if (column.getFamily().equals(recordEntry.getKey().getFamily())) {
-              collectedRecords.put(recordEntry.getKey(), recordEntry.getValue());
+          final KijiFreshenerRecord record = allRecords.get(column);
+          if (null != record) {
+            collectedRecords.put(column, record);
+          } else {
+            // Collect all records for columns in the family.
+            for (Map.Entry<KijiColumnName, KijiFreshenerRecord> recordEntry
+                : allRecords.entrySet()) {
+              if (column.getFamily().equals(recordEntry.getKey().getFamily())) {
+                collectedRecords.put(recordEntry.getKey(), recordEntry.getValue());
+              }
             }
           }
         }
@@ -524,8 +523,15 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         final Freshener freshener = fresheners.get(column);
         if (null != freshener) {
           collectedFresheners.put(column, freshener);
+        } else {
+          final KijiColumnName family = new KijiColumnName(column.getFamily(), null);
+          final Freshener familyFreshener = fresheners.get(family);
+          if (null != familyFreshener) {
+            collectedFresheners.put(family, familyFreshener);
+          }
         }
       } else {
+
         for (Map.Entry<KijiColumnName, Freshener> freshenerEntry : fresheners.entrySet()) {
           if (freshenerEntry.getKey().getFamily().equals(column.getFamily())) {
             collectedFresheners.put(freshenerEntry.getKey(), freshenerEntry.getValue());
@@ -534,42 +540,6 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       }
     }
     return ImmutableMap.copyOf(collectedFresheners);
-  }
-
-  /**
-   * Create InternalFreshenerContext objects for the given set of Fresheners. These are fully
-   * featured contexts which will be passed to
-   * {@link KijiFreshnessPolicy#isFresh(org.kiji.schema.KijiRowData,
-   * org.kiji.scoring.FreshenerContext)} and {@link ScoreFunction#score(org.kiji.schema.KijiRowData,
-   * org.kiji.scoring.FreshenerContext)} and other per-request methods.
-   *
-   * @param clientRequest the data request which triggered the Freshener runs which require these
-   *     contexts.
-   * @param fresheners the Fresheners applicable to the client request, which will consume the
-   *     contexts.
-   * @param parameterOverrides overriding configuration specified with {@link FreshRequestOptions}
-   *     passed to the request which requires these contexts.
-   * @return a mapping from attached column to InternalFreshenerContext corresponding to the input
-   *     Fresheners.
-   */
-  private static ImmutableMap<KijiColumnName, InternalFreshenerContext> createFreshenerContexts(
-      final KijiDataRequest clientRequest,
-      final Map<KijiColumnName, Freshener> fresheners,
-      final Map<String, String> parameterOverrides
-  ) {
-    final Map<KijiColumnName, InternalFreshenerContext> collectedContexts = Maps.newHashMap();
-
-    for (Map.Entry<KijiColumnName, Freshener> freshenerEntry : fresheners.entrySet()) {
-      final InternalFreshenerContext context = InternalFreshenerContext.create(
-          clientRequest,
-          freshenerEntry.getValue().getAttachedColumn(),
-          freshenerEntry.getValue().getParameters(),
-          parameterOverrides,
-          freshenerEntry.getValue().getKVStoreReaderFactory());
-      collectedContexts.put(freshenerEntry.getKey(), context);
-    }
-
-    return ImmutableMap.copyOf(collectedContexts);
   }
 
   /**
@@ -984,9 +954,6 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
 
       LOG.debug("{} will run Fresheners: {}", id, fresheners.values());
 
-      final ImmutableMap<KijiColumnName, InternalFreshenerContext> freshenerContexts =
-          createFreshenerContexts(dataRequest, fresheners, options.getParameters());
-
       final Future<KijiRowData> clientDataFuture = ScoringUtils.getFuture(
           mExecutorService, new TableReadCallable(mReaderPool, entityId, dataRequest));
 
@@ -994,7 +961,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
           id,
           startTime,
           fresheners,
-          freshenerContexts,
+          options.getParameters(),
           records,
           mReaderPool,
           entityId,
@@ -1088,11 +1055,12 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
 
       LOG.debug("{} will run Freshener: {}", id, freshener);
 
-      final InternalFreshenerContext freshenerContext = createFreshenerContexts(
+      final InternalFreshenerContext freshenerContext = InternalFreshenerContext.create(
           dataRequest,
-          ImmutableMap.of(columnName, freshener),
-          options.getParameters()
-      ).get(columnName);
+          columnName,
+          freshener.getParameters(),
+          options.getParameters(),
+          freshener.getKVStoreReaderFactory());
 
       final Future<KijiRowData> clientDataFuture = ScoringUtils.getFuture(
           mExecutorService, new TableReadCallable(mReaderPool, entityId, dataRequest));

@@ -67,10 +67,10 @@ final class FresheningRequestContext {
    */
   private final ImmutableMap<KijiColumnName, Freshener> mFresheners;
   /**
-   * FreshenerContexts associated with Fresheners used in this request. These contexts are fully
-   * initialized.
+   * Parameter overrides specified take from the
+   * {@link org.kiji.scoring.FreshKijiTableReader.FreshRequestOptions} associated with this request.
    */
-  private final Map<KijiColumnName, InternalFreshenerContext> mFreshenerContexts;
+  private final Map<String, String> mParameterOverrides;
   /** A pool of KijiTableReaders to use for retrieving data to check for freshness and score. */
   private final KijiTableReaderPool mReaderPool;
   /** The row to which this request applies. */
@@ -116,7 +116,8 @@ final class FresheningRequestContext {
    * @param id unique identifier for the request served by this context.
    * @param startTime the time in milliseconds since the epoch at which this request started.
    * @param fresheners Fresheners which should be run to fulfill this request.
-   * @param freshenerContexts InternalFreshenerContext which service fresheners in this request.
+   * @param parameterOverrides Request-time parameters which will be overlayed on the parameters
+   *     from the Freshener records.
    * @param freshenerRecords Freshener records for Fresheners applicable to this request.
    * @param readerPool the pool of KijiTableReaders to which to delegate table reads.
    * @param entityId the row from which to read.
@@ -138,7 +139,7 @@ final class FresheningRequestContext {
       final String id,
       final long startTime,
       final ImmutableMap<KijiColumnName, Freshener> fresheners,
-      final ImmutableMap<KijiColumnName, InternalFreshenerContext> freshenerContexts,
+      final Map<String, String> parameterOverrides,
       final ImmutableMap<KijiColumnName, KijiFreshenerRecord> freshenerRecords,
       final KijiTableReaderPool readerPool,
       final EntityId entityId,
@@ -158,12 +159,13 @@ final class FresheningRequestContext {
     mEntityId = entityId;
     mClientDataRequest = dataRequest;
     mClientDataFuture = clientDataFuture;
-    mFreshenerContexts = freshenerContexts;
+    mParameterOverrides = parameterOverrides;
     mBufferedWriter = bufferedWriter;
     mAllowPartial = allowPartial;
     mStatisticGatheringMode = statisticGatheringMode;
     mFreshenerSingleRunStatistics = statisticsQueue;
     mExecutorService = executorService;
+    mFreshenersRemaining = getInitialFresheners(freshenerRecords);
     if (mAllowPartial) {
       // Each Freshener will have its own buffer when partial freshening is enabled, so the
       // request buffer is not needed.
@@ -171,9 +173,33 @@ final class FresheningRequestContext {
     } else {
       // Each Freshener may write only one value, so initialize the size of the buffer to the
       // number of Fresheners.
-      mRequestBuffer = bufferedWriter.openSingleBuffer(fresheners.size());
+      mRequestBuffer = bufferedWriter.openSingleBuffer(mFreshenersRemaining.size());
     }
-    mFreshenersRemaining = Maps.newHashMap(freshenerRecords);
+  }
+
+  /**
+   * Get the mapping of all qualified columns to associated Freshener records which will be run as
+   * part of this request.
+   *
+   * @param freshenerRecords mapping from column to freshener record associated with that column.
+   * @return the input mapping from column to freshener record with any map families replaced by the
+   *     requested qualified columns from that family.
+   */
+  private Map<KijiColumnName, KijiFreshenerRecord> getInitialFresheners(
+      final Map<KijiColumnName, KijiFreshenerRecord> freshenerRecords
+  ) {
+    final Map<KijiColumnName, KijiFreshenerRecord> collectedColumns = Maps.newHashMap();
+    for (Map.Entry<KijiColumnName, KijiFreshenerRecord> record : freshenerRecords.entrySet()) {
+      if (record.getKey().isFullyQualified()) {
+        collectedColumns.put(record.getKey(), record.getValue());
+      } else {
+        for (KijiColumnName qualifier : ScoringUtils.getMapFamilyQualifiers(
+            mClientDataRequest, record.getKey())) {
+          collectedColumns.put(qualifier, record.getValue());
+        }
+      }
+    }
+    return collectedColumns;
   }
 
   /**
@@ -195,12 +221,12 @@ final class FresheningRequestContext {
   }
 
   /**
-   * Get the Freshener contexts applicable to this request.
+   * Get the parameter overrides for this request.
    *
-   * @return the Freshener contexts applicable to this request.
+   * @return the parameter overrides for this request.
    */
-  public Map<KijiColumnName, InternalFreshenerContext> getFreshenerContexts() {
-    return mFreshenerContexts;
+  public Map<String, String> getParameterOverrides() {
+    return mParameterOverrides;
   }
 
   /**
@@ -286,6 +312,9 @@ final class FresheningRequestContext {
       final KijiColumnName attachedColumn,
       final boolean scoreFunctionRan
   ) {
+    if (scoreFunctionRan) {
+      mHasReceivedWrites = true;
+    }
     final long finishTime = System.nanoTime();
     if (StatisticGatheringMode.NONE != mStatisticGatheringMode) {
       mFreshenerSingleRunStatistics.add(FreshenerSingleRunStatistics.create(
@@ -315,15 +344,6 @@ final class FresheningRequestContext {
     // Because this unique buffer will be used by only a single Freshener which can write only a
     // single value, set the initial buffer size to 1.
     return mBufferedWriter.openSingleBuffer(1);
-  }
-
-  /**
-   * Called when a Freshener finishes after writing a value into a buffer. Sets mHasReceivedWrites
-   * which is used when a request times out with partial freshening enabled to tell whether there
-   * is new data to read from the table.
-   */
-  public void freshenerWrote() {
-    mHasReceivedWrites = true;
   }
 
   /**
@@ -397,23 +417,15 @@ final class FresheningRequestContext {
         Lists.newArrayListWithCapacity(mFresheners.size());
 
     for (Map.Entry<KijiColumnName, Freshener> entry : mFresheners.entrySet()) {
-      final InternalFreshenerContext context =
-          mFreshenerContexts.get(entry.getKey());
-
-      final Future<KijiRowData> rowDataToCheckFuture;
-      if (entry.getValue().getFreshnessPolicy().shouldUseClientDataRequest(context)) {
-        rowDataToCheckFuture = mClientDataFuture;
+      if (entry.getKey().isFullyQualified()) {
+        final Future<Boolean> future = ScoringUtils.getFuture(mExecutorService,
+            new QualifiedFreshenerCallable(this, entry.getKey(), mClientDataFuture));
+        collectedFutures.add(future);
       } else {
-        rowDataToCheckFuture = ScoringUtils.getFuture(
-            mExecutorService,
-            new TableReadCallable(
-                mReaderPool,
-                mEntityId,
-                entry.getValue().getFreshnessPolicy().getDataRequest(context)));
+        final Future<Boolean> future = ScoringUtils.getFuture(mExecutorService,
+            new MapFamilyFreshenerCallable(this, entry.getKey(), mClientDataFuture));
+        collectedFutures.add(future);
       }
-      final Future<Boolean> future = ScoringUtils.getFuture(mExecutorService,
-          new FreshenerCallable(this, entry.getKey(), rowDataToCheckFuture));
-      collectedFutures.add(future);
     }
     return ImmutableList.copyOf(collectedFutures);
   }
