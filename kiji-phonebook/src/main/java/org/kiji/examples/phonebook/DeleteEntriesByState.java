@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.common.flags.Flag;
 import org.kiji.common.flags.FlagParser;
+import org.kiji.mapreduce.platform.KijiMRPlatformBridge;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
@@ -207,7 +208,7 @@ public class DeleteEntriesByState extends Configured implements Tool {
     GenericTableMapReduceUtil.addAllDependencyJars(job);
     DistributedCacheJars.addJarsToDistributedCache(
         job, new File(System.getenv("KIJI_HOME"), "lib"));
-    job.setUserClassesTakesPrecedence(true);
+    KijiMRPlatformBridge.get().setUserClassesTakesPrecedence(job, true);
 
     // Run the job.
     final boolean isSuccessful = job.waitForCompletion(true);
