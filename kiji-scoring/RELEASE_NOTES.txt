@@ -1,6 +1,13 @@
 
                               Kiji Scoring Release Notes
 
+Version 0.14.0
+    * SCORE-177. A Freshener may now be attached to a map-type family. This attachment behaves as
+        if a Freshener were attached to every qualifier within that family. Because the qualifiers
+        in a map-type family cannot be easily enumerated, freshening will only run when qualified
+        columns are explicitly requested; Requesting an entire map-type family will not trigger any
+        freshening.
+
 Version 0.13.0
     * SCORE-168. All Public classes now have ApiAudience and ApiStability annotations to indicate
         to which users they are relevant and the contract around their API compatibility. Some
