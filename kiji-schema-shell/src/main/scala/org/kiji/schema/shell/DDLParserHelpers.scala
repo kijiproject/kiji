@@ -23,18 +23,10 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 
-import org.kiji.schema.avro.HashType
-import org.kiji.schema.avro.RowKeyEncoding
-import org.kiji.schema.avro.RowKeyFormat
-import org.kiji.schema.KConstants
+import org.kiji.schema.avro.AvroValidationPolicy
+import org.kiji.schema.KijiInvalidNameException
 
 import org.kiji.schema.shell.ddl._
-import org.kiji.schema.shell.ddl.CompressionTypeToken._
-import org.kiji.schema.shell.ddl.LocalityGroupPropName._
-import org.kiji.schema.shell.ddl.key._
-import org.kiji.schema.shell.ddl.key.RowKeyElemType._
-import org.kiji.schema.shell.spi.ParserPlugin
-import org.kiji.schema.shell.spi.ParserPluginFactory
 
 import org.kiji.schema.util.KijiNameValidator
 

@@ -735,6 +735,38 @@ final class DDLParser(val env: Environment)
   )
 
   /**
+   * Parser that recognizes an ALTER TABLE .. SET VALIDATION .. FOR COLUMN statement.
+   */
+  def alterColumnValidation: Parser[DDLCommand] = (
+    i("ALTER")~>i("TABLE")~>tableName~i("SET")~tableValidationProperty~i("FOR")
+        ~i("COLUMN")~colName
+    ^^ { case tableName ~ _ ~ tableValidationProperty ~ _ ~ _ ~ colName =>
+        new AlterTableSetValidationModeCommand(
+          env,
+          tableName,
+          tableValidationProperty._2.asInstanceOf[TableValidationPolicy].avroValidationPolicy,
+          Left(colName)
+        )
+    }
+  )
+
+  /**
+   * Parser that recognizes an ALTER TABLE .. SET VALIDATION .. FOR FAMILY statement.
+   */
+  def alterFamilyValidation: Parser[DDLCommand] = (
+    i("ALTER")~>i("TABLE")~>tableName~i("SET")~tableValidationProperty~i("FOR")
+        ~i("FAMILY")~familyName
+        ^^ { case tableName ~ _ ~ tableValidationProperty ~ _ ~ _ ~ familyName =>
+      new AlterTableSetValidationModeCommand(
+        env,
+        tableName,
+        tableValidationProperty._2.asInstanceOf[TableValidationPolicy].avroValidationPolicy,
+        Right(familyName)
+      )
+    }
+  )
+
+  /**
    * Parser that recognizes an ALTER TABLE .. DROP SCHEMA .. FOR FAMILY statement.
    */
   def alterFamilyDropSchema: Parser[DDLCommand] = (
@@ -882,6 +914,8 @@ final class DDLParser(val env: Environment)
    */
   def statementBody: Parser[DDLCommand] = (
       alterAddGroupFamily
+    | alterColumnValidation
+    | alterFamilyValidation
     | alterTableSetProperty
     | alterAddMapFamily
     | alterDropFamily
