@@ -38,7 +38,8 @@ final class AlterTableSetValidationModeCommand(
 
   override def validateArguments(): Unit = {
     val layout = getInitialLayout()
-    val cellSchemaContext: CellSchemaContext = CellSchemaContext.create(env, layout, EmptySchemaUsageFlags)
+    val cellSchemaContext: CellSchemaContext =
+      CellSchemaContext.create(env, layout, EmptySchemaUsageFlags)
 
     def validateColumn(columnName: ColumnName): Unit = {
       checkColumnExists(layout, columnName.family, columnName.qualifier)
