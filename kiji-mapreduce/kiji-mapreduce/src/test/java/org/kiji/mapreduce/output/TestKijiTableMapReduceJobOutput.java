@@ -27,7 +27,7 @@ import org.junit.Test;
 
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiClientTest;
-import org.kiji.schema.KijiTable;
+import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 
@@ -40,10 +40,10 @@ public class TestKijiTableMapReduceJobOutput extends KijiClientTest {
     final KijiTableLayout layout = KijiTableLayout.createUpdatedLayout(
         KijiTableLayouts.getLayout(KijiTableLayouts.SIMPLE),  null);
     kiji.createTable("table", layout);
-    final KijiTable table = kiji.openTable("table");
+    KijiURI tableURI = KijiURI.newBuilder(kiji.getURI()).withTableName("table").build();
 
     final Job job = new Job();
-    new DirectKijiTableMapReduceJobOutput(table.getURI()).configure(job);
+    new DirectKijiTableMapReduceJobOutput(tableURI).configure(job);
 
     final Configuration conf = job.getConfiguration();
     boolean isMapSpecExEnabled = conf.getBoolean("mapred.map.tasks.speculative.execution", true);

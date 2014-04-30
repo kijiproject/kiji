@@ -195,9 +195,13 @@ public class TestKijiTableKeyValueStore extends KijiClientTest {
           .withColumn("family", "column")
           .build();
       KeyValueStoreReader<KijiRowKeyComponents, CharSequence> reader = input.open();
-      assertTrue(reader.containsKey(rowKey));
-      assertEquals(value, reader.get(rowKey).toString());
-      assertFalse(reader.containsKey(KijiRowKeyComponents.fromComponents("missingIdentifier")));
+      try {
+        assertTrue(reader.containsKey(rowKey));
+        assertEquals(value, reader.get(rowKey).toString());
+        assertFalse(reader.containsKey(KijiRowKeyComponents.fromComponents("missingIdentifier")));
+      } finally {
+        reader.close();
+      }
     } finally {
       releaseOrLog(table);
     }
