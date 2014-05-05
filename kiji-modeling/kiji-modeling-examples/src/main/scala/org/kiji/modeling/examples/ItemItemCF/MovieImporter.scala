@@ -23,8 +23,10 @@ import com.twitter.scalding.Args
 import com.twitter.scalding.TextLine
 import cascading.pipe.Pipe
 
-import org.kiji.express._
-import org.kiji.express.flow._
+import org.kiji.express.flow.ColumnFamilyOutputSpec
+import org.kiji.express.flow.EntityId
+import org.kiji.express.flow.KijiJob
+import org.kiji.express.flow.KijiOutput
 
 /**
  * Populates a table of movie ratings.

@@ -37,7 +37,7 @@
     <!-- Dependency versions -->
     <algebird-core.version>0.4.0</algebird-core.version>
     <cascading.version>2.5.2</cascading.version>
-    <scalding.version>0.9.0rc9</scalding.version>
+    <scalding.version>0.9.1</scalding.version>
   </properties>
 
   <dependencyManagement>
