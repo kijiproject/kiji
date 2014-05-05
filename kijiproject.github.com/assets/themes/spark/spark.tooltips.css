@@ -1,0 +1,68 @@
+
+/* Spark Tooltips (use with "spark.tooltips.js") */
+
+.spark-tooltip {
+	display: inline-block;
+}
+.spark-tooltip-box {
+	display: none;
+	position: absolute;
+	opacity: 0;
+	background: black;
+	color: white;
+	z-index: 1010;
+	padding: 7px 10px;
+	margin: 0;
+	pointer-events: none;
+	
+	/* Resets */
+	font-size: 13px;
+	line-height: 20px;
+	font-weight: normal;
+	cursor: default;
+	text-shadow: none;
+	
+	-webkit-box-shadow: 0px 2px 4px 0px rgba(0,0,0,0.3);
+	   -moz-box-shadow: 0px 2px 4px 0px rgba(0,0,0,0.3);
+			box-shadow: 0px 2px 4px 0px rgba(0,0,0,0.3);
+
+	-webkit-border-radius: 2px;
+	   -moz-border-radius: 2px;
+			border-radius: 2px;
+}
+.spark-tooltip-box:after {
+	border: solid transparent;
+	content: " ";
+	height: 0;
+	width: 0;
+	position: absolute;
+	pointer-events: none;
+	border-color: rgba(0, 0, 0, 0);
+	border-width: 8px;
+	left: 50%;
+	margin-left: -8px;
+}
+.spark-tooltip-box.position-top:after {
+	top: 100%;
+	border-top-color: #000;
+}
+.spark-tooltip-box.position-bottom:after {
+	bottom: 100%;
+	border-bottom-color: #000;
+}
+
+
+/* Dark variant */
+.dark .spark-tooltip-box {
+	background: white;
+	color: black;
+}
+.dark .spark-tooltip-box:after {
+	border-color: rgba(255, 255, 255, 0);
+}
+.dark .spark-tooltip-box.position-top:after {
+	border-top-color: #fff;
+}
+.dark .spark-tooltip-box.position-bottom:after {
+	border-bottom-color: #fff;
+}

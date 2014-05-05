@@ -1,0 +1,28 @@
+/* Don't edit this file as it is automatically overwritten each time new icons are uploaded through the backend - any changes will be lost */
+@font-face {
+    font-family: 'icomoon';
+    src:url('../fonts/icons.eot?f05c4724');
+    src:url('../fonts/icons.eot?f05c4724#iefix') format('embedded-opentype'),
+        url('../fonts/icons.woff?f05c4724') format('woff'),
+        url('../fonts/icons.ttf?f05c4724') format('truetype'),
+        url('../fonts/icons.svg?f05c4724#icomoon') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+ 
+[data-icon]:before {
+    font-family: 'icomoon';
+    content: attr(data-icon);
+    speak: none;
+    font-weight: normal;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Fix for poor quality WOFF rendering in Chrome, see http://stackoverflow.com/a/14345363 */
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+	@font-face {
+		font-family: 'icomoon';
+        src: url('../fonts/icons.svg?f05c4724#icomoon') format('svg');
+	}
+}
