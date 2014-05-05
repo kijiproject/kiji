@@ -302,7 +302,8 @@ class RecommendationPipe(val pipe: Pipe)
    * @param normalizingField is either the name of the field in the normalizing pipe that contains
    *     the normalizing constant or is the name of the field to insert into the pipe if you have
    *     provided a normalizingConstant.
-   * @param numReducers is used if you have more than 1 reducer available to run this function.
+   * @param numReducers is used to set the number of reducers to a value different from that in
+   *     job config. Default = -1, to use whatever is in the job config.
    * @return the pipe containing itemsets, their frequency and support in the specified result
    *     fields and the normalizing field.
    */
@@ -310,7 +311,8 @@ class RecommendationPipe(val pipe: Pipe)
       normalizingPipe: Option[Pipe],
       normalizingConstant: Option[Double],
       normalizingField: Fields,
-      numReducers: Int = 1) : Pipe = {
+      // -1 is used in Scalding for using the number of reducers in the job config
+      numReducers: Int = -1) : Pipe = {
     val (itemsetField, resultFields) = fieldSpec
     require(itemsetField.size == 1, "support expects a single input field name for the field " +
         "which contains the N-grams or itemsets.")
