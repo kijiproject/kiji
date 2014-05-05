@@ -805,10 +805,6 @@ form .wpcf7-submit.button {
 .add-more-top { margin-top: 20px !important; }
 
 
-/* Spark Layout */
-body, html {
-	overflow: hidden;
-}
 html.modern-mobile,
 html.modern-mobile body,
 html.static-header,
