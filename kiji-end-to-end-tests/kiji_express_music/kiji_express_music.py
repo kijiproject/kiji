@@ -80,7 +80,8 @@ class Tutorial(object):
   def __init__(
       self, work_dir, version,
       maven_local_repo=None,
-      maven_remote_repo=None):
+      maven_remote_repo=None,
+      python=False):
     """Initializes the tutorial runner.
 
     Args:
@@ -96,6 +97,7 @@ class Tutorial(object):
     # TODO: inject these in KijiBento
     self._maven_local_repo = maven_local_repo
     self._maven_remote_repo = maven_remote_repo
+    self._python = python
 
     # Initialized in Setup()
     self._kiji_bento = kiji_bento.KijiBento(
@@ -174,6 +176,18 @@ class Tutorial(object):
       logging.debug('Error: %r', cmd.error_text)
     return cmd
 
+  def StripJavaHomeLine(self, output_lines):
+      """Strips any line about JAVA_HOME being set, which sometimes happens in the output of a
+      `kiji` command, from the output lines of a `kiji` command.
+
+       Args:
+         command: Output lines from a `kiji` command.
+      """
+      if "JAVA_HOME" in output_lines[0]:
+        return output_lines[1:]
+      else:
+        return output_lines
+
   # ----------------------------------------------------------------------------
   # KijiMusic setup:
 
@@ -223,7 +237,7 @@ class Tutorial(object):
   # ----------------------------------------------------------------------------
   # KijiExpress Music bulk-importing:
 
-  def Part2(self, python=False):
+  def Part2(self):
     """Runs the importing part of the KijiExpress Music tutorial.
 
     http://docs.kiji.org/tutorials/express-recommendation/DEVEL/express-importing-data/
@@ -232,18 +246,19 @@ class Tutorial(object):
     # --------------------------------------------------------------------------
 
     cmd = ' '
-    if python == False:
+    if self._python == False:
       cmd = base.StripMargin("""
-          |express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \\
+          |express job \\
           |    ${EXPRESS_MUSIC_JAR} \\
           |    org.kiji.express.music.SongMetadataImporter \\
+          |    --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \\
           |    --input ${HDFS_BASE}/express-tutorial/song-metadata.json \\
           |    --table-uri ${KIJI}/songs --hdfs
           """)
 
     else:
       cmd = base.StripMargin("""
-          |python3 /home/sea_bass/developer/workspace/kiji-end-to-end-tests/express_script.py \\
+          |express.py \\
           |    job \\
           |    --libjars="${MUSIC_EXPRESS_HOME}/lib/*" \\
           |    --user_jar=${EXPRESS_MUSIC_JAR} \\
@@ -260,33 +275,36 @@ class Tutorial(object):
 
     list_rows = self.Command('kiji scan ${KIJI}/songs --max-rows=5')
     assert (list_rows.exit_code == 0)
-    assert (list_rows.output_lines[0].startswith('Scanning kiji table: kiji://'))
-    assert (len(list_rows.output_lines) >= 3 * 5 + 1), len(list_rows.output_lines)
+    # Strip the first line from the output, if it is about $JAVA_HOME not set.
+    stripped_output = self.StripJavaHomeLine(list_rows.output_lines)
+    assert (stripped_output[0].startswith('Scanning kiji table: kiji://'))
+    assert (len(stripped_output) >= 3 * 5 + 1), len(stripped_output)
     for row in range(0, 5):
       tutorial_test.ExpectRegexMatch(
           expect=r"^entity-id=\['song-\d+'\] \[\d+\] info:metadata$",
-          actual=list_rows.output_lines[1 + row * 3])
+          actual=stripped_output[1 + row * 3])
       tutorial_test.ExpectRegexMatch(
           expect=r"^\s*{\s*\"song_name\".*\"album_name\".*\"artist_name\".*\"genre\".*\"tempo\".*\"duration\".*\s*}\s*$",
-          actual=list_rows.output_lines[2 + row * 3])
+          actual=stripped_output[2 + row * 3])
       tutorial_test.ExpectRegexMatch(
           expect=r"^$",
-          actual=list_rows.output_lines[3 + row * 3])
+          actual=stripped_output[3 + row * 3])
 
     # --------------------------------------------------------------------------
 
     cmd = ' '
-    if python == False:
+    if self._python == False:
       cmd = base.StripMargin("""
-          |express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \\
+          |express job \\
           |    ${EXPRESS_MUSIC_JAR} \\
           |    org.kiji.express.music.SongPlaysImporter \\
+          |    --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \\
           |    --input ${HDFS_BASE}/express-tutorial/song-plays.json \\
           |    --table-uri ${KIJI}/users --hdfs
           """)
     else:
       cmd = base.StripMargin("""
-        |python3 /home/sea_bass/developer/workspace/kiji-end-to-end-tests/express_script.py \\
+        |express.py \\
         |    job \\
         |    -libjars="${MUSIC_EXPRESS_HOME}/lib/*" \\
         |    -user_jar=${EXPRESS_MUSIC_JAR} \\
@@ -302,36 +320,38 @@ class Tutorial(object):
 
     list_rows = self.Command('kiji scan ${KIJI}/users --max-rows=5')
     assert (list_rows.exit_code == 0)
-    assert (list_rows.output_lines[0].startswith('Scanning kiji table: kiji://'))
-    assert (len(list_rows.output_lines) >= 3 * 5 + 1), len(list_rows.output_lines)
+    stripped_output = self.StripJavaHomeLine(list_rows.output_lines)
+    assert (stripped_output[0].startswith('Scanning kiji table: kiji://'))
+    assert (len(stripped_output) >= 3 * 5 + 1), len(stripped_output)
     for row in range(0, 5):
       tutorial_test.ExpectRegexMatch(
           expect=r"^entity-id=\['user-\d+'\] \[\d+\] info:track_plays$",
-          actual=list_rows.output_lines[1 + row * 3])
+          actual=stripped_output[1 + row * 3])
       tutorial_test.ExpectRegexMatch(
           expect=r"^\s*song-\d+$",
-          actual=list_rows.output_lines[2 + row * 3])
+          actual=stripped_output[2 + row * 3])
       tutorial_test.ExpectRegexMatch(
           expect=r"^$",
-          actual=list_rows.output_lines[3 + row * 3])
+          actual=stripped_output[3 + row * 3])
 
   # --------------------------------------------------------------------------
   # play-count section.
 
-  def Part3(self, python=False):
+  def Part3(self):
     cmd = ' '
-    if python == False:
+    if self._python == False:
       cmd = base.StripMargin("""
-        |express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \\
+        |express job \\
         |  ${EXPRESS_MUSIC_JAR} \\
         |  org.kiji.express.music.SongPlayCounter \\
+        |  --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \\
         |  --table-uri ${KIJI}/users \\
         |  --output ${HDFS_BASE}/express-tutorial/songcount-output \\
         |  --hdfs
         """)
     else:
       cmd = base.StripMargin("""
-        |python3 /home/sea_bass/developer/workspace/kiji-end-to-end-tests/express_script.py \\
+        |express.py \\
         |    job \\
         |    -libjars="${MUSIC_EXPRESS_HOME}/lib/*" \\
         |    -user_jar=${EXPRESS_MUSIC_JAR} \\
@@ -346,26 +366,27 @@ class Tutorial(object):
         hadoop fs -text ${HDFS_BASE}/express-tutorial/songcount-output/part-00000 | head -3
         """)
     tutorial_test.Expect(expect=0, actual=fs_text.exit_code)
-    lines = list(filter(None, fs_text.output_lines))  # filter empty lines
+    lines = list(filter(None, self.StripJavaHomeLine(fs_text.output_lines)))  # filter empty lines
     tutorial_test.Expect(expect=3, actual=len(lines))
     for line in lines:
       tutorial_test.ExpectRegexMatch(expect=r'^song-\d+\t\d+$', actual=line)
 
   # ----------------------------------------------------------------------------
   # Top Next Songs section.
-  def Part4(self, python=False):
+  def Part4(self):
     cmd = ' '
-    if python is False:
+    if self._python == False:
       cmd = base.StripMargin("""
-        |express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \\
+        |express job \\
         |    ${EXPRESS_MUSIC_JAR} \\
         |    org.kiji.express.music.TopNextSongs \\
+        |    --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \\
         |    --users-table ${KIJI}/users \\
         |    --songs-table ${KIJI}/songs --hdfs
         """)
     else:
       cmd = base.StripMargin("""
-        |python3 /home/sea_bass/developer/workspace/kiji-end-to-end-tests/express_script.py \\
+        |express.py \\
         |    job \\
         |    -libjars="${MUSIC_EXPRESS_HOME}/lib/*" \\
         |    -user_jar=${EXPRESS_MUSIC_JAR} \\
@@ -378,30 +399,31 @@ class Tutorial(object):
     assert (top_songs.exit_code == 0)
     list_rows = self.Command('kiji scan ${KIJI}/songs --max-rows=2')
     assert (list_rows.exit_code == 0)
-    assert (list_rows.output_lines[0].startswith('Scanning kiji table: kiji://'))
-    assert (len(list_rows.output_lines) >= 5 * 2 + 1), len(list_rows.output_lines)
+    stripped_output = self.StripJavaHomeLine(list_rows.output_lines)
+    assert (stripped_output[0].startswith('Scanning kiji table: kiji://'))
+    assert (len(stripped_output) >= 5 * 2 + 1), len(stripped_output)
     for row in range(0, 2):
       tutorial_test.ExpectRegexMatch(
           expect=r"^entity-id=\['song-\d+'\] \[\d+\] info:metadata$",
-          actual=list_rows.output_lines[1 + row * 5])
+          actual=stripped_output[1 + row * 5])
       tutorial_test.ExpectRegexMatch(
           expect=r"^\s*{\s*\"song_name\".*\"album_name\".*\"artist_name\".*\"genre\".*\"tempo\".*\"duration\".*\s*}\s*$",
-          actual=list_rows.output_lines[2 + row * 5])
+          actual=stripped_output[2 + row * 5])
       tutorial_test.ExpectRegexMatch(
           expect=r"^entity-id=\['song-\d+'\] \[\d+\] info:top_next_songs$",
-          actual=list_rows.output_lines[3 + row * 5])
+          actual=stripped_output[3 + row * 5])
       tutorial_test.ExpectRegexMatch(
           expect=r"^\s*{\s*\"top_songs\".*}$",
-          actual=list_rows.output_lines[4 + row * 5])
+          actual=stripped_output[4 + row * 5])
       tutorial_test.ExpectRegexMatch(
           expect=r"^$",
-          actual=list_rows.output_lines[5 + row * 5])
+          actual=stripped_output[5 + row * 5])
 
   # ----------------------------------------------------------------------------
   # Song recommender
-  def Part5(self, python=False):
+  def Part5(self):
     cmd = ' '
-    if python == False:
+    if self._python == False:
       cmd = base.StripMargin("""
         |express job ${EXPRESS_MUSIC_JAR} \\
         |    org.kiji.express.music.SongRecommender \\
@@ -410,9 +432,9 @@ class Tutorial(object):
         """)
     else:
       cmd = base.StripMargin("""
-        |python3 /home/sea_bass/developer/workspace/kiji-end-to-end-tests/express_script.py \\
+        |express.py \\
         |    job \\
-        |    -user_jar=${EXPRESS_MUSIC_JAR} \\-b 
+        |    -user_jar=${EXPRESS_MUSIC_JAR} \\
         |    -job_name=org.kiji.express.music.SongRecommender \\
         |    -mode=hdfs \\
         |    --songs-table ${KIJI}/songs \\
@@ -423,24 +445,25 @@ class Tutorial(object):
 
     list_rows = self.Command("kiji scan ${KIJI}/users --max-rows=2")
     assert (list_rows.exit_code == 0)
-    assert (list_rows.output_lines[0].startswith('Scanning kiji table: kiji://'))
-    assert (len(list_rows.output_lines) >= 5 * 2 + 1), len(list_rows.output_lines)
+    stripped_output = self.StripJavaHomeLine(list_rows.output_lines)
+    assert (stripped_output[0].startswith('Scanning kiji table: kiji://'))
+    assert (len(stripped_output) >= 5 * 2 + 1), len(stripped_output)
     for row in range(0, 2):
       tutorial_test.ExpectRegexMatch(
           expect=r"^entity-id=\['user-\d+'\] \[\d+\] info:track_plays$",
-          actual=list_rows.output_lines[1 + row * 5])
+          actual=stripped_output[1 + row * 5])
       tutorial_test.ExpectRegexMatch(
           expect=r"^\s*song-\d+$",
-          actual=list_rows.output_lines[2 + row * 5])
+          actual=stripped_output[2 + row * 5])
       tutorial_test.ExpectRegexMatch(
           expect=r"^entity-id=\['user-\d+'\] \[\d+\] info:next_song_rec$",
-          actual=list_rows.output_lines[3 + row * 5])
+          actual=stripped_output[3 + row * 5])
       tutorial_test.ExpectRegexMatch(
           expect=r"^\s*song-\d+$",
-          actual=list_rows.output_lines[4 + row * 5])
+          actual=stripped_output[4 + row * 5])
       tutorial_test.ExpectRegexMatch(
           expect=r"^$",
-          actual=list_rows.output_lines[5 + row * 5])
+          actual=stripped_output[5 + row * 5])
 
 
   # ----------------------------------------------------------------------------
@@ -483,34 +506,43 @@ def Main(args):
   logging.info('Testing tutorial of KijiBento %s', FLAGS.kiji_bento_version)
 
   # Runs the tutorial:
-  tutorial = Tutorial(
+  deprecatedTutorial = Tutorial(
       work_dir=work_dir,
       version=FLAGS.kiji_bento_version,
       maven_local_repo=FLAGS.maven_local_repo,
       maven_remote_repo=FLAGS.maven_remote_repo,
+      python=False
   )
 
   try:
-    tutorial.Setup()
-    tutorial.Part1()
-    tutorial.Part2()
-    tutorial.Part3()
-    tutorial.Part4()
-    tutorial.Part5()
+    deprecatedTutorial.Setup()
+    deprecatedTutorial.Part1()
+    deprecatedTutorial.Part2()
+    deprecatedTutorial.Part3()
+    deprecatedTutorial.Part4()
+    deprecatedTutorial.Part5()
   finally:
     if FLAGS.cleanup_after_test:
-      tutorial.Cleanup()
+      deprecatedTutorial.Cleanup()
+
+  pythonTutorial = Tutorial(
+      work_dir=work_dir,
+      version=FLAGS.kiji_bento_version,
+      maven_local_repo=FLAGS.maven_local_repo,
+      maven_remote_repo=FLAGS.maven_remote_repo,
+      python=True
+  )
 
   try:
-    tutorial.Setup()
-    tutorial.Part1()
-    tutorial.Part2(python=True)
-    tutorial.Part3(python=True)
-    tutorial.Part4(python=True)
-    tutorial.Part5(python=True)
+    pythonTutorial.Setup()
+    pythonTutorial.Part1()
+    pythonTutorial.Part2()
+    pythonTutorial.Part3()
+    pythonTutorial.Part4()
+    pythonTutorial.Part5()
   finally:
     if FLAGS.cleanup_after_test:
-      tutorial.Cleanup()
+      pythonTutorial.Cleanup()
 
 
 # ------------------------------------------------------------------------------
