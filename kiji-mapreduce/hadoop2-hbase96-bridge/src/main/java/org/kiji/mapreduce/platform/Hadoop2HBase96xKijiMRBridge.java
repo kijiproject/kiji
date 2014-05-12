@@ -1,5 +1,5 @@
 /**
- * (c) Copyright 2013 WibiData, Inc.
+ * (c) Copyright 2014 WibiData, Inc.
  *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
@@ -27,10 +27,10 @@ import com.google.common.base.Preconditions;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.mapreduce.hadoopbackport.TotalOrderPartitioner;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.hadoop.mapreduce.OutputCommitter;
@@ -41,20 +41,31 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.TaskType;
 import org.apache.hadoop.mapreduce.lib.map.WrappedMapper;
+import org.apache.hadoop.mapreduce.lib.partition.TotalOrderPartitioner;
 import org.apache.hadoop.mapreduce.task.MapContextImpl;
 import org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl;
 
 import org.kiji.annotations.ApiAudience;
 
 /**
- * CDH4-backed implementation of the KijiMRPlatformBridge API.
+ * Hadoop 2 and HBase 0.96 implementation of the KijiMRPlatformBridge API.
  */
 @ApiAudience.Private
-public final class CDH4MR1KijiMRBridge extends KijiMRPlatformBridge {
+public final class Hadoop2HBase96xKijiMRBridge extends KijiMRPlatformBridge {
+  /** KVComparator used in #compareKeyValues. */
+  private final KeyValue.KVComparator mKVComparator;
+
+  /**
+   * No-arg constructor.  Will be instantiated via reflection.
+   */
+  Hadoop2HBase96xKijiMRBridge() {
+    mKVComparator = new KeyValue.KVComparator();
+  }
+
   /** {@inheritDoc} */
   @Override
   public TaskAttemptContext newTaskAttemptContext(Configuration conf, TaskAttemptID id) {
-    // In CDH4, TaskAttemptContext and its implementation are separated.
+    // In CDH4+, TaskAttemptContext and its implementation are separated.
     return new TaskAttemptContextImpl(conf, id);
   }
 
@@ -62,7 +73,7 @@ public final class CDH4MR1KijiMRBridge extends KijiMRPlatformBridge {
   @Override
   public TaskAttemptID newTaskAttemptID(String jtIdentifier, int jobId, TaskType type,
       int taskId, int id) {
-    // In CDH4, use all these args directly.
+    // In CDH4+, use all these args directly.
     return new TaskAttemptID(jtIdentifier, jobId, type, taskId, id);
   }
 
@@ -94,8 +105,9 @@ public final class CDH4MR1KijiMRBridge extends KijiMRPlatformBridge {
   /** {@inheritDoc} */
   @Override
   public void setUserClassesTakesPrecedence(Job job, boolean value) {
-    // We can do this directly in CDH4.
-    job.setUserClassesTakesPrecedence(value);
+    job
+        .getConfiguration()
+        .setBoolean(JobContext.MAPREDUCE_TASK_CLASSPATH_PRECEDENCE, value);
   }
 
   /** {@inheritDoc} */
@@ -132,34 +144,27 @@ public final class CDH4MR1KijiMRBridge extends KijiMRPlatformBridge {
       int roffset,
       int rlength
   ) {
-    return KeyValue.KEY_COMPARATOR.compare(left, loffset, llength, right, roffset, rlength);
+    return KeyValue.COMPARATOR.compareFlatKey(left, loffset, llength, right, roffset, rlength);
   }
 
   /** {@inheritDoc} */
   @Override
-  public int compareKeyValues(KeyValue left, KeyValue right) {
-    return KeyValue.COMPARATOR.compare(left, right);
+  public int compareKeyValues(final KeyValue left, final KeyValue right) {
+    return mKVComparator.compare(left, right);
   }
 
   /** {@inheritDoc} */
   @Override
   public void writeKeyValue(KeyValue keyValue, DataOutput dataOutput) throws IOException {
-    keyValue.write(dataOutput);
+    KeyValue.write(keyValue, dataOutput);
   }
 
   /** {@inheritDoc} */
   @Override
   public KeyValue readKeyValue(DataInput dataInput) throws IOException {
-    // This line is money.
-    // It works around the fact that KeyValue maintains cached state by
-    // just creating a fresh one before reading Writable-serialized data.
-    KeyValue keyValue = new KeyValue();
-
-    keyValue.readFields(dataInput);
-    return keyValue;
+    return KeyValue.create(dataInput);
   }
 
-  /** {@inheritDoc} */
   @Override
   public void setTotalOrderPartitionerClass(Job job) {
     job.setPartitionerClass(TotalOrderPartitioner.class);

@@ -85,6 +85,10 @@
                   <type>jar</type>
                   <classifier>hadoop1</classifier>
                 </artifact>
+                <artifact>
+                  <file>../hadoop2-hbase96-bridge/target/kiji-mapreduce-hadoop2-hbase96-bridge-${project.version}.jar</file>
+                  <classifier>hadoop2hbase96</classifier>
+                </artifact>
               </artifacts>
             </configuration>
           </execution>

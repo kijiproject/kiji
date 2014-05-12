@@ -19,6 +19,8 @@
 
 package org.kiji.mapreduce.platform;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.net.URI;
 
@@ -26,6 +28,8 @@ import com.google.common.base.Preconditions;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.mapreduce.hadoopbackport.TotalOrderPartitioner;
 import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Counter;
@@ -375,6 +379,44 @@ public final class Hadoop1xKijiMRBridge extends KijiMRPlatformBridge {
   ) throws IOException, InterruptedException {
     return new KijiWrappedMapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>().getMapContext(
         conf, taskId, reader, writer, committer, reporter, split);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public int compareFlatKey(
+      byte[] left,
+      int loffset,
+      int llength,
+      byte[] right,
+      int roffset,
+      int rlength
+  ) {
+    return KeyValue.KEY_COMPARATOR.compare(left, loffset, llength, right, roffset, rlength);
+  }
+
+  @Override
+  public int compareKeyValues(KeyValue left, KeyValue right) {
+    return KeyValue.COMPARATOR.compare(left, right);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void writeKeyValue(KeyValue keyValue, DataOutput dataOutput) throws IOException {
+    keyValue.write(dataOutput);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public KeyValue readKeyValue(DataInput dataInput) throws IOException {
+    KeyValue keyValue = new KeyValue();
+
+    keyValue.readFields(dataInput);
+    return keyValue;
+  }
+
+  @Override
+  public void setTotalOrderPartitionerClass(Job job) {
+    job.setPartitionerClass(TotalOrderPartitioner.class);
   }
 
 }

@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
+import org.kiji.mapreduce.platform.KijiMRPlatformBridge;
 
 /**
  * A KeyValue-like object that implements WritableComparable.
@@ -149,7 +150,7 @@ public final class HFileKeyValue implements WritableComparable<HFileKeyValue> {
   /** {@inheritDoc} */
   @Override
   public int compareTo(HFileKeyValue other) {
-    return KeyValue.COMPARATOR.compare(mKeyValue, other.mKeyValue);
+    return KijiMRPlatformBridge.get().compareKeyValues(mKeyValue, other.mKeyValue);
   }
 
   // TODO(KIJIMR-85): Add equals() and hashCode() here. Remove findBugs exclusion
@@ -158,18 +159,13 @@ public final class HFileKeyValue implements WritableComparable<HFileKeyValue> {
   /** {@inheritDoc} */
   @Override
   public void readFields(DataInput in) throws IOException {
-    // This line is money.
-    // It works around the fact that KeyValue maintains cached state by
-    // just creating a fresh one before reading Writable-serialized data.
-    mKeyValue = new KeyValue();
-
-    mKeyValue.readFields(in);
+    mKeyValue = KijiMRPlatformBridge.get().readKeyValue(in);
   }
 
   /** {@inheritDoc} */
   @Override
   public void write(DataOutput out) throws IOException {
-    mKeyValue.write(out);
+    KijiMRPlatformBridge.get().writeKeyValue(mKeyValue, out);
   }
 
   /** {@inheritDoc} */
@@ -209,7 +205,7 @@ public final class HFileKeyValue implements WritableComparable<HFileKeyValue> {
       //
       // Use the key comparator to compare just the KEY portion of the KeyValue buffers.
       // KeyValue.ROW_OFFSET is 8 bytes, the size of KEYLENGTH and VALUELENGTH.
-      return KeyValue.KEY_COMPARATOR.compare(
+      return KijiMRPlatformBridge.get().compareFlatKey(
           b1,
           s1 + Bytes.SIZEOF_INT + KeyValue.ROW_OFFSET,
           Bytes.toInt(b1, s1 + Bytes.SIZEOF_INT),

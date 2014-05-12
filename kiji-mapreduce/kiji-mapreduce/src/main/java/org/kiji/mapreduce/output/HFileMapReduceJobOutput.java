@@ -253,7 +253,7 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
    */
   public static void configurePartitioner(Job job, List<HFileKeyValue> startKeys)
       throws IOException {
-    job.setPartitionerClass(TotalOrderPartitioner.class);
+    KijiMRPlatformBridge.get().setTotalOrderPartitionerClass(job);
 
     LOG.info("Configuring " + startKeys.size() + " reduce partitions.");
     job.setNumReduceTasks(startKeys.size());

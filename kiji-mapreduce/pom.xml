@@ -48,6 +48,7 @@
     <module>platform-api</module>
     <module>cdh4mr1-bridge</module>
     <module>hadoop1-bridge</module>
+    <module>hadoop2-hbase96-bridge</module>
     <module>kiji-mapreduce</module> <!-- hadoop2-based build -->
     <module>mr-hadoop1x</module> <!-- hadoop1-based build -->
     <module>dist</module>

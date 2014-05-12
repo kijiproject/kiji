@@ -94,6 +94,25 @@
       <filtered>false</filtered>
     </fileSet>
 
+    <fileSet>
+      <outputDirectory>lib/distribution/hadoop2-hbase96</outputDirectory>
+      <directory>../hadoop2-hbase96-bridge/target</directory>
+      <fileMode>0644</fileMode>
+      <includes>
+        <include>kiji-mapreduce-hadoop2-hbase96-bridge-${project.version}.jar</include>
+      </includes>
+      <filtered>false</filtered>
+    </fileSet>
+    <fileSet>
+      <outputDirectory>lib/distribution/hadoop2-hbase96</outputDirectory>
+      <directory>../kiji-mapreduce/target/dependency</directory>
+      <fileMode>0644</fileMode>
+      <includes>
+        <include>kiji-avro-*.jar</include>
+      </includes>
+      <filtered>false</filtered>
+    </fileSet>
+
     <!-- profiling scripts -->
     <fileSet>
       <outputDirectory>bin/profiling</outputDirectory>

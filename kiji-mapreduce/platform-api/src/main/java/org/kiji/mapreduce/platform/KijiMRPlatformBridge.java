@@ -19,10 +19,13 @@
 
 package org.kiji.mapreduce.platform;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
@@ -138,6 +141,69 @@ public abstract class KijiMRPlatformBridge {
       StatusReporter reporter,
       InputSplit split
   ) throws IOException, InterruptedException;
+
+  /**
+   * Compares the keys from two KeyValues, assuming the KeyValues are laid out in byte arrays.
+   *
+   * @param left The byte[] that holds the left KeyValue.
+   * @param loffset Where to start comparing from in the left byte[].
+   * @param llength The length of the left byte[] to compare.
+   * @param right The byte[] that holds the right KeyValue.
+   * @param roffset Where to start comparing from in the right byte[].
+   * @param rlength The length of the right byte[] to compare.
+   * @return The result of comparing the keys from the KeyValues.
+   */
+  public abstract int compareFlatKey(
+      byte[] left,
+      int loffset,
+      int llength,
+      byte[] right,
+      int roffset,
+      int rlength
+      );
+
+  /**
+   * Compares two KeyValues, according to their keys only.
+   *
+   * Follows the convention of returning a negative integer, zero, or a positive integer as the
+   * left argument is less than, equal to, or greater than the right argument.
+   *
+   * @param left The left KeyValue to compare.
+   * @param right The right KeyValue to compare.
+   * @return A negative integer, zero, or a positive integer as the left is less than, equal to,
+   *     or greater than the right.
+   */
+  public abstract int compareKeyValues(final KeyValue left, final KeyValue right);
+
+  /**
+   * Writes the keyValue object to the dataOutput.
+   *
+   * @param keyValue The KeyValue to write.
+   * @param dataOutput The DataOutput to write to.
+   * @throws java.io.IOException If an I/O error occurred while writing.
+   */
+  public abstract void writeKeyValue(final KeyValue keyValue, DataOutput dataOutput) throws
+      IOException;
+
+  /**
+   * Reads a KeyValue object from dataInput.
+   *
+   * This works around the fact that KeyValue maintains cached state by
+   * just creating a fresh one before reading Writable-serialized data.
+   *
+   * @param dataInput The DataInput to read from.
+   * @return A new KeyValue object, where the fields are read from DataInput.
+   * @throws IOException If an I/O error occurred while reading.
+   */
+  public abstract KeyValue readKeyValue(DataInput dataInput) throws IOException;
+
+  /**
+   * Sets the PartitionerClass on the job to the TotalOrderPartitioner Class,
+   * which has moved in some versions.
+   *
+   * @param job The job to set the PartitionerClass to TotalOrderPartitioner.class.
+   */
+  public abstract void setTotalOrderPartitionerClass(Job job);
 
   private static KijiMRPlatformBridge mBridge;
 
