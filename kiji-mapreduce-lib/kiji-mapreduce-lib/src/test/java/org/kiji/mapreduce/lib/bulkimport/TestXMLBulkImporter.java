@@ -106,8 +106,11 @@ public class TestXMLBulkImporter extends KijiClientTest {
 
     // Validate output:
     final KijiRowScanner scanner = mReader.getScanner(KijiDataRequest.create("info"));
-    BulkImporterTestUtils.validateImportedRows(scanner, false);
-    scanner.close();
+    try {
+      BulkImporterTestUtils.validateImportedRows(scanner, false);
+    } finally {
+      scanner.close();
+    }
   }
 
   @Test
@@ -143,8 +146,11 @@ public class TestXMLBulkImporter extends KijiClientTest {
 
     // Validate output:
     final KijiRowScanner scanner = mReader.getScanner(KijiDataRequest.create("info"));
-    BulkImporterTestUtils.validateImportedRows(scanner, true);
-    scanner.close();
+    try {
+      BulkImporterTestUtils.validateImportedRows(scanner, true);
+    } finally {
+      scanner.close();
+    }
   }
 
   @Test
@@ -152,55 +158,74 @@ public class TestXMLBulkImporter extends KijiClientTest {
     //Setup special table:
     getKiji().createTable(KijiTableLayouts.getLayout(KijiMRTestLayouts.LG_TEST_LAYOUT));
     final KijiTable table = getKiji().openTable("testlg");
+    try {
+      //Prepare input file:
+      File inputFile = File.createTempFile("TestXMLImportInput", ".txt", getLocalTempDir());
+      TestingResources.writeTextFile(
+          inputFile,
+          TestingResources.get(BulkImporterTestUtils.XML_IMPORT_DATA));
 
-    //Prepare input file:
-    File inputFile = File.createTempFile("TestXMLImportInput", ".txt", getLocalTempDir());
-    TestingResources.writeTextFile(inputFile,
-        TestingResources.get(BulkImporterTestUtils.XML_IMPORT_DATA));
+      Configuration conf = new Configuration(getConf());
+      conf.set(
+          DescribedInputTextBulkImporter.CONF_FILE,
+          BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_LG_XML_IMPORT_DESCRIPTOR));
+      conf.set(XMLInputFormat.RECORD_TAG_CONF_KEY, "user");
 
-    Configuration conf = getConf();
-    conf.set(DescribedInputTextBulkImporter.CONF_FILE,
-        BulkImporterTestUtils.localResource(
-            BulkImporterTestUtils.FOO_LG_XML_IMPORT_DESCRIPTOR));
-    conf.set(XMLInputFormat.RECORD_TAG_CONF_KEY, "user");
+      // Run the bulk-import:
+      final KijiMapReduceJob job = KijiBulkImportJobBuilder.create()
+          .withConf(conf)
+          .withBulkImporter(XMLBulkImporter.class)
+          .withInput(MapReduceJobInputs.newXMLMapReduceJobInput(new Path(inputFile.toString())))
+          .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(table.getURI()))
+          .build();
+      assertTrue(job.run());
 
-    // Run the bulk-import:
-    final KijiMapReduceJob job = KijiBulkImportJobBuilder.create()
-        .withConf(conf)
-        .withBulkImporter(XMLBulkImporter.class)
-        .withInput(MapReduceJobInputs.newXMLMapReduceJobInput(new Path(inputFile.toString())))
-        .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(table.getURI()))
-        .build();
-    assertTrue(job.run());
-
-    // Confirm data was written correctly:
-    final KijiTableReader reader = table.openTableReader();
-    final KijiDataRequest request = KijiDataRequest.create("info", "name");
-    final KijiDataRequest request2 = KijiDataRequest.create("other", "email");
-    assertEquals(
-        reader.get(table.getEntityId("John"), request)
-            .getMostRecentCell("info", "name").getData().toString(),
-        "John");
-    assertEquals(
-        reader.get(table.getEntityId("John"), request2)
-            .getMostRecentCell("other", "email").getData().toString(),
-        "johndoe@gmail.com");
-    assertEquals(
-        reader.get(table.getEntityId("Alice"), request)
-            .getMostRecentCell("info", "name").getData().toString(),
-        "Alice");
-    assertEquals(
-        reader.get(table.getEntityId("Alice"), request2)
-            .getMostRecentCell("other", "email").getData().toString(),
-        "alice.smith@yahoo.com");
-    assertEquals(
-        reader.get(table.getEntityId("Bob"), request)
-            .getMostRecentCell("info", "name").getData().toString(),
-        "Bob");
-    assertEquals(
-        reader.get(table.getEntityId("Bob"), request2)
-            .getMostRecentCell("other", "email").getData().toString(),
-        "bobbyj@aol.com");
-    table.release();
+      // Confirm data was written correctly:
+      final KijiTableReader reader = table.openTableReader();
+      try {
+        final KijiDataRequest request = KijiDataRequest.create("info", "name");
+        final KijiDataRequest request2 = KijiDataRequest.create("other", "email");
+        assertEquals(
+            reader
+                .get(table.getEntityId("John"), request)
+                .getMostRecentCell("info", "name")
+                .getData().toString(),
+            "John");
+        assertEquals(
+            reader
+                .get(table.getEntityId("John"), request2)
+                .getMostRecentCell("other", "email")
+                .getData().toString(),
+            "johndoe@gmail.com");
+        assertEquals(
+            reader
+                .get(table.getEntityId("Alice"), request)
+                .getMostRecentCell("info", "name")
+                .getData().toString(),
+            "Alice");
+        assertEquals(
+            reader
+                .get(table.getEntityId("Alice"), request2)
+                .getMostRecentCell("other", "email")
+                .getData().toString(),
+            "alice.smith@yahoo.com");
+        assertEquals(
+            reader
+                .get(table.getEntityId("Bob"), request)
+                .getMostRecentCell("info", "name")
+                .getData().toString(),
+            "Bob");
+        assertEquals(
+            reader
+                .get(table.getEntityId("Bob"), request2)
+                .getMostRecentCell("other", "email")
+                .getData().toString(),
+            "bobbyj@aol.com");
+      } finally {
+        reader.close();
+      }
+    } finally {
+      table.release();
+    }
   }
 }
