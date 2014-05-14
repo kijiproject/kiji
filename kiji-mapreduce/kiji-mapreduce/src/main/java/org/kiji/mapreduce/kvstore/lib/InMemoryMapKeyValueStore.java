@@ -56,20 +56,20 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
  * <p>To create a InMemoryMapKeyValueStore you should use {@link #builder()} to
  * get a builder object.
  * This class has one method,
- * {@link InMemoryMapKeyValueStore.Builder#withMap(Map<K, V>)} which takes as input the
+ * {@link InMemoryMapKeyValueStore.Builder#withMap(Map)} which takes as input the
  * Map&lt;K, V&gt; to be used to back the InMemoryMapKeyValueStore.</p>
  *
  * <p>The contents of this Map are copied when
  * {@link InMemoryMapKeyValueStore.Builder#build()} is called; modifications to
- * the map between the calls to {@link Builder#withMap(Map<K, V>)} and
+ * the map between the calls to {@link Builder#withMap(Map)} and
  * {@link InMemoryMapKeyValueStore.Builder#build()} will be reflected in the
  * KeyValueStore. Modifications made after the call to build() will not. Thus,
- * all data should be stored in the Map passed to {@link Builder#withMap(Map<K, V>)}
+ * all data should be stored in the Map passed to {@link Builder#withMap(Map)}
  * before the call to {@link InMemoryMapKeyValueStore.Builder#build()}, but it
  * can either be inserted before or between these calls.</p>
  *
  * <p>As a shortcut, you may use the static method
- * {@link InMemoryMapKeyValueStore#fromMap(Map<K, V>)} to immediately generate a key
+ * {@link #fromMap(Map)} to immediately generate a key
  * value store with the contents of the Map argument. Note that the Map is copied
  * immediately and no modifications made to it after the call to get() will be
  * reflected in the InMemoryMapKeyValueStore.</p>
@@ -151,7 +151,7 @@ public final class InMemoryMapKeyValueStore<K, V> implements KeyValueStore<K, V>
   /**
    * Reflection-only constructor. Used only for reflection. You should
    * create InMemoryMapKeyValueStore instances by using a builder or
-   * the factory method {@link InMemoryMapKeyValueStore#fromMap(Map<K, V>)}.
+   * the factory method {@link InMemoryMapKeyValueStore#fromMap(Map)}.
    */
   public InMemoryMapKeyValueStore() {
     mMap = new HashMap<K, V>();

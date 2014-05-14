@@ -58,8 +58,9 @@ import org.kiji.schema.KijiRowData;
  *   Use the {@link KijiPivotJobBuilder} to configure a {@link KijiPivoter} job, by specifying:
  *   <ul>
  *     <li> the {@link KijiPivoter} class to run over the input KijiTable; </li>
- *     <li> the input {@link KijiTable} to be processed by the {@link KijiPivoter}; </li>
- *     <li> the output {@link KijiTable} the {@link KijiPivoter} writes to. </li>
+ *     <li> the input {@link org.kiji.schema.KijiTable} to be processed by the {@link KijiPivoter};
+ *     </li>
+ *     <li> the output {@link org.kiji.schema.KijiTable} the {@link KijiPivoter} writes to. </li>
  *   </ul>
  * </p>
  *

@@ -50,7 +50,6 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.testutil.AbstractKijiIntegrationTest;
-import org.kiji.schema.util.ResourceUtils;
 
 /**
  * Integration test for the job history table.
@@ -58,6 +57,7 @@ import org.kiji.schema.util.ResourceUtils;
 public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationTest {
   private static final Logger LOG = LoggerFactory.getLogger(
       IntegrationTestJobHistoryKijiTable.class);
+
   /**
    * Test that makes sure the job history table is installed correctly and can be opened.
    */
@@ -106,9 +106,12 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
 
       // Now install job history table
       final JobHistoryKijiTable jobHistory = JobHistoryKijiTable.open(kiji);
-      assertEquals(kiji.getMetaTable().getTableLayout(tableName).getDesc().getLayoutId(),
-          jhTableLayoutVersion);
-      jobHistory.close();
+      try {
+        assertEquals(kiji.getMetaTable().getTableLayout(tableName).getDesc().getLayoutId(),
+            jhTableLayoutVersion);
+      } finally {
+        jobHistory.close();
+      }
     } finally {
       kiji.release();
     }
@@ -165,7 +168,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     /** {@inheritDoc} */
     @Override
     public void produce(KijiRowData input, ProducerContext context) throws IOException {
-      throw new IOException("This producer always fails.");
+      throw new RuntimeException("This producer always fails.");
     }
   }
 
@@ -224,10 +227,10 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
         assertEquals("Couldn't retrieve configuration field from deserialized configuration.",
             "squirrel", config.get("conf.test.animal.string"));
       } finally {
-        ResourceUtils.closeOrLog(jobHistory);
+        jobHistory.close();
       }
     } finally {
-      ResourceUtils.releaseOrLog(kiji);
+      kiji.release();
     }
   }
 
@@ -243,7 +246,6 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     try {
       final KijiURI fooTableURI = KijiURI.newBuilder(getKijiURI()).withTableName("foo").build();
       final JobHistoryKijiTable jobHistory = JobHistoryKijiTable.open(kiji);
-
       try {
         // Construct a Producer for this table.
         final KijiProduceJobBuilder builder = KijiProduceJobBuilder.create()
@@ -266,10 +268,10 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
         JobHistoryEntry jobEntry = jobHistory.getJobDetails(jobId);
         assertEquals("FAILED", jobEntry.getJobEndStatus());
       } finally {
-        ResourceUtils.closeOrLog(jobHistory);
+        jobHistory.close();
       }
     } finally {
-      ResourceUtils.releaseOrLog(kiji);
+      kiji.release();
     }
   }
 
@@ -310,10 +312,10 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
         JobHistoryEntry jobEntry = jobHistory.getJobDetails(jobId);
         assertTrue(jobEntry.getJobStartTime() < jobEntry.getJobEndTime());
       } finally {
-        ResourceUtils.closeOrLog(jobHistory);
+        jobHistory.close();
       }
     } finally {
-      ResourceUtils.releaseOrLog(kiji);
+      kiji.release();
     }
   }
 
@@ -337,10 +339,10 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
         final KijiMapReduceJob mrJob = builder.build();
         assertTrue(mrJob.run());
       } finally {
-        ResourceUtils.releaseOrLog(fooTable);
+        fooTable.release();
       }
     } finally {
-      ResourceUtils.releaseOrLog(kiji);
+      kiji.release();
     }
   }
 
@@ -421,10 +423,10 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
         assertTrue(jobHistoryStdOut.contains(new Date(jobTwoEntry.getJobEndTime()).toString()));
         assertTrue(jobHistoryStdOut.contains(jobTwoEntry.getJobEndStatus()));
       } finally {
-        ResourceUtils.closeOrLog(jobHistory);
+        jobHistory.close();
       }
     } finally {
-      ResourceUtils.releaseOrLog(kiji);
+      kiji.release();
     }
   }
 }

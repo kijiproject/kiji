@@ -94,6 +94,9 @@ public class IntegrationTestKijiBulkLoad
     mOutputTable.release();
     mKiji.release();
     mFS.delete(mBulkImportInputPath, false);
+    // NOTE: fs should get closed here, but doesn't because of a bug with FileSystem that
+    // causes it to close other thread's filesystem objects. For more information
+    // see: https://issues.apache.org/jira/browse/HADOOP-7973
 
     mOutputTable = null;
     mKiji = null;

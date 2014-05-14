@@ -51,7 +51,6 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.testutil.AbstractKijiIntegrationTest;
-import org.kiji.schema.util.ResourceUtils;
 
 /** Tests bulk-importers. */
 public class IntegrationTestSimpleBulkImporter extends AbstractKijiIntegrationTest {
@@ -138,9 +137,12 @@ public class IntegrationTestSimpleBulkImporter extends AbstractKijiIntegrationTe
 
   @After
   public void tearDown() throws Exception {
-    ResourceUtils.releaseOrLog(mOutputTable);
-    ResourceUtils.releaseOrLog(mKiji);
+    mOutputTable.release();
+    mKiji.release();
     mFS.delete(mBulkImportInputPath, false);
+    // NOTE: fs should get closed here, but doesn't because of a bug with FileSystem that
+    // causes it to close other thread's filesystem objects. For more information
+    // see: https://issues.apache.org/jira/browse/HADOOP-7973
 
     mOutputTable = null;
     mKiji = null;

@@ -104,10 +104,6 @@ public class IntegrationTestKijiTableInputFormat
     }
   }
 
-  private Job setupJob(EntityId start, EntityId limit, KijiRowFilter filter) throws Exception {
-    return setupJob("job", createOutputFile(), null, null, start, limit, filter);
-  }
-
   public Job setupJob(
       String jobName,
       Path outputFile,

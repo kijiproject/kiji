@@ -52,7 +52,6 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.testutil.AbstractKijiIntegrationTest;
-import org.kiji.schema.util.ResourceUtils;
 
 /** Tests bulk-importers. */
 public class IntegrationTestTableMapper extends AbstractKijiIntegrationTest {
@@ -142,9 +141,12 @@ public class IntegrationTestTableMapper extends AbstractKijiIntegrationTest {
 
   @After
   public final void teardownIntegrationTestTableMapper() throws Exception {
-    ResourceUtils.releaseOrLog(mInputTable);
-    ResourceUtils.releaseOrLog(mOutputTable);
-    ResourceUtils.releaseOrLog(mKiji);
+    mInputTable.release();
+    mOutputTable.release();
+    mKiji.release();
+    // NOTE: fs should get closed here, but doesn't because of a bug with FileSystem that
+    // causes it to close other thread's filesystem objects. For more information
+    // see: https://issues.apache.org/jira/browse/HADOOP-7973
 
     mInputTable = null;
     mOutputTable = null;

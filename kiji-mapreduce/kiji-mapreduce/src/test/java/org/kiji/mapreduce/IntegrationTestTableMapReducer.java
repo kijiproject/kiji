@@ -19,10 +19,11 @@
 
 package org.kiji.mapreduce;
 
+import static org.junit.Assert.assertTrue;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.junit.Assert;
 import org.junit.Test;
 
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
@@ -34,7 +35,6 @@ import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.avro.TableLayoutDesc;
 import org.kiji.schema.testutil.AbstractKijiIntegrationTest;
-import org.kiji.schema.util.ResourceUtils;
 
 /** Tests running a table map/reducer. */
 public class IntegrationTestTableMapReducer extends AbstractKijiIntegrationTest {
@@ -42,6 +42,9 @@ public class IntegrationTestTableMapReducer extends AbstractKijiIntegrationTest 
   public void testTableMapReducer() throws Exception {
     final Configuration conf = createConfiguration();
     final FileSystem fs = FileSystem.get(conf);
+    // NOTE: fs should get closed, but because of a bug with FileSystem that causes it to close
+    // other thread's filesystem objects we do not. For more information
+    // see: https://issues.apache.org/jira/browse/HADOOP-7973
 
     final KijiURI uri = getKijiURI();
     final Kiji kiji = Kiji.Factory.open(uri, conf);
@@ -53,11 +56,12 @@ public class IntegrationTestTableMapReducer extends AbstractKijiIntegrationTest 
 
       final KijiTable table = kiji.openTable(tableName);
       try {
-        {
-          final KijiTableWriter writer = table.openTableWriter();
+        final KijiTableWriter writer = table.openTableWriter();
+        try {
           for (int i = 0; i < 10; ++i) {
             writer.put(table.getEntityId("row-" + i), "primitives", "int", i % 3);
           }
+        } finally  {
           writer.close();
         }
 
@@ -72,17 +76,12 @@ public class IntegrationTestTableMapReducer extends AbstractKijiIntegrationTest 
             .withInputTable(table.getURI())
             .withOutput(MapReduceJobOutputs.newHFileMapReduceJobOutput(table.getURI(), output, 16))
             .build();
-        if (!mrjob.run()) {
-          Assert.fail("MapReduce job failed");
-        }
-
+        assertTrue(mrjob.run());
       } finally {
-        ResourceUtils.releaseOrLog(table);
+        table.release();
       }
-
     } finally {
-      ResourceUtils.releaseOrLog(kiji);
+      kiji.release();
     }
   }
-
 }

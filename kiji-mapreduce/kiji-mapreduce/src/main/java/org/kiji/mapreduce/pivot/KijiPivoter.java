@@ -43,8 +43,8 @@ import org.kiji.schema.KijiRowData;
  * <p>
  *   A {@link KijiPivoter} scans the rows from an input KijiTable and write cells into an
  *   output KijiTable. The input and the output Kiji tables may or may not be the same.
- *   Contrary to a {@link KijiProducer}, a {@link KijiPivoter} is free to write cells to any
- *   column of any row in the output table.
+ *   Contrary to a {@link org.kiji.mapreduce.produce.KijiProducer}, a {@link KijiPivoter} is free
+ *   to write cells to any column of any row in the output table.
  * </p>
  *
  * <h1>Lifecycle:</h1>
@@ -147,7 +147,7 @@ public abstract class KijiPivoter
 
   /**
    * Called once to initialize this pivoter before any calls to
-   * {@link #produce(KijiRowData, pivoterContext)}.
+   * {@link KijiPivoter#produce(KijiRowData, KijiTableContext)}.
    *
    * @param context The KijiContext providing access to KeyValueStores, Counters, etc.
    * @throws IOException on I/O error.

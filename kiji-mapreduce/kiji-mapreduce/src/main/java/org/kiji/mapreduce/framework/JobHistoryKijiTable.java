@@ -42,7 +42,6 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.layout.KijiTableLayout;
-import org.kiji.schema.util.ResourceUtils;
 
 /**
  * A class providing an API to install and access the job history kiji table.
@@ -147,8 +146,8 @@ public final class JobHistoryKijiTable implements Closeable {
    * @throws IOException If there is an error writing to the table.
    */
   public void recordJob(Job job, long startTime, long endTime) throws IOException {
-    KijiTableWriter writer = mKijiTable.openTableWriter();
     EntityId jobEntity = mKijiTable.getEntityId(job.getJobID().toString());
+    KijiTableWriter writer = mKijiTable.openTableWriter();
     try {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       writer.put(jobEntity, JOB_HISTORY_FAMILY, JOB_HISTORY_ID_QUALIFIER,
@@ -168,7 +167,7 @@ public final class JobHistoryKijiTable implements Closeable {
           startTime, baos.toString("UTF-8"));
       writeIndividualCounters(writer, job);
     } finally {
-      ResourceUtils.closeOrLog(writer);
+      writer.close();
     }
   }
 
@@ -204,13 +203,13 @@ public final class JobHistoryKijiTable implements Closeable {
    * @throws IOException If there is an IO error retrieving the data.
    */
   public JobHistoryEntry getJobDetails(String jobId) throws IOException {
-    final KijiTableReader reader = mKijiTable.openTableReader();
     KijiDataRequestBuilder builder = KijiDataRequest.builder();
     builder.newColumnsDef().addFamily("info")
         .addFamily("counters")
         .addFamily("extendedInfo");
     final KijiDataRequest request = builder.build();
     final KijiRowData data;
+    final KijiTableReader reader = mKijiTable.openTableReader();
     try {
       data = reader.get(mKijiTable.getEntityId(jobId), request);
     } finally {
@@ -243,13 +242,13 @@ public final class JobHistoryKijiTable implements Closeable {
    * @throws IOException If there is an IO error retrieving the data.
    */
   public KijiRowScanner getJobScanner() throws IOException {
-    KijiTableReader wtr = mKijiTable.openTableReader();
     KijiDataRequest wdr = KijiDataRequest.create("info");
 
+    KijiTableReader wtr = mKijiTable.openTableReader();
     try {
       return wtr.getScanner(wdr);
     } finally {
-      ResourceUtils.closeOrLog(wtr);
+      wtr.close();
     }
   }
 

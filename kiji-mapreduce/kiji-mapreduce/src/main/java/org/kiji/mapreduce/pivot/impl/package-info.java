@@ -18,7 +18,7 @@
  */
 
 /**
- * Implementation classes for {@link KijiPivoter},
- * intended for private, internal use by KijiMR.
+ * Implementation classes for {@link org.kiji.mapreduce.pivot.KijiPivoter}, intended for private,
+ * internal use by KijiMR.
  */
 package org.kiji.mapreduce.pivot.impl;

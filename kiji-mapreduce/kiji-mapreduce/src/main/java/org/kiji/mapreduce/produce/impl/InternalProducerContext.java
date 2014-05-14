@@ -73,8 +73,7 @@ public final class InternalProducerContext
   }
 
   /**
-   * Creates a new implementation of {@link InternalProducerContextInterface} for use by Kiji
-   * producers.
+   * Creates a new implementation of {@link InternalProducerContext} for use by Kiji producers.
    *
    * @param taskContext is the Hadoop {@link TaskInputOutputContext} to which the new context's
    *    functionality will be delegated.
@@ -89,7 +88,7 @@ public final class InternalProducerContext
   }
 
   /**
-   * Gets an EntityId as set by {@link setEntityId()}.
+   * Gets an EntityId as set by {@link #setEntityId(EntityId)} ()}.
    *
    * @return the previously set EntityId.
    */

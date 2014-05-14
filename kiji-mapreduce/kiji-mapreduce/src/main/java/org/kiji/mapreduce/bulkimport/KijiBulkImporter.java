@@ -38,9 +38,9 @@ import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
  * passed to the --importer flag of a <code>kiji bulk-import</code> command.</p>
  *
  * <p>To implement your own bulk importer, extend KijiBulkImporter and implement the
- * {@link #produce(Object, Object, org.kiji.mapreduce.KijiTableContext)} method to process
+ * {@link #produce(Object, Object, KijiTableContext)} method to process
  * your input.  To write data to Kiji, call the appropriate <code>put()</code> method of the
- * {@link org.kiji.mapreduce.KijiTableContext}.</p>
+ * {@link KijiTableContext}.</p>
  *
  * <h1>Lifecycle:</h1>
  *
@@ -131,10 +131,10 @@ public abstract class KijiBulkImporter<K, V>
 
   /**
    * Called once to initialize this bulk importer before any calls to
-   * {@link #produce(Object, Object, org.kiji.mapreduce.KijiTableContext)}.
+   * {@link #produce(Object, Object, KijiTableContext)}.
    *
    * @param context A context you can use to generate EntityIds and commit writes.
-   *     See {@link org.kiji.mapreduce.KijiTableContext#getEntityId(Object...)}.
+   *     See {@link KijiTableContext#getEntityId(Object...)}.
    * @throws IOException on I/O error.
    */
   public void setup(KijiTableContext context) throws IOException {
@@ -156,8 +156,8 @@ public abstract class KijiBulkImporter<K, V>
    * @param key The MapReduce input key (its type depends on the InputFormat you use).
    * @param value The MapReduce input value (its type depends on the InputFormat you use).
    * @param context A context you can use to generate EntityIds and commit writes.
-   *     See {@link org.kiji.mapreduce.KijiTableContext#getEntityId(Object...)} and
-   *     {@link org.kiji.schema.KijiPutter#put(org.kiji.schema.EntityId, String, String, T)}.
+   *     See {@link KijiTableContext#getEntityId(Object...)} and
+   *     {@link org.kiji.schema.KijiPutter#put(org.kiji.schema.EntityId, String, String, Object)}.
    * @throws IOException on I/O error.
    */
   public abstract void produce(K key, V value, KijiTableContext context)
@@ -165,10 +165,10 @@ public abstract class KijiBulkImporter<K, V>
 
   /**
    * Called once to clean up this bulk importer after all
-   * {@link #produce(Object, Object, org.kiji.mapreduce.KijiTableContext)} calls are made.
+   * {@link #produce(Object, Object, KijiTableContext)} calls are made.
    *
    * @param context A context you can use to generate EntityIds and commit writes.
-   *     See {@link org.kiji.mapreduce.KijiTableContext#getEntityId(Object...)}.
+   *     See {@link KijiTableContext#getEntityId(Object...)}.
    * @throws IOException on I/O error.
    */
   public void cleanup(KijiTableContext context) throws IOException {

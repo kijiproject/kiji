@@ -21,11 +21,11 @@
  * Pivot classes for KijiMR clients.
  *
  * <p>
- *   A {@link KijiPivoter} scans over the rows of an input Kiji table and writes cells
- *   into an output Kiji table which may or may not be the same table.
- *   The {@link KijiPivoter} class is the base class for all pivoter job.
- *   Conceptually, a {@link KijiPivoter} is a map-only job that reads from a Kiji table
- *   and writes to a Kiji table.
+ *   A {@link org.kiji.mapreduce.pivot.KijiPivoter} scans over the rows of an input Kiji table and
+ *   writes cells into an output Kiji table which may or may not be the same table. The
+ *   {@link org.kiji.mapreduce.pivot.KijiPivoter} class is the base class for all pivoter job.
+ *   Conceptually, a {@link org.kiji.mapreduce.pivot.KijiPivoter} is a map-only job that reads from
+ *   a Kiji table and writes to a Kiji table.
  * </p>
  *
  * <h2>Constructing a pivot job:</h2>

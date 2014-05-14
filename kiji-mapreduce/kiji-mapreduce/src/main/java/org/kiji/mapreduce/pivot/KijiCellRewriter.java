@@ -68,7 +68,7 @@ import org.kiji.schema.layout.ColumnReaderSpec;
  *   or to the same column or family of a different Kiji table, potentially in a different Kiji
  *   instance.
  * <br/>
- *   An example demonstrating how to use this job is available in {@link TestKijiCellRewriter}.
+ *   An example demonstrating how to use this job is available in {@code TestKijiCellRewriter}.
  * </p>
  */
 @ApiAudience.Public

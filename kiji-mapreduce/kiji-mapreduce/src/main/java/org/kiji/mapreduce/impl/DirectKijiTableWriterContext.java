@@ -33,7 +33,6 @@ import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiPutter;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.util.ResourceUtils;
 
 /**
  * Kiji context that writes cells to a configured output table.
@@ -122,9 +121,9 @@ public final class DirectKijiTableWriterContext
   /** {@inheritDoc} */
   @Override
   public void close() throws IOException {
-    ResourceUtils.closeOrLog(mPutter);
-    ResourceUtils.releaseOrLog(mTable);
-    ResourceUtils.releaseOrLog(mKiji);
+    mPutter.close();
+    mTable.release();
+    mKiji.release();
     super.close();
   }
 }
