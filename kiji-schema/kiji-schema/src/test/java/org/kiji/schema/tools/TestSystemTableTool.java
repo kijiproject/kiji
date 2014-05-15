@@ -98,4 +98,19 @@ public class TestSystemTableTool extends KijiToolTest {
         runTool(st, "--kiji=" + kiji.getURI(), "--do=get", "invalidKey"));
     assertEquals(mToolOutputStr.trim(), "No system table property named 'invalidKey'.");
   }
+
+    @Test
+    public void testPutShouldNotPromptWhenOriginalValueIsNull() throws Exception {
+        final Kiji kiji = getKiji();
+        final SystemTableTool st = new SystemTableTool();
+
+        assertEquals(BaseTool.SUCCESS, runToolWithInput(
+                // in case we are prompted to overwrite the existing value for testPutKey we are
+                // saying "no" which should cause the assertion below to fail
+                st, "no", "--kiji=" + kiji.getURI(),
+                "--do=put", "testPutKey", "testPutValue", "--interactive=true"));
+        assertEquals(
+                Bytes.toString(kiji.getSystemTable().getValue("testPutKey")), "testPutValue");
+    }
 }
+
