@@ -954,7 +954,7 @@ public final class KijiFreshnessManager implements Closeable {
     } else {
       final KijiFreshenerRecord record = retrieveFreshenerRecord(tableName, columnName);
 
-      return validateRecord(tableName, columnName, record, false);
+      return validateRecord(tableName, columnName, record, true);
     }
   }
 
