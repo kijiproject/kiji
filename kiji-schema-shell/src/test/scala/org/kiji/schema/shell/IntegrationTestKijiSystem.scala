@@ -358,6 +358,7 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       res7.successful mustEqual true
       val env8 = res7.get.exec()
 
+      environment.kijiSystem.shutdown()
       env8.kijiSystem.shutdown()
 
       ok("Completed test")
