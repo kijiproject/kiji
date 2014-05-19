@@ -90,7 +90,7 @@ class IntegrationTestSimpleFlow extends AbstractKijiIntegrationTest {
     try {
       val table = kiji.openTable(TableName)
       try {
-        new InstanceBuilder()
+        new InstanceBuilder(kiji)
             .withTable(table)
                 .withRow("row1")
                     .withFamily("info")
@@ -107,7 +107,7 @@ class IntegrationTestSimpleFlow extends AbstractKijiIntegrationTest {
               .withTableURI(table.getURI.toString)
               .withColumns("info:email" -> 'email)
               .build
-              .groupAll { group => group.size() }
+              .groupAll { group => group.size }
               .debug
               .write(NullSource)
         }

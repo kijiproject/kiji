@@ -419,65 +419,57 @@ object KijiScheme {
     result.add(entityId)
 
     def rowToTupleColumnFamily(cf: ColumnFamilyInputSpec) {
-      if (row.containsColumn(cf.family)) {
-        cf.pagingSpec match {
-          case PagingSpec.Off => {
-            val stream: Seq[FlowCell[_]] = row
-                .iterator(cf.family)
-                .asScala
-                .toList
-                .map { kijiCell: KijiCell[_] => FlowCell(kijiCell) }
-            result.add(stream)
-          }
-          case PagingSpec.Cells(pageSize) => {
-            def genItr(): Iterator[FlowCell[_]] = {
-              new MapFamilyVersionIterator(row, cf.family, qualifierPageSize, pageSize)
-                  .asScala
-                  .map { entry: MapFamilyVersionIterator.Entry[_] =>
-                    FlowCell(
-                        cf.family,
-                        entry.getQualifier,
-                        entry.getTimestamp,
-                        AvroUtil.avroToScala(entry.getValue))
-              }
-            }
-            result.add(new TransientStream(genItr))
-          }
+      cf.pagingSpec match {
+        case PagingSpec.Off => {
+          val stream: Seq[FlowCell[_]] = row
+              .iterator(cf.family)
+              .asScala
+              .toList
+              .map { kijiCell: KijiCell[_] => FlowCell(kijiCell) }
+          result.add(stream)
         }
-      } else {
-        result.add(Seq())
+        case PagingSpec.Cells(pageSize) => {
+          def genItr(): Iterator[FlowCell[_]] = {
+            new MapFamilyVersionIterator(row, cf.family, qualifierPageSize, pageSize)
+                .asScala
+                .map { entry: MapFamilyVersionIterator.Entry[_] =>
+                  FlowCell(
+                      cf.family,
+                      entry.getQualifier,
+                      entry.getTimestamp,
+                      AvroUtil.avroToScala(entry.getValue))
+            }
+          }
+          result.add(new TransientStream(genItr))
+        }
       }
     }
 
     def rowToTupleQualifiedColumn(qc: QualifiedColumnInputSpec) {
-      if (row.containsColumn(qc.family, qc.qualifier)) {
-        qc.pagingSpec match {
-          case PagingSpec.Off => {
-            val stream: Seq[FlowCell[_]] = row
-                .iterator(qc.family, qc.qualifier)
-                .asScala
-                .toList
-                .map { kijiCell: KijiCell[_] => FlowCell(kijiCell) }
-            result.add(stream)
-          }
-          case PagingSpec.Cells(pageSize) => {
-            def genItr(): Iterator[FlowCell[_]] = {
-              new ColumnVersionIterator(row, qc.family, qc.qualifier, pageSize)
-                  .asScala
-                  .map { entry: java.util.Map.Entry[java.lang.Long,_] =>
-                    FlowCell(
-                      qc.family,
-                      qc.qualifier,
-                      entry.getKey,
-                      AvroUtil.avroToScala(entry.getValue)
-                    )
-                  }
-            }
-            result.add(new TransientStream(genItr))
-          }
+      qc.pagingSpec match {
+        case PagingSpec.Off => {
+          val stream: Seq[FlowCell[_]] = row
+              .iterator(qc.family, qc.qualifier)
+              .asScala
+              .toList
+              .map { kijiCell: KijiCell[_] => FlowCell(kijiCell) }
+          result.add(stream)
         }
-      } else {
-        result.add(Seq())
+        case PagingSpec.Cells(pageSize) => {
+          def genItr(): Iterator[FlowCell[_]] = {
+            new ColumnVersionIterator(row, qc.family, qc.qualifier, pageSize)
+                .asScala
+                .map { entry: java.util.Map.Entry[java.lang.Long,_] =>
+                  FlowCell(
+                    qc.family,
+                    qc.qualifier,
+                    entry.getKey,
+                    AvroUtil.avroToScala(entry.getValue)
+                  )
+                }
+          }
+          result.add(new TransientStream(genItr))
+        }
       }
     }
 
