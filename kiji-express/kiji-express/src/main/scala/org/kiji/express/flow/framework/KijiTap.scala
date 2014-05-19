@@ -97,7 +97,7 @@ final class KijiTap(
   private val logger: Logger = LoggerFactory.getLogger(classOf[KijiTap])
 
   /** Address of the table to read from or write to. */
-  private val tableUri: String = uri.toString
+  private[express] val tableUri: String = uri.toString
 
   /** Unique identifier for this KijiTap instance. */
   private val id: String = UUID.randomUUID().toString

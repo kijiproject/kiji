@@ -67,7 +67,7 @@ final private[express] class LocalKijiTap(
         scheme.asInstanceOf[Scheme[Properties, InputStream, OutputStream, _, _]]) {
 
   /** The URI of the table to be read through this tap. */
-  private val tableAddress: String = uri.toString
+  private[express] val tableUri: String = uri.toString
 
   /** A unique identifier for this tap instance. */
   private val id: String = UUID.randomUUID().toString
@@ -84,7 +84,7 @@ final private[express] class LocalKijiTap(
       flow: FlowProcess[Properties],
       conf: Properties) {
     // Store the input table.
-    conf.setProperty(KijiConfKeys.KIJI_INPUT_TABLE_URI, tableAddress)
+    conf.setProperty(KijiConfKeys.KIJI_INPUT_TABLE_URI, tableUri)
 
     super.sourceConfInit(flow, conf)
   }
@@ -101,7 +101,7 @@ final private[express] class LocalKijiTap(
       flow: FlowProcess[Properties],
       conf: Properties) {
     // Store the output table.
-    conf.setProperty(KijiConfKeys.KIJI_OUTPUT_TABLE_URI, tableAddress)
+    conf.setProperty(KijiConfKeys.KIJI_OUTPUT_TABLE_URI, tableUri)
 
     super.sinkConfInit(flow, conf)
   }
@@ -199,13 +199,13 @@ final private[express] class LocalKijiTap(
   override def getModifiedTime(conf: Properties): Long = System.currentTimeMillis()
 
   override def equals(obj: Any): Boolean = obj match {
-    case other: LocalKijiTap => (tableAddress == other.tableAddress
+    case other: LocalKijiTap => (tableUri == other.tableUri
         && scheme == other.scheme
         && id == other.id)
     case _ => false
   }
 
-  override def hashCode(): Int = Objects.hashCode(tableAddress, scheme, id)
+  override def hashCode(): Int = Objects.hashCode(tableUri, scheme, id)
 
   /**
    * Checks whether the instance, tables, and columns this tap uses can be accessed.
