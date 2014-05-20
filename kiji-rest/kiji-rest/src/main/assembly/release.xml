@@ -69,6 +69,12 @@ http://maven.apache.org/xsd/assembly-1.1.2.xsd">
         <exclude>options</exclude>
       </excludes>
     </fileSet>
+    <fileSet>
+      <!-- rest clients -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>clients</outputDirectory>
+      <directory>${project.basedir}/../clients</directory>
+    </fileSet>
   </fileSets>
   <dependencySets>
     <dependencySet>
