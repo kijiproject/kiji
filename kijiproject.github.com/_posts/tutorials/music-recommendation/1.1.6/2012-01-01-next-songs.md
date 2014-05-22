@@ -43,7 +43,7 @@ This reducer
 
 
 #### Create an ordered Collection
-In out setup method, we instantiate a TreeSet that will be reused. TreeSets use their comparator
+In our setup method, we instantiate a TreeSet that will be reused. TreeSets use their comparator
 (as opposed to a class' equals method) to determine if an element is already in the set. In order
 for our TreeSet to contain multiple SongCount records with the same count, we must make sure
 that our comparator differentiates SongCount records with the same number of counts, but with
