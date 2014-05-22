@@ -57,7 +57,7 @@ IncrementTalkTime uses MapReduce to calculate the talk time per person in the ca
 extending the Hadoop Mapper class. You can find more information about Hadoop MapReduce [here](http://hadoop.apache.org/).
 
 The application starts by configuring a Hadoop job. Note that we need to ship certain jars
-that we depend on during the *map* task. Here\'s how we do this:
+that we depend on during the *map* task. Here's how we do this:
 
 {% highlight java %}
 GenericTableMapReduceUtil.addAllDependencyJars(job);

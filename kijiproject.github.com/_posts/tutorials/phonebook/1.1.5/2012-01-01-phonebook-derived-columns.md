@@ -34,7 +34,7 @@ and zip code (the derived columns) to make it easier for you to get this informa
 ### AddressFieldExtractor.java
 
 The run function begins by creating an HBase configuration, and configuring the MapReduce task.
-Note that we need to ship certain jars that we depend on during the *map* task. Here\'s how we
+Note that we need to ship certain jars that we depend on during the *map* task. Here's how we
 do this:
 
 {% highlight java %}
