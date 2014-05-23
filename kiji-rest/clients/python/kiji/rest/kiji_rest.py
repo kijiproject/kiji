@@ -115,7 +115,7 @@ class KijiRestClient(object):
   @property
   def admin_address(self):
     """Returns: 'host:port' admin address of the KijiREST server, as a string."""
-    return self._admiin_address
+    return self._admin_address
 
   def Request(
       self,
