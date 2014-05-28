@@ -45,13 +45,13 @@ import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
-import org.kiji.schema.util.ResourceUtils;
 
 public class TestKijiTableRecordReader extends KijiClientTest {
   private static final Long TIMESTAMP = 1L;
   private Kiji mKiji;
   private KijiTable mTable;
   private KijiTableReader mReader;
+  private Configuration mConf;
 
   private static final String TABLE_NAME = "user";
 
@@ -75,13 +75,14 @@ public class TestKijiTableRecordReader extends KijiClientTest {
     // Fill local variables.
     mTable = mKiji.openTable(TABLE_NAME);
     mReader = mTable.openTableReader();
+    mConf = getConf();
   }
 
   @After
   public void cleanupEnvironment() throws IOException {
-    ResourceUtils.closeOrLog(mReader);
-    ResourceUtils.releaseOrLog(mTable);
-    ResourceUtils.releaseOrLog(mKiji);
+    mReader.close();
+    mTable.release();
+    mKiji.release();
   }
 
   @Test
@@ -92,36 +93,39 @@ public class TestKijiTableRecordReader extends KijiClientTest {
     KijiTableInputSplit tableInputSplit =
         new KijiTableInputSplit(kijiURI, startKey, endKey, null, null);
 
-    Configuration conf = getConf();
     KijiDataRequest kijiDataRequest = KijiDataRequest.create("info", "name");
-    conf.set(KijiTableSerDe.HIVE_TABLE_NAME_PROPERTY, TABLE_NAME);
-    conf.set(KijiTableInputFormat.CONF_KIJI_DATA_REQUEST_PREFIX + TABLE_NAME,
+    mConf.set(KijiTableSerDe.HIVE_TABLE_NAME_PROPERTY, TABLE_NAME);
+    mConf.set(KijiTableInputFormat.CONF_KIJI_DATA_REQUEST_PREFIX + TABLE_NAME,
         KijiDataRequestSerializer.serialize(kijiDataRequest));
 
-    // Initialize KijiTableRecordReader
-    KijiTableRecordReader tableRecordReader = new KijiTableRecordReader(tableInputSplit, conf);
-
-    // Retrieve result
-    ImmutableBytesWritable key = new ImmutableBytesWritable();
-    KijiRowDataWritable value = new KijiRowDataWritable();
-    int resultCount = 0;
-    boolean hasResult = tableRecordReader.next(key, value);
-    while (hasResult) {
-      resultCount++;
-      hasResult = tableRecordReader.next(key, value);
+    KijiTableRecordReader tableRecordReader = new KijiTableRecordReader(tableInputSplit, mConf);
+    try {
+      // Retrieve result
+      ImmutableBytesWritable key = new ImmutableBytesWritable();
+      KijiRowDataWritable value = new KijiRowDataWritable();
+      int resultCount = 0;
+      boolean hasResult = tableRecordReader.next(key, value);
+      while (hasResult) {
+        resultCount++;
+        hasResult = tableRecordReader.next(key, value);
+      }
+      assertEquals(2, resultCount);
+    } finally {
+      tableRecordReader.close();
     }
-    assertEquals(2, resultCount);
   }
 
   @Test
   public void testFetchPagedCellData() throws IOException {
     // Add some extra versions of the rows so that we can page through the results.
     KijiTableWriter kijiTableWriter = mTable.openTableWriter();
-    EntityId entityId = mTable.getEntityId("foo");
-    kijiTableWriter.put(entityId, "info", "name", TIMESTAMP + 1, "foo-val-update1");
-    kijiTableWriter.put(entityId, "info", "name", TIMESTAMP + 2, "foo-val-update2");
-
-    ResourceUtils.closeOrLog(kijiTableWriter);
+    try {
+      EntityId entityId = mTable.getEntityId("foo");
+      kijiTableWriter.put(entityId, "info", "name", TIMESTAMP + 1, "foo-val-update1");
+      kijiTableWriter.put(entityId, "info", "name", TIMESTAMP + 2, "foo-val-update2");
+    } finally {
+      kijiTableWriter.close();
+    }
 
     KijiURI kijiURI = mTable.getURI();
     byte[] startKey = new byte[0];
@@ -129,46 +133,49 @@ public class TestKijiTableRecordReader extends KijiClientTest {
     KijiTableInputSplit tableInputSplit =
         new KijiTableInputSplit(kijiURI, startKey, endKey, null, null);
 
-    Configuration conf = getConf();
     KijiDataRequest kijiDataRequest = KijiDataRequest.builder()
         .addColumns(ColumnsDef.create().withMaxVersions(10).withPageSize(1).add("info", "name"))
         .build();
 
-    conf.set(KijiTableSerDe.HIVE_TABLE_NAME_PROPERTY, TABLE_NAME);
-    conf.set(KijiTableInputFormat.CONF_KIJI_DATA_REQUEST_PREFIX + TABLE_NAME,
+    mConf.set(KijiTableSerDe.HIVE_TABLE_NAME_PROPERTY, TABLE_NAME);
+    mConf.set(KijiTableInputFormat.CONF_KIJI_DATA_REQUEST_PREFIX + TABLE_NAME,
         KijiDataRequestSerializer.serialize(kijiDataRequest));
 
-    // Initialize KijiTableRecordReader
-    KijiTableRecordReader tableRecordReader = new KijiTableRecordReader(tableInputSplit, conf);
+    KijiTableRecordReader tableRecordReader = new KijiTableRecordReader(tableInputSplit, mConf);
+    try {
+      // Retrieve result
+      ImmutableBytesWritable key = new ImmutableBytesWritable();
+      KijiRowDataWritable value = new KijiRowDataWritable();
+      int resultCount = 0;
+      boolean hasResult = tableRecordReader.next(key, value);
+      while (hasResult) {
+        resultCount++;
+        hasResult = tableRecordReader.next(key, value);
+      }
 
-    // Retrieve result
-    ImmutableBytesWritable key = new ImmutableBytesWritable();
-    KijiRowDataWritable value = new KijiRowDataWritable();
-    int resultCount = 0;
-    boolean hasResult = tableRecordReader.next(key, value);
-    while (hasResult) {
-      resultCount++;
-      hasResult = tableRecordReader.next(key, value);
+      // Should read 4 cells, 3 for foo, 1 for bar.  See testFetchData() for a nonpaged example that
+      // has 2 results.
+      assertEquals(4, resultCount);
+    } finally {
+      tableRecordReader.close();
     }
-
-    // Should read 4 cells, 3 for foo, 1 for bar.  See testFetchData() for a nonpaged example that
-    // has 2 results.
-    assertEquals(4, resultCount);
-    ResourceUtils.closeOrLog(tableRecordReader);
   }
 
   @Test
   public void testMultiplePagedCellColumns() throws IOException {
     // Add some extra versions of the rows so that we can page through the results.
     KijiTableWriter kijiTableWriter = mTable.openTableWriter();
-    EntityId entityId = mTable.getEntityId("foo");
-    kijiTableWriter.put(entityId, "info", "name", TIMESTAMP + 1, "foo-val-update1");
-    kijiTableWriter.put(entityId, "info", "name", TIMESTAMP + 2, "foo-val-update2");
-    kijiTableWriter.put(entityId, "info", "location", TIMESTAMP, "foo-location");
-    kijiTableWriter.put(entityId, "info", "location", TIMESTAMP + 1, "foo-location-update1");
-    kijiTableWriter.put(entityId, "info", "location", TIMESTAMP + 2, "foo-location-update2");
-    kijiTableWriter.put(entityId, "info", "location", TIMESTAMP + 3, "foo-location-update3");
-    ResourceUtils.closeOrLog(kijiTableWriter);
+    try {
+      EntityId entityId = mTable.getEntityId("foo");
+      kijiTableWriter.put(entityId, "info", "name", TIMESTAMP + 1, "foo-val-update1");
+      kijiTableWriter.put(entityId, "info", "name", TIMESTAMP + 2, "foo-val-update2");
+      kijiTableWriter.put(entityId, "info", "location", TIMESTAMP, "foo-location");
+      kijiTableWriter.put(entityId, "info", "location", TIMESTAMP + 1, "foo-location-update1");
+      kijiTableWriter.put(entityId, "info", "location", TIMESTAMP + 2, "foo-location-update2");
+      kijiTableWriter.put(entityId, "info", "location", TIMESTAMP + 3, "foo-location-update3");
+    } finally {
+      kijiTableWriter.close();
+    }
 
     KijiURI kijiURI = mTable.getURI();
     byte[] startKey = new byte[0];
@@ -176,46 +183,48 @@ public class TestKijiTableRecordReader extends KijiClientTest {
     KijiTableInputSplit tableInputSplit =
         new KijiTableInputSplit(kijiURI, startKey, endKey, null, null);
 
-    Configuration conf = getConf();
     KijiDataRequest kijiDataRequest = KijiDataRequest.builder()
         .addColumns(ColumnsDef.create().withMaxVersions(9).withPageSize(1).add("info", "name"))
         .addColumns(ColumnsDef.create().withMaxVersions(9).withPageSize(1).add("info", "location"))
         .build();
 
-    conf.set(KijiTableSerDe.HIVE_TABLE_NAME_PROPERTY, TABLE_NAME);
-    conf.set(KijiTableInputFormat.CONF_KIJI_DATA_REQUEST_PREFIX + TABLE_NAME,
+    mConf.set(KijiTableSerDe.HIVE_TABLE_NAME_PROPERTY, TABLE_NAME);
+    mConf.set(KijiTableInputFormat.CONF_KIJI_DATA_REQUEST_PREFIX + TABLE_NAME,
         KijiDataRequestSerializer.serialize(kijiDataRequest));
 
-    // Initialize KijiTableRecordReader
-    KijiTableRecordReader tableRecordReader = new KijiTableRecordReader(tableInputSplit, conf);
+    KijiTableRecordReader tableRecordReader = new KijiTableRecordReader(tableInputSplit, mConf);
+    try {
+      // Retrieve result
+      ImmutableBytesWritable key = new ImmutableBytesWritable();
+      KijiRowDataWritable value = new KijiRowDataWritable();
+      int resultCount = 0;
+      boolean hasResult = tableRecordReader.next(key, value);
+      while (hasResult) {
+        resultCount++;
+        hasResult = tableRecordReader.next(key, value);
+      }
 
-    // Retrieve result
-    ImmutableBytesWritable key = new ImmutableBytesWritable();
-    KijiRowDataWritable value = new KijiRowDataWritable();
-    int resultCount = 0;
-    boolean hasResult = tableRecordReader.next(key, value);
-    while (hasResult) {
-      resultCount++;
-      hasResult = tableRecordReader.next(key, value);
+      // Should read 4 cells, 3 for foo, 1 for bar.
+      assertEquals(5, resultCount);
+    } finally {
+      tableRecordReader.close();
     }
-
-    // Should read 4 cells, 3 for foo, 1 for bar.
-    assertEquals(5, resultCount);
-    ResourceUtils.closeOrLog(tableRecordReader);
   }
 
   @Test
   public void testFetchPagedQualifierData() throws IOException {
     // Add some extra versions of the rows so that we can page through the results.
     KijiTableWriter kijiTableWriter = mTable.openTableWriter();
-    EntityId entityId = mTable.getEntityId("foo");
-    kijiTableWriter.put(entityId, "jobs", "foo1", TIMESTAMP, "bar1");
-    kijiTableWriter.put(entityId, "jobs", "foo2", TIMESTAMP, "bar2");
-    kijiTableWriter.put(entityId, "jobs", "foo3", TIMESTAMP, "bar3");
-    kijiTableWriter.put(entityId, "jobs", "foo4", TIMESTAMP, "bar4");
-    kijiTableWriter.put(entityId, "jobs", "foo5", TIMESTAMP, "bar5");
-
-    ResourceUtils.closeOrLog(kijiTableWriter);
+    try {
+      EntityId entityId = mTable.getEntityId("foo");
+      kijiTableWriter.put(entityId, "jobs", "foo1", TIMESTAMP, "bar1");
+      kijiTableWriter.put(entityId, "jobs", "foo2", TIMESTAMP, "bar2");
+      kijiTableWriter.put(entityId, "jobs", "foo3", TIMESTAMP, "bar3");
+      kijiTableWriter.put(entityId, "jobs", "foo4", TIMESTAMP, "bar4");
+      kijiTableWriter.put(entityId, "jobs", "foo5", TIMESTAMP, "bar5");
+    } finally {
+      kijiTableWriter.close();
+    }
 
     KijiURI kijiURI = mTable.getURI();
     byte[] startKey = new byte[0];
@@ -223,48 +232,51 @@ public class TestKijiTableRecordReader extends KijiClientTest {
     KijiTableInputSplit tableInputSplit =
         new KijiTableInputSplit(kijiURI, startKey, endKey, null, null);
 
-    Configuration conf = getConf();
     KijiDataRequest kijiDataRequest = KijiDataRequest.builder()
         .addColumns(ColumnsDef.create().withPageSize(2).addFamily("jobs"))
         .build();
 
-    conf.set(KijiTableSerDe.HIVE_TABLE_NAME_PROPERTY, TABLE_NAME);
-    conf.set(KijiTableInputFormat.CONF_KIJI_DATA_REQUEST_PREFIX + TABLE_NAME,
+    mConf.set(KijiTableSerDe.HIVE_TABLE_NAME_PROPERTY, TABLE_NAME);
+    mConf.set(KijiTableInputFormat.CONF_KIJI_DATA_REQUEST_PREFIX + TABLE_NAME,
         KijiDataRequestSerializer.serialize(kijiDataRequest));
 
     // Initialize KijiTableRecordReader
-    KijiTableRecordReader tableRecordReader = new KijiTableRecordReader(tableInputSplit, conf);
+    KijiTableRecordReader tableRecordReader = new KijiTableRecordReader(tableInputSplit, mConf);
+    try {
+      // Retrieve result
+      ImmutableBytesWritable key = new ImmutableBytesWritable();
+      KijiRowDataWritable value = new KijiRowDataWritable();
+      int resultCount = 0;
+      boolean hasResult = tableRecordReader.next(key, value);
 
-    // Retrieve result
-    ImmutableBytesWritable key = new ImmutableBytesWritable();
-    KijiRowDataWritable value = new KijiRowDataWritable();
-    int resultCount = 0;
-    boolean hasResult = tableRecordReader.next(key, value);
+      while (hasResult) {
+        resultCount++;
+        hasResult = tableRecordReader.next(key, value);
+        // Ensure that each page of mapped qualifier results is at most 2.
+        assertTrue(value.getData().size() <= 2);
+      }
 
-    while (hasResult) {
-      resultCount++;
-      hasResult = tableRecordReader.next(key, value);
-      // Ensure that each page of mapped qualifier results is at most 2.
-      assertTrue(value.getData().size() <= 2);
+      // Should read 3 rows
+      assertEquals(3, resultCount);
+    } finally {
+      tableRecordReader.close();
     }
-
-    // Should read 3 rows
-    assertEquals(3, resultCount);
-    ResourceUtils.closeOrLog(tableRecordReader);
   }
 
   @Test
   public void testFetchPagedQualifierAndCellsData() throws IOException {
     // Add some extra versions of the rows so that we can page through the results.
     KijiTableWriter kijiTableWriter = mTable.openTableWriter();
-    EntityId entityId = mTable.getEntityId("foo");
-    kijiTableWriter.put(entityId, "jobs", "foo1", TIMESTAMP, "bar1");
-    kijiTableWriter.put(entityId, "jobs", "foo1", TIMESTAMP + 1, "bar1+1");
-    kijiTableWriter.put(entityId, "jobs", "foo1", TIMESTAMP + 2, "bar1+2");
-    kijiTableWriter.put(entityId, "jobs", "foo2", TIMESTAMP, "bar2");
-    kijiTableWriter.put(entityId, "jobs", "foo3", TIMESTAMP, "bar3");
-
-    ResourceUtils.closeOrLog(kijiTableWriter);
+    try {
+      EntityId entityId = mTable.getEntityId("foo");
+      kijiTableWriter.put(entityId, "jobs", "foo1", TIMESTAMP, "bar1");
+      kijiTableWriter.put(entityId, "jobs", "foo1", TIMESTAMP + 1, "bar1+1");
+      kijiTableWriter.put(entityId, "jobs", "foo1", TIMESTAMP + 2, "bar1+2");
+      kijiTableWriter.put(entityId, "jobs", "foo2", TIMESTAMP, "bar2");
+      kijiTableWriter.put(entityId, "jobs", "foo3", TIMESTAMP, "bar3");
+    } finally {
+      kijiTableWriter.close();
+    }
 
     KijiURI kijiURI = mTable.getURI();
     byte[] startKey = new byte[0];
@@ -272,7 +284,6 @@ public class TestKijiTableRecordReader extends KijiClientTest {
     KijiTableInputSplit tableInputSplit =
         new KijiTableInputSplit(kijiURI, startKey, endKey, null, null);
 
-    Configuration conf = getConf();
     KijiDataRequest kijiDataRequest = KijiDataRequest.builder()
         .addColumns(ColumnsDef.create()
             .withPageSize(1)
@@ -280,27 +291,28 @@ public class TestKijiTableRecordReader extends KijiClientTest {
             .addFamily("jobs"))
         .build();
 
-    conf.set(KijiTableSerDe.HIVE_TABLE_NAME_PROPERTY, TABLE_NAME);
-    conf.set(KijiTableInputFormat.CONF_KIJI_DATA_REQUEST_PREFIX + TABLE_NAME,
+    mConf.set(KijiTableSerDe.HIVE_TABLE_NAME_PROPERTY, TABLE_NAME);
+    mConf.set(KijiTableInputFormat.CONF_KIJI_DATA_REQUEST_PREFIX + TABLE_NAME,
         KijiDataRequestSerializer.serialize(kijiDataRequest));
 
-    // Initialize KijiTableRecordReader
-    KijiTableRecordReader tableRecordReader = new KijiTableRecordReader(tableInputSplit, conf);
+    KijiTableRecordReader tableRecordReader = new KijiTableRecordReader(tableInputSplit, mConf);
+    try {
+      // Retrieve result
+      ImmutableBytesWritable key = new ImmutableBytesWritable();
+      KijiRowDataWritable value = new KijiRowDataWritable();
+      int resultCount = 0;
+      boolean hasResult = tableRecordReader.next(key, value);
+      while (hasResult) {
+        resultCount++;
+        hasResult = tableRecordReader.next(key, value);
+        // Ensure that each page of mapped qualifier results is at most 2.
+        assertTrue(value.getData().size() <= 2);
+      }
 
-    // Retrieve result
-    ImmutableBytesWritable key = new ImmutableBytesWritable();
-    KijiRowDataWritable value = new KijiRowDataWritable();
-    int resultCount = 0;
-    boolean hasResult = tableRecordReader.next(key, value);
-    while (hasResult) {
-      resultCount++;
-      hasResult = tableRecordReader.next(key, value);
-      // Ensure that each page of mapped qualifier results is at most 2.
-      assertTrue(value.getData().size() <= 2);
+      // Should read 3 rows
+      assertEquals(5, resultCount);
+    } finally {
+      tableRecordReader.close();
     }
-
-    // Should read 3 rows
-    assertEquals(5, resultCount);
-    ResourceUtils.closeOrLog(tableRecordReader);
   }
 }

@@ -44,7 +44,6 @@ import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
-import org.kiji.schema.util.ResourceUtils;
 
 public class TestHiveTableDescription extends KijiClientTest {
   private static final Long TIMESTAMP = 1L;
@@ -73,9 +72,9 @@ public class TestHiveTableDescription extends KijiClientTest {
 
   @After
   public void cleanupEnvironment() throws IOException {
-    ResourceUtils.closeOrLog(mReader);
-    ResourceUtils.releaseOrLog(mTable);
-    ResourceUtils.releaseOrLog(mKiji);
+    mReader.close();
+    mTable.release();
+    mKiji.release();
   }
 
   @Test
@@ -83,7 +82,7 @@ public class TestHiveTableDescription extends KijiClientTest {
     List<String> columnNames = Lists.newArrayList();
     List<TypeInfo> columnTypes = Lists.newArrayList();
     List<String> columnExpressions = Lists.newArrayList();
-    final HiveTableDescription hiveTableDescription = HiveTableDescription.newBuilder()
+    HiveTableDescription.newBuilder()
         .withColumnNames(columnNames)
         .withColumnTypes(columnTypes)
         .withColumnExpressions(columnExpressions)
@@ -139,27 +138,29 @@ public class TestHiveTableDescription extends KijiClientTest {
 
     final KijiDataRequest request = KijiDataRequest.create("info", "name");
     final KijiRowScanner scanner = mReader.getScanner(request);
+    try {
+      KijiRowData kijiRowData = scanner.iterator().next();
+      KijiRowDataWritable result = new KijiRowDataWritable(kijiRowData, mReader);
 
-    KijiRowData kijiRowData = scanner.iterator().next();
-    KijiRowDataWritable result = new KijiRowDataWritable(kijiRowData, mReader);
+      // array<>
+      List<Object> decodedArray = (List) hiveTableDescription.createDataObject(result);
+      assertEquals(1, decodedArray.size());
 
-    // array<>
-    List<Object> decodedArray = (List) hiveTableDescription.createDataObject(result);
-    assertEquals(1, decodedArray.size());
+      // array<struct<>>
+      List<Object> decodedStruct = (List) decodedArray.get(0);
+      assertEquals(1, decodedStruct.size());
 
-    // array<struct<>>
-    List<Object> decodedStruct = (List) decodedArray.get(0);
-    assertEquals(1, decodedStruct.size());
+      // array<struct<ts:timestamp,value:string>>
+      List<Object> decodedElement = (List) decodedStruct.get(0);
+      assertEquals(2, decodedElement.size());
 
-    // array<struct<ts:timestamp,value:string>>
-    List<Object> decodedElement = (List) decodedStruct.get(0);
-    assertEquals(2, decodedElement.size());
+      Timestamp timestamp = (Timestamp) decodedElement.get(0);
+      assertTrue(timestamp.equals(new Timestamp(TIMESTAMP)));
 
-    Timestamp timestamp = (Timestamp) decodedElement.get(0);
-    assertTrue(timestamp.equals(new Timestamp(TIMESTAMP)));
-
-    String name = (String) decodedElement.get(1);
-    assertEquals("foo-val", name);
+      String name = (String) decodedElement.get(1);
+      assertEquals("foo-val", name);
+    } finally {
+      scanner.close();
+    }
   }
-
 }

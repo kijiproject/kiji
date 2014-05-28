@@ -19,6 +19,7 @@
 
 package org.kiji.hive.io;
 
+import java.io.Closeable;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -29,6 +30,7 @@ import java.util.NavigableMap;
 import java.util.NavigableSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
@@ -50,13 +52,14 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.impl.hbase.HBaseKijiRowData;
 import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout.FamilyLayout;
+import org.kiji.schema.util.ResourceUtils;
 import org.kiji.schema.util.TimestampComparator;
 
 /**
  * Writable version of the data stored within a KijiRowData.  Contains a subset of methods
  * which are necessary for the Hive adapter.
  */
-public class KijiRowDataWritable implements Writable {
+public class KijiRowDataWritable implements Writable, Closeable {
   private static final Logger LOG = LoggerFactory.getLogger(KijiRowDataWritable.class);
 
   private static final NavigableMap<Long, KijiCellWritable> EMPTY_DATA = Maps.newTreeMap();
@@ -82,6 +85,13 @@ public class KijiRowDataWritable implements Writable {
   private KijiTableReader mReader;
   private Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> mQualifierPageData;
 
+  /**
+   * Tracks whether this instance has been closed yet. This is necessary so we don't double close
+   * KijiPager objects. This can be removed when SCHEMA-787 hits. This should only be mutated from
+   * #close().
+   */
+  private final AtomicBoolean mIsOpen = new AtomicBoolean(true);
+
   /** Required so that this can be built by WritableFactories. */
   public KijiRowDataWritable() {
   }
@@ -102,7 +112,7 @@ public class KijiRowDataWritable implements Writable {
    * Constructs a KijiRowDataWritable from a existing KijiRowData.
    *
    * @param rowData the source of the fields to copy.
-   * @param kijiTableReader to be used for fetching qualifier pages.
+   * @param kijiTableReader to be used for fetching qualifier pages. Must be closed by caller.
    * @throws IOException if there is an error loading the table layout.
    */
   public KijiRowDataWritable(KijiRowData rowData, KijiTableReader kijiTableReader)
@@ -152,6 +162,20 @@ public class KijiRowDataWritable implements Writable {
         KijiColumnName familyColumnName = new KijiColumnName(family);
         Schema schema = rowData.getReaderSchema(family, familyColumnName.getQualifier());
         mSchemas.put(familyColumnName, schema);
+      }
+    }
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void close() throws IOException {
+    if (mIsOpen.compareAndSet(true, false)) {
+      for (KijiPager pager : mKijiQualifierPagers.values()) {
+        ResourceUtils.closeOrLog(pager);
+      }
+
+      for (KijiPager pager : mKijiCellPagers.values()) {
+        ResourceUtils.closeOrLog(pager);
       }
     }
   }
@@ -230,6 +254,12 @@ public class KijiRowDataWritable implements Writable {
         qualifierPageData.put(kijiColumnName, writableData);
       }
       mQualifierPageData = qualifierPageData;
+      if (mKijiCellPagers != null) {
+        // Cleanup existing pagers
+        for (KijiPager pager : mKijiCellPagers.values()) {
+          ResourceUtils.closeOrLog(pager);
+        }
+      }
       mKijiCellPagers = getKijiCellPagers(kijiDataRequest, qualifierPage);
     }
 
@@ -251,8 +281,9 @@ public class KijiRowDataWritable implements Writable {
     // Add in all of the data from paged qualifiers
     pageData.putAll(mQualifierPageData);
 
-    for (KijiColumnName kijiColumnName : mKijiCellPagers.keySet()) {
-      final KijiPager cellPager = mKijiCellPagers.get(kijiColumnName);
+    for (Map.Entry<KijiColumnName, KijiPager> entry : mKijiCellPagers.entrySet()) {
+      final KijiColumnName kijiColumnName = entry.getKey();
+      final KijiPager cellPager = entry.getValue();
       try {
         final KijiRowData pagedKijiRowData = cellPager.next();
         final NavigableMap<Long, KijiCell<Object>> pagedData =

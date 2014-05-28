@@ -23,7 +23,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Iterator;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Writables;
@@ -76,8 +75,8 @@ public class KijiTableRecordReader
     mKijiTableReader = mKijiTable.openTableReader();
 
     final String hiveName = conf.get(KijiTableSerDe.HIVE_TABLE_NAME_PROPERTY);
-    final String dataRequestParameter = KijiTableInputFormat.CONF_KIJI_DATA_REQUEST_PREFIX
-        + hiveName;
+    final String dataRequestParameter =
+        KijiTableInputFormat.CONF_KIJI_DATA_REQUEST_PREFIX + hiveName;
 
     try {
       final String dataRequestString = conf.get(dataRequestParameter);
@@ -85,8 +84,7 @@ public class KijiTableRecordReader
         throw new RuntimeException("KijiTableInputFormat was not configured. "
             + "Please set " + dataRequestParameter + " in configuration.");
       }
-      KijiDataRequest dataRequest = KijiDataRequestSerializer.deserialize(
-          dataRequestString);
+      KijiDataRequest dataRequest = KijiDataRequestSerializer.deserialize(dataRequestString);
 
       KijiScannerOptions scannerOptions = new KijiScannerOptions();
       if (inputSplit.getRegionStartKey().length > 0) {
@@ -105,7 +103,8 @@ public class KijiTableRecordReader
   /** {@inheritDoc} */
   @Override
   public void close() throws IOException {
-    IOUtils.closeQuietly(mScanner);
+    ResourceUtils.closeOrLog(mCurrentPagedKijiRowDataWritable);
+    ResourceUtils.closeOrLog(mScanner);
     ResourceUtils.closeOrLog(mKijiTableReader);
     ResourceUtils.releaseOrLog(mKijiTable);
     ResourceUtils.releaseOrLog(mKiji);
@@ -152,6 +151,9 @@ public class KijiTableRecordReader
       }
     }
 
+    // Close current kiji row data writable before replacing it
+    ResourceUtils.closeOrLog(mCurrentPagedKijiRowDataWritable);
+
     // Stop if there are no more rows.
     if (!mIterator.hasNext()) {
       return false;
@@ -173,6 +175,7 @@ public class KijiTableRecordReader
 
     key.set(rowData.getHBaseResult().getRow());
     Writables.copyWritable(result, value);
+    ResourceUtils.closeOrLog(result);
     return true;
   }
 }
