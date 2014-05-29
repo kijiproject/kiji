@@ -87,6 +87,11 @@ public final class JobHistoryKijiTable implements Closeable {
   /** Value stored to configuration qualifier if the job did not have a configuration. */
   public static final String JOB_HISTORY_NO_CONFIGURATION_VALUE = "No configuration for job.";
 
+  /** Message to record into the {@value #JOB_HISTORY_END_STATUS_QUALIFIER} on job success. */
+  public static final String SUCCEEDED = "SUCCEEDED";
+  /** Message to record into the {@value #JOB_HISTORY_END_STATUS_QUALIFIER} on job failure. */
+  public static final String FAILED = "FAILED";
+
   /** The HBaseKijiTable managed by the JobHistoryKijiTable. */
   private final KijiTable mKijiTable;
 
@@ -240,7 +245,7 @@ public final class JobHistoryKijiTable implements Closeable {
       putter.put(JOB_HISTORY_FAMILY, JOB_HISTORY_START_TIME_QUALIFIER, startTime, startTime);
       putter.put(JOB_HISTORY_FAMILY, JOB_HISTORY_END_TIME_QUALIFIER, startTime, endTime);
       putter.put(JOB_HISTORY_FAMILY, JOB_HISTORY_END_STATUS_QUALIFIER, startTime,
-          (jobSuccess) ? "SUCCEEDED" : "FAILED");
+          (jobSuccess) ? SUCCEEDED : FAILED);
       putter.put(JOB_HISTORY_FAMILY, JOB_HISTORY_COUNTERS_QUALIFIER, startTime,
           counters.toString());
       if (null != conf) {
