@@ -10,11 +10,11 @@ some basic dependencies and files, with only a few commands. Learn more about Ma
 Check out the KijiExpress project, then compile and install the archetype:
 
     cd kiji-express-archetype
-    mvn clean compile install
+    mvn clean install
 
 This adds the Express archetype to your local archetype catalog.
 
-To create a basic project, create a new directory in which to gernate the archetype. `cd` into
+To create a basic project, create a new directory in which to generate the archetype. `cd` into
 that directory and run
 
     mvn archetype:generate -DarchetypeCatalog=local
