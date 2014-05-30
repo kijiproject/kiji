@@ -82,7 +82,7 @@
                 <!-- This script will use symlinks to remove redundant JARs in the bento box -->
                 <execution>
                     <configuration>
-                        <executable>python</executable>
+                        <executable>python3</executable>
                         <workingDirectory>${project.build.directory}/kiji-bento-${codename}-${project.version}-release</workingDirectory>
                         <arguments>
                             <argument>${basedir}/src/main/scripts/assembly/link_redundant_jars.py</argument>

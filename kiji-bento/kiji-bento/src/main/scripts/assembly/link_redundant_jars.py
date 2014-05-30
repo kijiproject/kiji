@@ -160,7 +160,7 @@ class RedundantJarLinker(object):
     os.chdir(self._bento_dir)
     jarsToLocations = self._get_symlink_candidates()
     self._symlink_jars(jarsToLocations)
-    print "Added %d symlinks" % self._link_count
+    print("Added %d symlinks" % self._link_count)
     os.chdir(old_dir)
 
 
