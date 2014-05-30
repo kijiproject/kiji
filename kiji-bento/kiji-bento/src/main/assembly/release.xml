@@ -25,7 +25,8 @@
   <id>release</id>
   <formats>
     <format>dir</format>
-    <format>tar.gz</format>
+    <!-- No longer tar up here - do so after running the redundant-jar python script. -->
+    <!--<format>tar.gz</format>-->
   </formats>
 
   <includeBaseDirectory>true</includeBaseDirectory>
