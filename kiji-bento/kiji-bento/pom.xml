@@ -74,48 +74,76 @@
             </configuration>
           </execution>
         </executions>
-        </plugin>
-        <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>exec-maven-plugin</artifactId>
-            <executions>
-                <!-- This script will use symlinks to remove redundant JARs in the bento box -->
-                <execution>
-                    <configuration>
-                        <executable>python3</executable>
-                        <workingDirectory>${project.build.directory}/kiji-bento-${codename}-${project.version}-release</workingDirectory>
-                        <arguments>
-                            <argument>${basedir}/src/main/scripts/assembly/link_redundant_jars.py</argument>
-                            <argument>-v</argument>
-                            <argument>-r</argument>
-                            <argument>${project.build.directory}/kiji-bento-${codename}-${project.version}-release/kiji-bento-${codename}</argument>
-                        </arguments>
-                    </configuration>
-                    <id>python-jars</id>
-                    <phase>package</phase>
-                    <goals>
-                        <goal>exec</goal>
-                    </goals>
-                </execution>
-                <!-- Actually tar up the Bento Box! -->
-                <execution>
-                    <configuration>
-                        <executable>tar</executable>
-                        <workingDirectory>${project.build.directory}/kiji-bento-${codename}-${project.version}-release</workingDirectory>
-                        <arguments>
-                            <argument>-czf</argument>
-                            <argument>../kiji-bento-${codename}-${project.version}-release.tar.gz</argument>
-                            <argument>kiji-bento-${codename}</argument>
-                        </arguments>
-                    </configuration>
-                    <id>final-tar</id>
-                    <phase>package</phase>
-                    <goals>
-                        <goal>exec</goal>
-                    </goals>
-                </execution>
-            </executions>
-        </plugin>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <executions>
+          <!-- This script will use symlinks to remove redundant JARs in the bento box -->
+          <execution>
+            <configuration>
+              <executable>python3</executable>
+              <workingDirectory>
+                ${project.build.directory}/kiji-bento-${codename}-${project.version}-release
+              </workingDirectory>
+              <arguments>
+                <argument>${basedir}/src/main/scripts/assembly/link_redundant_jars.py</argument>
+                <argument>-v</argument>
+                <argument>-r</argument>
+                <argument>
+                  ${project.build.directory}/kiji-bento-${codename}-${project.version}-release/kiji-bento-${codename}
+                </argument>
+              </arguments>
+            </configuration>
+            <id>python-jars</id>
+            <phase>package</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+          </execution>
+          <!-- Actually tar up the Bento Box. -->
+          <execution>
+            <configuration>
+              <executable>tar</executable>
+              <workingDirectory>
+                ${project.build.directory}/kiji-bento-${codename}-${project.version}-release
+              </workingDirectory>
+              <arguments>
+                <argument>-czf</argument>
+                <argument>../kiji-bento-${codename}-${project.version}-release.tar.gz</argument>
+                <argument>kiji-bento-${codename}</argument>
+              </arguments>
+            </configuration>
+            <id>final-tar</id>
+            <phase>package</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Now add the tarball to the deployed assembly -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-artifacts</id>
+            <phase>package</phase>
+            <goals>
+              <goal>attach-artifact</goal>
+            </goals>
+            <configuration>
+              <artifacts>
+                <artifact>
+                  <file>${project.build.directory}/kiji-bento-${codename}-${project.version}-release.tar.gz</file>
+                  <type>tar.gz</type>
+                </artifact>
+              </artifacts>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
