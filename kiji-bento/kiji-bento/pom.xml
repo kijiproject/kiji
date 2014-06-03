@@ -138,6 +138,7 @@
                 <artifact>
                   <file>${project.build.directory}/kiji-bento-${codename}-${project.version}-release.tar.gz</file>
                   <type>tar.gz</type>
+                  <classifier>release</classifier>
                 </artifact>
               </artifacts>
             </configuration>
