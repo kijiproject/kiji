@@ -31,32 +31,32 @@
 #    and our release artifacts.
 
 # KijiSchema version
-SCHEMA_FLAT_VER=1_4_1
-SCHEMA_VER=1.4.1
+SCHEMA_FLAT_VER=1_4_2
+SCHEMA_VER=1.4.2
 
 # KijiMR version
-KIJIMR_FLAT_VER=1_2_7
-KIJIMR_VER=1.2.7
+KIJIMR_FLAT_VER=1_2_8
+KIJIMR_VER=1.2.8
 
 # KijiMR Library version
-MRLIB_FLAT_VER=1_1_6
-MRLIB_VER=1.1.6
+MRLIB_FLAT_VER=1_1_7
+MRLIB_VER=1.1.7
 
 # KijiExpress version
-EXPRESS_FLAT_VER=2.0.2
-EXPRESS_VER=2.0.2
+EXPRESS_FLAT_VER=2.0.3
+EXPRESS_VER=2.0.3
 
 # Scoring version
-SCORING_FLAT_VER=0_14_0
-SCORING_VER=0.14.0
+SCORING_FLAT_VER=0_15_0
+SCORING_VER=0.15.0
 
 # Music Recommendation Tutorial version
 MUSIC_FLAT_VER=1_1_6
 MUSIC_VER=1.1.6
 
 # Express Music Recommendation tutorial version
-EXPRESS_MUSIC_FLAT_VER=2.0.1
-EXPRESS_MUSIC_VER=2.0.1
+EXPRESS_MUSIC_FLAT_VER=2.0.2
+EXPRESS_MUSIC_VER=2.0.2
 
 # Phonebook Tutorial version
 PHONEBOOK_FLAT_VER=1_1_5
@@ -67,6 +67,16 @@ REST_FLAT_VER=1_3_2
 REST_VER=1.3.2
 
 ### Ordinary configuration does not go past this line ###
+
+# Bash strict mode
+set -o nounset   # Fail when referencing undefined variables
+set -o errexit   # Script exits on the first error
+set -o pipefail  # Pipeline status failure if any command fails
+if [[ ! -z "${DEBUG:-}" ]]; then
+  source=$(basename "${BASH_SOURCE}")
+  PS4="# ${source}":'${LINENO}: ' # Prints out line numbers during the execution of the script
+  set -x
+fi
 
 # Constants used later in this script
 API=http://api-docs.kiji.org

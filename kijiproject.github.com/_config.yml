@@ -105,16 +105,16 @@ tutorial_music_devel : /tutorials/music-recommendation/devel
 tutorial_express_devel : /tutorials/express-recommendation/devel
 tutorial_scoring_devel : /tutorials/scoring/devel
 
-schema_devel_version : 1.4.2
+schema_devel_version : 1.4.3
 schema_devel_branch : master
 
-mr_devel_version : 1.2.8
+mr_devel_version : 1.2.9
 mr_devel_branch : master
 
-mrlib_devel_version : 1.1.7
+mrlib_devel_version : 1.1.8
 mrlib_devel_branch : master
 
-express_devel_version : 2.0.3
+express_devel_version : 2.0.4
 express_devel_branch : master
 
 phonebook_devel_version : 1.1.6
@@ -122,13 +122,13 @@ phonebook_devel_version : 1.1.6
 music_devel_version : 1.1.7
 music_devel_branch : master
 
-music_express_devel_version : 2.0.2
+music_express_devel_version : 2.0.3
 music_express_devel_branch : master
 
-rest_devel_version: 1.3.2
+rest_devel_version: 1.3.3
 rest_devel_branch : master
 
-scoring_devel_version : 0.15.0
+scoring_devel_version : 0.16.0
 scoring_devel_branch : master
 
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash
@@ -374,3 +374,14 @@ tutorial_music_1_1_6 : /tutorials/music-recommendation/1.1.6
 tutorial_exp_music_2.0.1 : /tutorials/express-recommendation/2.0.1
 tutorial_scoring_0_14_0 : /tutorials/scoring/0.14.0
 api_mrlib_1_1_6 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.1.6/org/kiji/mapreduce/lib
+userguide_schema_1_4_2 : /userguides/schema/1.4.2
+api_schema_1_4_2 : http://api-docs.kiji.org/kiji-schema/1.4.2/org/kiji/schema
+api_mr_1_2_8 : http://api-docs.kiji.org/kiji-mapreduce/1.2.8/org/kiji/mapreduce
+userguide_mapreduce_1_2_8 : /userguides/mapreduce/1.2.8
+userguide_express_2.0.3 : /userguides/express/2.0.3
+api_express_2.0.3 : http://api-docs.kiji.org/kiji-express/2.0.3/org/kiji/express
+userguide_scoring_0_15_0 : /userguides/scoring/0.15.0
+api_scoring_0_15_0 : http://api-docs.kiji.org/kiji-scoring/0.15.0/org/kiji/scoring
+tutorial_exp_music_2.0.2 : /tutorials/express-recommendation/2.0.2
+tutorial_scoring_0_15_0 : /tutorials/scoring/0.15.0
+api_mrlib_1_1_7 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.1.7/org/kiji/mapreduce/lib
