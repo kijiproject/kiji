@@ -249,7 +249,7 @@ And `hash_props` is a collection of the following properties:
 * `THROUGH component_name` - Specifies that the hash prefix is calculated through all
   fields up to and including `component_name`. By default, the hash prefix will be
   calculated based on the first field.
-* `SIZE = n` - Specifies the number of bytes to use in the hash prefix, between 0 and 16 inclusive.
+* `SIZE = n` - Specifies the number of bytes to use in the hash prefix, between 1 and 16 inclusive.
   If not given, this defaults to 2 bytes.
 * `SUPPRESS FIELDS` - If specified, then the "plain text" of your key is discarded; only the
   hash of the key is used. If `SIZE` is not specified but `SUPPRESS FIELDS` is, the entire 16
