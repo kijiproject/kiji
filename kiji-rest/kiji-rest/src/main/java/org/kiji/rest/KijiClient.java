@@ -78,11 +78,19 @@ public interface KijiClient {
   FreshKijiTableReader getFreshKijiTableReader(String instance, String table);
 
   /**
-   * Removes the table from the various table reader caches. This happens when trying
-   * to read from a table that may have been deleted after KijiREST opened a reader for it.
+   * Removes the table from the various table reader caches. This can happen as a response to a
+   * user request, or because a table is no longer valid.
    *
    * @param instance is the name of the instance.
    * @param table is the name of the table to remove from the cache.
    */
   void invalidateTable(String instance, String table);
+
+  /**
+   * Closes an open Kiji instance and corresponding tables. This can happen as a response to a
+   * user request, or because an instance is no longer valid.
+   *
+   * @param instance name of the Kiji instance.
+   */
+  void invalidateInstance(String instance);
 }

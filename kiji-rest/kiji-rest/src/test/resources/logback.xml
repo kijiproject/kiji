@@ -24,4 +24,10 @@
   <root level="debug">
     <appender-ref ref="STDOUT" />
   </root>
+
+  <logger name="org.apache.zookeeper" level="INFO" />
+  <logger name="org.apache.curator" level="INFO" />
+  <logger name="org.kiji.schema.util" level="WARN" />
+  <logger name="org.kiji.testing" level="INFO" />
+
 </configuration>

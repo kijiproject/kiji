@@ -23,28 +23,30 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.yammer.dropwizard.lifecycle.Managed;
 import com.yammer.metrics.core.HealthCheck;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
-import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +57,8 @@ import org.kiji.schema.KijiSchemaTable;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableNotFoundException;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.layout.impl.ZooKeeperMonitor;
+import org.kiji.schema.util.ResourceUtils;
+import org.kiji.schema.zookeeper.ZooKeeperUtils;
 import org.kiji.scoring.FreshKijiTableReader;
 
 /**
@@ -64,23 +67,37 @@ import org.kiji.scoring.FreshKijiTableReader;
 public class ManagedKijiClient implements KijiClient, Managed {
   private static final Logger LOG = LoggerFactory.getLogger(ManagedKijiClient.class);
 
-  /** Keeps track of visible instances. When instances are added/deleted, this map is mutated. */
-  private final ConcurrentMap<String, KijiInstanceCache> mInstanceCaches;
-
-  /** Holds the cluster URI being served by this REST server. */
-  private final KijiURI mClusterURI;
+  /** Holds instances currently being served. */
+  private final LoadingCache<String, KijiInstanceCache> mInstanceCaches;
 
   /** CuratorFramework object which is backing <code>mZKInstances</code>. */
   private final CuratorFramework mZKFramework;
 
   /**
-   * A 'cache' object which can look up the current instances in Zookeeper, and updates this
-   * ManagedKijiClient when instances are created or destroyed.
+   * A 'cache' object which keeps track of the currently registered Kiji instances in ZooKeeper.
    */
   private final PathChildrenCache mZKInstances;
 
-  /** Set to true during {@link #stop()} to prevent further access to this object's methods. */
-  private volatile boolean mIsStopped = false;
+  /**
+   * Holds the currently known Kiji instances as registered in ZooKeeper. It is sufficient for this
+   * to be volatile (as opposed to atomic or using locks), because it always holds an immutable set,
+   * and the referenced set is only changed by {@link #refreshInstances()}, which does not require
+   * any check and set semantics.
+   */
+  private volatile Set<String> mKijiInstances;
+
+  /** Tracks the lifecycle state of this ManagedKijiClient. */
+  private final AtomicReference<State> mState;
+
+  /** The possible states of this ManagedKijiClient. */
+  private static enum State {
+    /** ManagedKijiClient is constructed, but not yet started. */
+    INITIALIZED,
+    /** ManagedKijiClient is started and alive. */
+    STARTED,
+    /** ManagedKijiClient is stopped. */
+    STOPPED
+  }
 
   /**
    * Constructs a ManagedKijiClient.
@@ -88,25 +105,54 @@ public class ManagedKijiClient implements KijiClient, Managed {
    * @param clusterURI of HBase cluster to serve.
    * @throws IOException if error while creating connections to the cluster.
    */
-  public ManagedKijiClient(KijiURI clusterURI) throws IOException {
-    mInstanceCaches = Maps.newConcurrentMap();
-    mClusterURI = clusterURI;
-
-    mZKFramework = CuratorFrameworkFactory.newClient(
-        clusterURI.getZooKeeperEnsemble(), new ExponentialBackoffRetry(1000, 3));
+  public ManagedKijiClient(final KijiURI clusterURI) throws IOException {
+    mZKFramework = ZooKeeperUtils.getZooKeeperClient(clusterURI);
     mZKInstances =
         new PathChildrenCache(
             mZKFramework,
-            ZooKeeperMonitor.INSTANCES_ZOOKEEPER_PATH.getPath(),
+            ZooKeeperUtils.INSTANCES_ZOOKEEPER_PATH.getPath(),
             true);
+    mInstanceCaches = CacheBuilder
+        .newBuilder()
+        // Expire instances if they have not been used in 10 minutes
+        // TODO (REST-133): Make this value configurable
+        .expireAfterAccess(10, TimeUnit.MINUTES)
+        .removalListener(new RemovalListener<String, KijiInstanceCache>() {
+          @Override
+          public void onRemoval(RemovalNotification<String, KijiInstanceCache> notification) {
+            try {
+              notification.getValue().stop(); // strong cache; should not be null
+            } catch (IOException e) {
+              LOG.warn("Unable to stop KijiInstanceCache {} for instance {}.",
+                  notification.getValue(), notification.getKey());
+            }
+          }
+        })
+        .build(new CacheLoader<String, KijiInstanceCache>() {
+          @Override
+          public KijiInstanceCache load(String instanceName) throws Exception {
+            final KijiURI instanceURI =
+                KijiURI.newBuilder(clusterURI).withInstanceName(instanceName).build();
+
+            // Check if our instances list contains the instance before attempting to construct it.
+            if (!mKijiInstances.contains(instanceName)) {
+              throw new KijiNotInstalledException(
+                  "Kiji instance not found in known instances set.", instanceURI);
+            }
+            return new KijiInstanceCache(instanceURI);
+          }
+        });
+
+    mState = new AtomicReference<State>(State.INITIALIZED);
   }
 
   /** {@inheritDoc} */
   @Override
   public void start() throws Exception {
-    Preconditions.checkState(!mIsStopped, "Can't start a stopped ManagedKijiClient.");
+    Preconditions.checkState(mState.compareAndSet(State.INITIALIZED, State.STARTED),
+        "Can not start ManagedKijiClient in state %s.", mState.get());
+    /** The listener updates the set of served instances based on ZK changes. */
     mZKInstances.getListenable().addListener(new InstanceListener());
-    mZKFramework.start();
     mZKInstances.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
     refreshInstances();
     LOG.info("Successfully started ManagedKijiClient!");
@@ -115,19 +161,15 @@ public class ManagedKijiClient implements KijiClient, Managed {
   /** {@inheritDoc} */
   @Override
   public synchronized void stop() throws Exception {
-    Preconditions.checkState(!mIsStopped, "Can't stop an already stopped ManagedKijiClient.");
-    LOG.info("Stopping ManagedKijiClient...");
-    mIsStopped = true;
+    Preconditions.checkState(mState.compareAndSet(State.STARTED, State.STOPPED),
+        "Can not stop in state %s.", mState.get());
+    LOG.info("Stopping ManagedKijiClient.");
 
-    mZKInstances.close();
-    mZKFramework.close();
+    ResourceUtils.closeOrLog(mZKInstances);
+    ResourceUtils.closeOrLog(mZKFramework);
 
-    // Make the caches unavailable, and then stop them all
-    List<KijiInstanceCache> cacheCopies = ImmutableList.copyOf(mInstanceCaches.values());
-    mInstanceCaches.clear();
-    for (KijiInstanceCache instanceCache: cacheCopies) {
-      instanceCache.stop();
-    }
+    mInstanceCaches.invalidateAll();
+    mInstanceCaches.cleanUp();
   }
 
   /**
@@ -137,22 +179,24 @@ public class ManagedKijiClient implements KijiClient, Managed {
    * @return the instance cache.
    */
   private KijiInstanceCache getInstanceCache(String instance) {
-    KijiInstanceCache instanceCache = mInstanceCaches.get(instance);
-    if (instanceCache == null) {
-      throw new WebApplicationException(new IOException("Instance " + instance + " unavailable!"),
-          Response.Status.FORBIDDEN);
+    try {
+      return mInstanceCaches.get(instance);
+    } catch (Exception e) {
+      final Throwable cause = e.getCause();
+      throw new WebApplicationException(cause, getExceptionStatus(cause));
     }
-    return instanceCache;
   }
 
   /**
-   * Unwrap the provided ExecutionException and return the correct response type for its cause.
+   * Match an exception against a response status.
    *
-   * @param e ExecutionException to unwrap.
+   * @param cause exception to match.
    * @return the appropriate response code.
    */
-  private Response.Status unwrapExecutionException(ExecutionException e) {
-    Throwable cause = e.getCause();
+  private Response.Status getExceptionStatus(Throwable cause) {
+    if (cause instanceof KijiNotInstalledException) {
+      return Response.Status.FORBIDDEN;
+    }
     if (cause instanceof KijiTableNotFoundException) {
       return Response.Status.NOT_FOUND;
     } else {
@@ -163,15 +207,18 @@ public class ManagedKijiClient implements KijiClient, Managed {
   /** {@inheritDoc} */
   @Override
   public Kiji getKiji(String instance) {
-    Preconditions.checkState(!mIsStopped, "Can't get Kiji from a stopped ManagedKijiClient.");
+    final State state = mState.get();
+    Preconditions.checkState(state == State.STARTED,
+        "Can not get a Kiji while in state %s.", state);
     return getInstanceCache(instance).getKiji();
   }
 
   /** {@inheritDoc} */
   @Override
   public KijiSchemaTable getKijiSchemaTable(String instance) {
-    Preconditions.checkState(
-        !mIsStopped, "Can't get a schema table from a stopped ManagedKijiClient.");
+    final State state = mState.get();
+    Preconditions.checkState(state == State.STARTED,
+        "Can not get a schema table while in state %s.", state);
     try {
       return getKiji(instance).getSchemaTable();
     } catch (IOException e) {
@@ -179,23 +226,26 @@ public class ManagedKijiClient implements KijiClient, Managed {
     }
   }
 
-
   /** {@inheritDoc} */
   @Override
   public Collection<String> getInstances() {
-    Preconditions.checkState(!mIsStopped, "Can't get instances from a stopped ManagedKijiClient.");
-    return ImmutableSet.copyOf(mInstanceCaches.keySet());
+    final State state = mState.get();
+    Preconditions.checkState(state == State.STARTED,
+        "Can not get instances while in state %s.", state);
+    return mKijiInstances;
   }
 
   /** {@inheritDoc} */
   @Override
   public KijiTable getKijiTable(String instance, String table) {
-    Preconditions.checkState(!mIsStopped, "Can't get table from a stopped ManagedKijiClient.");
+    final State state = mState.get();
+    Preconditions.checkState(state == State.STARTED,
+        "Can not get Kiji table while in state %s.", state);
     try {
       return getInstanceCache(instance).getKijiTable(table);
     } catch (ExecutionException e) {
-      Response.Status status = unwrapExecutionException(e);
-      throw new WebApplicationException(e.getCause(), status);
+      final Throwable cause = e.getCause();
+      throw new WebApplicationException(cause, getExceptionStatus(cause));
     } catch (WebApplicationException e) {
       throw e;
     } catch (Exception e) {
@@ -206,13 +256,14 @@ public class ManagedKijiClient implements KijiClient, Managed {
   /** {@inheritDoc} */
   @Override
   public FreshKijiTableReader getFreshKijiTableReader(String instance, String table) {
-    Preconditions.checkState(
-        !mIsStopped, "Can't get fresh reader from a stopped ManagedKijiClient.");
+    final State state = mState.get();
+    Preconditions.checkState(state == State.STARTED,
+        "Can not get fresh Kiji table reader while in state %s.", state);
     try {
       return getInstanceCache(instance).getFreshKijiTableReader(table);
     } catch (ExecutionException e) {
-      Response.Status status = unwrapExecutionException(e);
-      throw new WebApplicationException(e.getCause(), status);
+      final Throwable cause = e.getCause();
+      throw new WebApplicationException(cause, getExceptionStatus(cause));
     } catch (WebApplicationException e) {
       throw e;
     } catch (Exception e) {
@@ -223,56 +274,19 @@ public class ManagedKijiClient implements KijiClient, Managed {
   /** {@inheritDoc} */
   @Override
   public void invalidateTable(String instance, String table) {
+    final State state = mState.get();
+    Preconditions.checkState(state == State.STARTED,
+        "Can not invalidate table while in state %s.", state);
     getInstanceCache(instance).invalidateTable(table);
   }
 
-  /**
-   * Add a new instance to the set of served instances.
-   *
-   * @param uri of instance to add to cache.
-   * @throws IOException if error while adding the instance.
-   */
-  private synchronized void addInstance(final KijiURI uri) throws IOException {
-    if (!mInstanceCaches.containsKey(uri.getInstance())) {
-      LOG.info("Adding instance {}.", uri);
-      try {
-        mInstanceCaches.put(uri.getInstance(), new KijiInstanceCache(uri));
-      } catch (KijiNotInstalledException kine) {
-        // The fix for SCHEMA-651 was to ensure that deleted instances remove their corresponding
-        // information from zookeeper; however, if people are running REST against a cluster
-        // that didn't have this fix, then there is a chance that zookeeper has some crud that
-        // needs removing. Don't prevent KijiREST from starting completely, but simply log the
-        // message and move on.
-        LOG.error("Kiji " + uri + " not installed. Please check zookeeper for any old instances.");
-      }
-    }
-  }
-
-  /**
-   * Remove cached reference to instance and all its readers.
-   *
-   * @param uri of instance to remove from cache.
-   * @throws IOException if error while removing the instance.
-   */
-  private synchronized void removeInstance(final KijiURI uri) throws IOException {
-    KijiInstanceCache instanceCache = mInstanceCaches.remove(uri.getInstance());
-    if (instanceCache != null) {
-      LOG.info("Removing instance {}.", uri);
-      instanceCache.stop();
-    }
-  }
-
-  /**
-   * Retrieves the URIs for all served instances.
-   *
-   * @return the set of instance URIs being served.
-   */
-  private Set<KijiURI> getInstanceURIs() {
-    final ImmutableSet.Builder<KijiURI> setBuilder = ImmutableSet.builder();
-    for (KijiInstanceCache instanceCache : mInstanceCaches.values()) {
-      setBuilder.add(instanceCache.getKiji().getURI());
-    }
-    return setBuilder.build();
+  /** {@inheritDoc} */
+  @Override
+  public void invalidateInstance(String instance) {
+    final State state = mState.get();
+    Preconditions.checkState(state == State.STARTED,
+        "Can not invalidate instance while in state %s.", state);
+    mInstanceCaches.invalidate(instance);
   }
 
   /**
@@ -280,22 +294,16 @@ public class ManagedKijiClient implements KijiClient, Managed {
    *
    * @throws IOException if an instance can not be added to the cache.
    */
-  public synchronized void refreshInstances() throws IOException {
-    Preconditions.checkState(!mIsStopped, "Can't refreshInstances on a stopped ManagedKijiClient.");
+  public void refreshInstances() throws IOException {
+    final State state = mState.get();
+    Preconditions.checkState(state == State.STARTED,
+        "Can not invalidate instance while in state %s.", state);
     LOG.info("Refreshing instances.");
-    Set<KijiURI> instances = zNodesToInstanceURIs(mClusterURI, mZKInstances.getCurrentData());
-
-    // Remove instances not in updatedInstances.
-    for (KijiURI instance : getInstanceURIs()) {
-      if (!instances.contains(instance)) {
-        removeInstance(instance);
-      }
+    final ImmutableSet.Builder<String> instances = ImmutableSet.builder();
+    for (ChildData node : mZKInstances.getCurrentData()) {
+      instances.add(Iterables.getLast(Splitter.on('/').split(node.getPath())));
     }
-
-    // Add all instances.
-    for (KijiURI instance : instances) {
-      addInstance(instance);
-    }
+    mKijiInstances = instances.build();
   }
 
   /**
@@ -304,9 +312,12 @@ public class ManagedKijiClient implements KijiClient, Managed {
    * @return health status of the KijiClient.
    */
   public HealthCheck.Result checkHealth() {
-    Preconditions.checkState(!mIsStopped, "Can't checkHealth on a stopped ManagedKijiClient.");
+    final State state = mState.get();
+    Preconditions.checkState(state == State.STARTED,
+        "Can not check health while in state %s.", state);
+
     List<String> issues = Lists.newArrayList();
-    for (KijiInstanceCache instanceCache : mInstanceCaches.values()) {
+    for (KijiInstanceCache instanceCache : mInstanceCaches.asMap().values()) {
       issues.addAll(instanceCache.checkHealth());
     }
     if (issues.isEmpty()) {
@@ -317,39 +328,8 @@ public class ManagedKijiClient implements KijiClient, Managed {
   }
 
   /**
-   * Parses a Kiji instance name from its ZNode path.
-   *
-   * @param path The path to the instance's ZNode.
-   * @return instance name
-   */
-  private static String parseInstanceName(final String path) {
-    return Iterables.getLast(Splitter.on('/').split(path));
-  }
-
-  /**
-   * Converts a list of instance ZNodes into a set of instance URIs with the same base URI as the
-   * provided cluster URI.
-   *
-   * @param clusterURI of instances.
-   * @param nodes containing instance names.
-   * @return set of instance URIs.
-   */
-  private static Set<KijiURI> zNodesToInstanceURIs(KijiURI clusterURI, List<ChildData> nodes) {
-    final ImmutableSet.Builder<KijiURI> instances = ImmutableSet.builder();
-    for (ChildData node : nodes) {
-      instances.add(
-          KijiURI
-              .newBuilder(clusterURI)
-              .withInstanceName(parseInstanceName(node.getPath()))
-              .build()
-      );
-    }
-    return instances.build();
-  }
-
-  /**
-   * A <code>PathChildrenCacheListener</code> to listen to the Kiji instances ZNode directory and
-   * update a KijiClient's served instances when the available instances change.
+   * A {@link PathChildrenCacheListener} to listen to the Kiji instances ZNode directory and
+   * update the set of available Kiji instances.
    */
   private class InstanceListener implements PathChildrenCacheListener {
     /**
@@ -358,10 +338,12 @@ public class ManagedKijiClient implements KijiClient, Managed {
     public InstanceListener() {}
 
     @Override
-    public void childEvent(CuratorFramework client, PathChildrenCacheEvent event)
-        throws IOException {
+    public void childEvent(
+        CuratorFramework client,
+        PathChildrenCacheEvent event
+    ) throws IOException {
       LOG.debug("InstanceListener for {} triggered on event {}.", ManagedKijiClient.this, event);
-      ManagedKijiClient.this.refreshInstances();
+      refreshInstances();
     }
   }
 }

@@ -22,6 +22,7 @@ package org.kiji.rest.util;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
@@ -57,6 +58,9 @@ public class KijiInstanceCache {
 
   private final LoadingCache<String, KijiTable> mTables =
       CacheBuilder.newBuilder()
+          // Expire table if it has not been used in 10 minutes
+          // TODO (REST-133): Make this value configurable
+          .expireAfterAccess(10, TimeUnit.MINUTES)
           .removalListener(
               new RemovalListener<String, KijiTable>() {
                 @Override
@@ -82,6 +86,9 @@ public class KijiInstanceCache {
 
   private final LoadingCache<String, FreshKijiTableReader> mFreshReaders =
       CacheBuilder.newBuilder()
+          // Expire fresh reader if it has not been used in 10 minutes
+          // TODO (REST-133): Make this value configurable
+          .expireAfterAccess(10, TimeUnit.MINUTES)
           .removalListener(
               new RemovalListener<String, FreshKijiTableReader>() {
                 @Override
