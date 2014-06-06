@@ -1,169 +1,203 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
+# -*- mode: python -*-
+# -*- coding: utf-8 -*-
 
-""" Copies all JARs needed for a project into a bento box lib dir. """
+"""Copies all JARs needed for a project into a bento box lib dir."""
 
 import argparse
 import collections
-import functools
+import hashlib
 import logging
 import os
 import re
-import shutil
 import subprocess
 import sys
 
-myname = os.path.split(sys.argv[0])[-1]
-description = \
-    "This script will help you copy JAR files from your local maven repo and into the Bento " + \
-    "Box lib dir."
 
-# Regex to get the bento version, assumes for now that each part of the version is only one digit
-# (makes getting the most-recent version easy - just sort lexographically).
-p_bento = re.compile(r'kiji-bento-(?P<name>\w+)-(?P<version>\d\.\d\.\d)-release\.tar\.gz')
+description = (
+    "This script will help you copy JAR files from your local maven repo and into the Bento "
+    "Box lib dir.")
+
+
+RE_JAR = re.compile(r".*[.]jar")
+
+
+def md5_sum(file_path):
+    """Computes the MD5 sum of a given file.
+
+    Args:
+        file_path: Path of the file to sum.
+    Returns:
+        The MD5 hex sum of the specified file.
+    """
+    with open(file_path, "rb") as f:
+        return hashlib.md5(f.read()).hexdigest()
+
+
+def list_files(root_dir, name_pattern):
+    """List the files whose name matches a specified pattern.
+
+    Args:
+        root_dir: Path of the directory to recursively scan for files.
+        name_pattern: Regex of the file names to match.
+    Yields:
+        The full paths of the files that match the specified pattern.
+    """
+    for (dir_path, _, filenames) in os.walk(root_dir):
+        for file_name in filenames:
+            if name_pattern.match(file_name):
+                yield os.path.join(dir_path, file_name)
+
 
 def run(cmd):
-  result = ""
-  try:
-    result = subprocess.check_output(cmd, shell=True)
-  except subprocess.CalledProcessError as e:
-    sys.stderr.write("Error running command '%s'\n" % cmd)
-    sys.stderr.write("Exit code = %s\n" % e.returncode)
-    sys.stderr.write("Output = %s\n" % e.output)
-    raise e
-  return result
+    """Runs a shell command as a sub-process and reports the command output.
+
+    Args:
+        cmd: Shell command to run.
+    Returns:
+        The captured command output.
+    """
+    try:
+        return subprocess.check_output(cmd, shell=True)
+    except subprocess.CalledProcessError as err:
+        logging.error("Error running command %r", cmd)
+        logging.error("Exit code = %s", e.returncode)
+        logging.error("Output = %s", e.output)
+        raise err
+
+
+# --------------------------------------------------------------------------------------------------
+
 
 class RedundantJarLinker(object):
+    """Identify identical JARs found in a directory tree and symlink them together.
 
-  def __init__(self):
-    super(RedundantJarLinker, self).__init__()
-
-    # Root bento box directory.
-    self._bento_dir = None
-
-  def _create_parser(self):
-    """ Returns a parser for the script """
-
-    parser = argparse.ArgumentParser(
-        description=description,
-        formatter_class=argparse.RawTextHelpFormatter)
-
-    parser.add_argument(
-        '-v',
-        '--verbose',
-        action='store_true',
-        default=False,
-        help='Verbose mode (turn on logging.info)')
-
-    parser.add_argument(
-        '-d',
-        '--debug',
-        action='store_true',
-        default=False,
-        help='Debug (turn on logging.debug)')
-
-    parser.add_argument(
-        '-r',
-        '--root-dir',
-        type=str,
-        default=os.getcwd(),
-        help='Root directory (containing tgz for bento) [pwd]')
-
-    parser.add_argument(
-        '-x',
-        '--skip-link',
-        action='store_true',
-        default=False,
-        help='Do not actually sym link')
-
-    return parser
-
-  def _parse_options(self, cmd_line_args):
-
-    # ----------------------------------------------------------------------------------------------
-    # Parse command-line arguments
-    args = self._create_parser().parse_args(cmd_line_args)
-
-    if args.verbose:
-      logging.basicConfig(level=logging.INFO)
-
-    if args.debug:
-      logging.basicConfig(level=logging.DEBUG)
-
-    self._bento_dir = args.root_dir
-    assert os.path.isdir(self._bento_dir)
-    logging.info("Bento directory is " + self._bento_dir)
-
-    self._do_link = not args.skip_link
-
-  def _get_symlink_candidates(self):
-    """
-    Starting at the Bento root dir, create a map from JAR file names to locations.  For any JAR in
-    more than one location, symlink all locations to the location with the shortest name.
-
+    The directory tree should not contain multiple copies of the same JARs.
+    For now, the process uses JAR file names only.
     """
 
-    jarsToLocations = collections.defaultdict(set)
+    def __init__(self):
+        super(RedundantJarLinker, self).__init__()
 
-    # TODO: Make this more efficient?
-    for (dirpath, _, filenames) in os.walk(os.getcwd()):
-      for fname in filenames:
-        if not fname.endswith('.jar'):
-          continue
-        jarsToLocations[fname].add(dirpath)
+        # Root bento box directory.
+        self._bento_dir = None
 
-    logging.info("Found %d unique jars" % len(jarsToLocations.keys()))
-    logging.debug("JARS that we can symlink:")
-    logging.debug("^^^^^^^^^^^^^^^^^^^^^^^^^")
-    for jarname in jarsToLocations.keys():
-      if (len(jarsToLocations[jarname]) > 1):
-        logging.debug(jarname)
-        for jarpath in jarsToLocations[jarname]:
-          logging.debug("\t" + jarpath)
-    return jarsToLocations
+        # Counter for the number of bytes saved.
+        self._bytes_saved = 0
 
-  def _symlink_jars(self, jarsToLocations):
-    self._link_count = 0
-    for jarname in jarsToLocations.keys():
-      if (len(jarsToLocations[jarname]) > 1):
-        self._reduce_to_one_jar(jarname, jarsToLocations[jarname])
+    def _create_parser(self):
+        """Returns a parser for the script."""
+        parser = argparse.ArgumentParser(
+                description=description,
+                formatter_class=argparse.RawTextHelpFormatter)
+        parser.add_argument(
+                "--verbose",
+                action="store_true",
+                default=False,
+                help="Verbose mode (turn on logging.info)")
+        parser.add_argument(
+                "--debug",
+                action="store_true",
+                default=False,
+                help="Debug (turn on logging.debug)")
+        parser.add_argument(
+                "--root-dir",
+                type=str,
+                default=os.getcwd(),
+                help="Root directory (containing tgz for bento) [pwd]")
+        parser.add_argument(
+                "--dry-run",
+                action="store_true",
+                default=False,
+                help="Do not actually sym link")
+        return parser
 
-  def _reduce_to_one_jar(self, jar_name, jar_dirs):
-    target_dir = sorted(list(jar_dirs))[-1]
-    target_jar = os.path.join(target_dir, jar_name)
+    def _parse_options(self, cmd_line_args):
+        """Processes command-line flags.
 
+        Args:
+            cmd_line_args: List of the command-line arguments to process.
+        """
+        args = self._create_parser().parse_args(cmd_line_args)
 
-    for link_dir in jar_dirs:
-      if link_dir == target_dir:
-        continue
-      link_jar = os.path.join(link_dir, jar_name)
+        if args.verbose:
+            logging.basicConfig(level=logging.INFO)
 
-      if not self._is_same_size_as_target_jar(target_jar, link_jar):
-        continue
+        if args.debug:
+            logging.basicConfig(level=logging.DEBUG)
 
-      relpath = os.path.relpath(target_dir, link_dir)
-      logging.debug("relpath from %s to %s is %s" % (link_dir, target_dir, relpath))
+        self._bento_dir = os.path.abspath(args.root_dir)
+        assert os.path.isdir(self._bento_dir), ("Invalid Bento root directory: %r" % self._bento_dir)
+        logging.info("Bento directory is %r", self._bento_dir)
 
-      if self._do_link:
-        os.remove(link_jar)
-        os.symlink(os.path.join(relpath, jar_name), link_jar)
-        self._link_count += 1
+        self._args = args
 
-  def _is_same_size_as_target_jar(self, target_jar, link_jar):
-    """ All of the JARs should be the same size, or else something weird is going on... """
-    size_a = os.path.getsize(target_jar)
-    size_b = os.path.getsize(link_jar)
-    return size_a == size_b
+    def _build_md5_jars_map(self):
+        """Scans the Bento file tree for JAR files and build a map indexed by MD5 sum.
 
-  def go(self, cmd_line_args):
-    self._parse_options(cmd_line_args)
-    old_dir = os.getcwd()
-    os.chdir(self._bento_dir)
-    jarsToLocations = self._get_symlink_candidates()
-    self._symlink_jars(jarsToLocations)
-    print("Added %d symlinks" % self._link_count)
-    os.chdir(old_dir)
+        Returns:
+            Map from MD5 sum of JAR files to the set of the JAR file paths sharing the MD5 sum.
+        """
+        # Map: JAR file MD5 sum -> set of JAR file paths sharing the same MD5
+        md5_map = collections.defaultdict(set)
+
+        jar_count = 0
+
+        for jar_path in list_files(root_dir=self._bento_dir, name_pattern=RE_JAR):
+            jar_count += 1
+            jar_md5 = md5_sum(jar_path)
+            md5_map[jar_md5].add(jar_path)
+
+        logging.info("Found %d unique MD5 sums out of %d jar files.", len(md5_map), jar_count)
+        for md5, jar_paths in md5_map.items():
+            if len(jar_paths) < 1:
+                continue
+            logging.debug("Deduplicating %d JARs with MD5 %r: %r",
+                          len(jar_paths), md5, sorted(jar_paths))
+
+        return md5_map
+
+    def _deduplicate_jars(self, md5, jar_paths):
+        """Deduplicates the specified JAR files.
+
+        Args:
+            md5: MD5 sum of the JAR files to deduplicate.
+            jar_paths: Set of JAR file paths to deduplicate.
+                    The JAR files are expected to share the same MD5.
+        """
+        jar_paths = set(jar_paths)
+        logging.debug("Deduplicating %d JARs with MD5 %r", len(jar_paths), md5)
+
+        target_jar_path = min(jar_paths, key=lambda path: len(path))
+        target_jar_size = os.path.getsize(target_jar_path)
+        jar_paths.remove(target_jar_path)
+        logging.debug("Symlinking %d JARs with MD5 %r to %r (%d bytes)",
+                                    len(jar_paths), md5, target_jar_path, target_jar_size)
+
+        for duplicate_jar_path in jar_paths:
+            assert (os.path.getsize(duplicate_jar_path) == target_jar_size), (
+                    'Inconsistent file size for duplicate JAR %r' % duplicate_jar_path)
+
+            rel_jar_path = os.path.relpath(target_jar_path, start=os.path.dirname(duplicate_jar_path))
+            logging.debug("Symlinking %r -> %r", duplicate_jar_path, rel_jar_path)
+
+            if not self._args.dry_run:
+                os.remove(duplicate_jar_path)
+                os.symlink(src=rel_jar_path, dst=duplicate_jar_path)
+
+        self._bytes_saved += target_jar_size * len(jar_paths)
+
+    def go(self, cmd_line_args):
+        """Entry point of the JAR deduplicator."""
+        self._parse_options(cmd_line_args)
+        md5_jars_map = self._build_md5_jars_map()
+        for md5, jar_paths in md5_jars_map.items():
+            if len(jar_paths) > 1:
+                self._deduplicate_jars(md5, jar_paths)
+        logging.info("Saved %d bytes.", self._bytes_saved)
+
 
 
 if __name__ == "__main__":
-  foo = RedundantJarLinker()
-  foo.go(sys.argv[1:])
+    foo = RedundantJarLinker()
+    foo.go(sys.argv[1:])
