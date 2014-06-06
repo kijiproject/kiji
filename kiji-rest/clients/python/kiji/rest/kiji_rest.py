@@ -351,6 +351,48 @@ class KijiRestClient(object):
     )
     return base.JsonDecode(text_reply)
 
+  def CloseInstance(self, instance):
+    """Stop serving a Kiji instance and close all connections to it."""
+
+    assert (instance is not None), 'No Kiji instance specified.'
+    url = 'http://%s/tasks/close?instance=%s' % (self._admin_address, instance)
+    method = HttpMethod.POST
+    http_req = urllib.request.Request(url=url, method=method)
+    http_req.get_method = lambda: method
+    try:
+      http_reply = urllib.request.urlopen(http_req)
+      http_code = http_reply.getcode()
+      assert (http_code == http.client.OK), \
+          ('Close instance failed with HTTP code %d' % http_code)
+      return True
+    except urllib.error.URLError as err:
+      logging.debug('Error closing instance: %r', err)
+      return False
+    except urllib.error.HTTPError as err:
+      logging.debug('Error closing instance: %r\n%s', err, err.readlines())
+      return False
+
+  def CloseTable(self, instance, table):
+    """Stop serving a Kiji table and close all connections to it."""
+
+    assert (instance is not None), 'No Kiji instance specified.'
+    assert (table is not None), 'No Kiji table specified.'
+    url = 'http://%s/tasks/close?instance=%s&table=%s' % (self._admin_address, instance, table)
+    method = HttpMethod.POST
+    http_req = urllib.request.Request(url=url, method=method)
+    http_req.get_method = lambda: method
+    try:
+      http_reply = urllib.request.urlopen(http_req)
+      http_code = http_reply.getcode()
+      assert (http_code == http.client.OK), \
+          ('Close table failed with HTTP code %d' % http_code)
+      return True
+    except urllib.error.URLError as err:
+      logging.debug('Error closing table: %r', err)
+      return False
+    except urllib.error.HTTPError as err:
+      logging.debug('Error closing table: %r\n%s', err, err.readlines())
+      return False
 
   def Ping(self):
     """Ping the REST server on the admin endpoint."""
@@ -882,6 +924,45 @@ class RestPing(RestAction):
       print('FAILURE')
       return ExitCode.FAILURE
 
+class CloseInstance(RestAction):
+  """Close all REST connections to a Kiji instance."""
+
+  def RegisterFlags(self):
+    self.flags.AddString(
+        name='instance',
+        help='Name of the Kiji instance whose connection to close.',
+    )
+
+  def Run(self, args):
+    assert (len(args) == 0), ('Unexpected arguments: %r' % args)
+    if self.client.CloseInstance(instance = self.flags.instance):
+      print('OK')
+      return ExitCode.SUCCESS
+    else:
+      print('FAILURE')
+      return ExitCode.FAILURE
+
+class CloseTable(RestAction):
+  """Close all REST connections to a Kiji table."""
+
+  def RegisterFlags(self):
+    self.flags.AddString(
+        name='instance',
+        help='Name of the Kiji instance containing the table whose connection to close.',
+    )
+    self.flags.AddString(
+        name='table',
+        help='Name of the Kiji table whose connection to close.',
+    )
+
+  def Run(self, args):
+    assert (len(args) == 0), ('Unexpected arguments: %r' % args)
+    if self.client.CloseTable(instance = self.flags.instance, table = self.flags.table):
+      print('OK')
+      return ExitCode.SUCCESS
+    else:
+      print('FAILURE')
+      return ExitCode.FAILURE
 
 class ListInstances(RestAction):
   """Lists the Kiji instances accessible through the REST server."""
@@ -1102,6 +1183,18 @@ class Stop(ServerAction):
     print('FAILED')
     return ExitCode.FAILURE
 
+class ServerPing(ServerAction):
+  NAME = 'ping'
+
+  def Run(self, args):
+    assert (len(args) == 0), ('Unexpected arguments: %r' % args)
+    assert (len(args) == 0), ('Extra CLI args: %r' % args)
+    if self.server.GetClient().Ping():
+      print('OK')
+      return ExitCode.SUCCESS
+    else:
+      print('FAILED')
+      return ExitCode.FAILURE
 
 class ServerPing(ServerAction):
   NAME = 'ping'

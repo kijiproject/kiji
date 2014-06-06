@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import org.kiji.delegation.Lookups;
 import org.kiji.rest.health.KijiClientHealthCheck;
 import org.kiji.rest.plugins.KijiRestPlugin;
+import org.kiji.rest.resources.CloseTask;
 import org.kiji.rest.resources.RefreshInstancesTask;
 import org.kiji.schema.KijiURI;
 
@@ -100,6 +101,9 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
 
     // Load admin task to manually refresh instances.
     environment.addTask(new RefreshInstancesTask(managedKijiClient));
+    // Load admin task to manually close instances and tables.
+    environment.addTask(new CloseTask(managedKijiClient));
+
 
     // Load resources.
     for (KijiRestPlugin plugin : Lookups.get(KijiRestPlugin.class)) {
