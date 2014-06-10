@@ -188,7 +188,7 @@ public class TestManagedKijiClient extends KijiClientTest {
     assertTrue(mKijiClient.getInstances().contains(instance));
 
     deleteTestKiji(kiji);
-    // Thread.sleep(50); // This one doesn't seem to be necessary
+    Thread.sleep(50); // Give the ZK callback a chance to trigger
     assertFalse(mKijiClient.getInstances().contains(instance));
   }
 }
