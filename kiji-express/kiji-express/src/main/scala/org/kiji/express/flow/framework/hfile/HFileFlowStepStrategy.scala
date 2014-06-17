@@ -80,8 +80,15 @@ object HFileFlowStepStrategy extends FlowStepStrategy[JobConf] {
 
       val kijiURI = KijiURI.newBuilder(sink.tableUri).build()
       val splits = HFileMapReduceJobOutput.makeTableKeySplit(kijiURI, 0, conf)
-      if (splits.size > 1) require(conf.get("mapred.job.tracker") != "local",
-        "Cannot create HFiles for table with more than a single region in local map reduce mode.")
+      if (splits.size > 1) {
+        val mr1Mode = Option(conf.get("mapred.job.tracker"))
+        val yarnMode = Option(conf.get("mapreduce.framework.name"))
+        val mode = yarnMode orElse mr1Mode orElse Option("local")
+        require(
+          mode.get != "local",
+          "Cannot create HFiles for table with more than a single region in local map reduce mode."
+        )
+      }
       conf.setNumReduceTasks(splits.size())
 
       // Write the partition file for the TotalOrderPartitioner
