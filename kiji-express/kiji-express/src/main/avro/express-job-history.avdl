@@ -1,0 +1,55 @@
+/**
+ * (c) Copyright 2014 WibiData, Inc.
+ *
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@namespace("org.kiji.express.avro.generated")
+protocol ExpressJobHistoryRecords {
+
+  /** Record that holds a Express Job History Table entry. */
+  record ExpressJobHistoryEntry {
+    /** Job ID. */
+    string job_id;
+
+    /** Job name. */
+    string job_name;
+
+    /** Job start time. */
+    long job_start_time;
+
+    /** Job end time. */
+    long job_end_time;
+
+    /** Job end status. */
+    string job_end_status;
+
+    /** Job counters. */
+    string job_counters;
+
+    /** Job configuration. */
+    string job_configuration;
+
+    /** Derived information. */
+    map<string> extended_info = {};
+
+    /** Individual counters. */
+    map<long> counters_family = {};
+
+    /** Array of the metrics from all the flow steps*/
+    array<map<long>> flow_step_counters = {};
+  }
+}

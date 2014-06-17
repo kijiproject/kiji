@@ -1,3 +1,22 @@
+/**
+ * (c) Copyright 2014 WibiData, Inc.
+ *
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.kiji.express.flow
 
 import java.io.InputStream
@@ -13,14 +32,14 @@ import org.apache.commons.io.IOUtils
 import org.junit.Assert
 import org.junit.Test
 
-import org.kiji.mapreduce.avro.generated.JobHistoryEntry
-import org.kiji.mapreduce.framework.JobHistoryKijiTable
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiClientTest
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
 import org.kiji.schema.shell.api.Client
 import org.kiji.schema.util.InstanceBuilder
+import org.kiji.express.flow.framework.ExpressJobHistoryKijiTable
+import org.kiji.express.avro.generated.ExpressJobHistoryEntry
 
 class JobHistorySuite extends KijiClientTest {
   import JobHistorySuite._
@@ -57,16 +76,17 @@ class JobHistorySuite extends KijiClientTest {
       )
 
       val job: SimpleJob = new SimpleJob(args)
-      Assert.assertTrue(job.counters.isEmpty)
+      Assert.assertTrue(job.flowCounters.isEmpty)
       Assert.assertTrue(job.run)
-      Assert.assertFalse(job.counters.isEmpty)
+      Assert.assertFalse(job.flowCounters.isEmpty)
 
-      val jobHistoryTable: JobHistoryKijiTable = JobHistoryKijiTable.open(kiji)
+      val expressJobHistoryTable: ExpressJobHistoryKijiTable =  ExpressJobHistoryKijiTable(kiji)
       try {
-        val jobDetails: JobHistoryEntry = jobHistoryTable.getJobDetails(job.uniqueId.get)
+        val jobDetails: ExpressJobHistoryEntry = expressJobHistoryTable
+          .getExpressJobDetails(job.uniqueId.get)
         Assert.assertEquals(job.uniqueId.get, jobDetails.getJobId)
         Assert.assertEquals(job.name, jobDetails.getJobName)
-        val testCounters: Set[(String, String, Long)] = job.counters.filter {
+        val testCounters: Set[(String, String, Long)] = job.flowCounters.filter {
           triple: (String, String, Long) => {
             val (group, name, _) = triple
             group == "group" && name == "name"
@@ -81,7 +101,7 @@ class JobHistorySuite extends KijiClientTest {
         }.toMap
         Assert.assertEquals(extendedInfo, recordedExtendedInfo)
       } finally {
-        jobHistoryTable.close()
+        expressJobHistoryTable.close()
       }
     } finally {
       table.release()
