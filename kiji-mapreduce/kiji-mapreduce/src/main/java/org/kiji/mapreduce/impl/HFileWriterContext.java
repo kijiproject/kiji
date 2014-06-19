@@ -40,7 +40,7 @@ import org.kiji.schema.KijiURI;
 import org.kiji.schema.hbase.HBaseColumnName;
 import org.kiji.schema.impl.DefaultKijiCellEncoderFactory;
 import org.kiji.schema.layout.CellSpec;
-import org.kiji.schema.layout.KijiColumnNameTranslator;
+import org.kiji.schema.layout.HBaseColumnNameTranslator;
 import org.kiji.schema.util.ResourceUtils;
 
 /**
@@ -63,7 +63,7 @@ public final class HFileWriterContext
 
   private final Kiji mKiji;
   private final KijiTable mTable;
-  private final KijiColumnNameTranslator mColumnNameTranslator;
+  private final HBaseColumnNameTranslator mColumnNameTranslator;
   private final EntityIdFactory mEntityIdFactory;
 
   /**
@@ -82,7 +82,7 @@ public final class HFileWriterContext
         KijiURI.newBuilder(conf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI)).build();
     mKiji = Kiji.Factory.open(outputURI, conf);
     mTable = mKiji.openTable(outputURI.getTable());
-    mColumnNameTranslator = KijiColumnNameTranslator.from(mTable.getLayout());
+    mColumnNameTranslator = HBaseColumnNameTranslator.from(mTable.getLayout());
     mEntityIdFactory = EntityIdFactory.getFactory(mTable.getLayout());
   }
 
