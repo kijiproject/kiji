@@ -50,6 +50,10 @@ public class KijiRESTConfiguration extends Configuration {
   @JsonProperty("plugin-properties")
   private Map<String, String> mPluginProperties = Collections.emptyMap();
 
+  /** Whether to register this REST server with service discovery. */
+  @JsonProperty("service-discovery")
+  private boolean mServiceDiscovery = true;
+
   /** @return The cluster address. */
   public final String getClusterURI() {
     return mCluster;
@@ -63,6 +67,11 @@ public class KijiRESTConfiguration extends Configuration {
   /** @return Is global CORS turned on or off. */
   public boolean getCORS() {
     return mCORS;
+  }
+
+  /** @return register this REST instance with service discovery. */
+  public boolean getServiceDiscovery() {
+    return mServiceDiscovery;
   }
 
   /**

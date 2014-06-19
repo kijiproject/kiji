@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.kiji.rest</groupId>
     <artifactId>kiji-rest-root</artifactId>
-    <version>1.3.3-SNAPSHOT</version>
+    <version>1.4.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 

@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.delegation.Lookups;
+import org.kiji.rest.discovery.RestServiceRegistrar;
 import org.kiji.rest.health.KijiClientHealthCheck;
 import org.kiji.rest.plugins.KijiRestPlugin;
 import org.kiji.rest.resources.CloseTask;
@@ -85,6 +86,11 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
 
     // Setup the health checker for the KijiClient
     environment.addHealthCheck(new KijiClientHealthCheck(managedKijiClient));
+
+    if (configuration.getServiceDiscovery()) {
+      final RestServiceRegistrar registrar = new RestServiceRegistrar(clusterURI, environment);
+      environment.manage(registrar);
+    }
 
     // Remove all built-in Dropwizard ExceptionHandler.
     // Always depend on custom ones.

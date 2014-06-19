@@ -43,6 +43,7 @@ import com.google.common.collect.Lists;
 import com.yammer.dropwizard.lifecycle.Managed;
 import com.yammer.metrics.core.HealthCheck;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.imps.CuratorFrameworkState;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
@@ -315,8 +316,13 @@ public class ManagedKijiClient implements KijiClient, Managed {
     final State state = mState.get();
     Preconditions.checkState(state == State.STARTED,
         "Can not check health while in state %s.", state);
-
     List<String> issues = Lists.newArrayList();
+
+    if (mZKFramework.getState() != CuratorFrameworkState.STARTED) {
+      issues.add(String.format("ZooKeeper connection in unhealthy state %s.",
+              mZKFramework.getState()));
+    }
+
     for (KijiInstanceCache instanceCache : mInstanceCaches.asMap().values()) {
       issues.addAll(instanceCache.checkHealth());
     }

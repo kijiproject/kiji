@@ -1,6 +1,9 @@
 
                               KijiREST Release Notes
 
+Version 1.4.0
+  * REST-139. Add REST service discovery service
+
 Version 1.2.2
   * REST-90. Allow KijiREST to be started in foreground mode, via the
       'foreground' command line option.
