@@ -48,8 +48,8 @@ import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiURI
 import org.kiji.schema.impl.DefaultKijiCellEncoderFactory
+import org.kiji.schema.layout.HBaseColumnNameTranslator
 import org.kiji.schema.layout.impl.CellEncoderProvider
-import org.kiji.schema.layout.KijiColumnNameTranslator
 import org.kiji.schema.{EntityId => JEntityId}
 
 /**
@@ -136,7 +136,7 @@ final private[express] class HFileKijiScheme(
       sinkCall.setContext(
         HFileKijiSinkContext(
           EntityIdFactory.getFactory(layout),
-          KijiColumnNameTranslator.from(layout),
+          HBaseColumnNameTranslator.from(layout),
           new CellEncoderProvider(uri, layout, kiji.getSchemaTable,
             DefaultKijiCellEncoderFactory.get()),
           kiji))
@@ -229,6 +229,6 @@ final private[express] class HFileKijiScheme(
 @ApiStability.Stable
 private[express] final case class HFileKijiSinkContext (
     eidFactory: EntityIdFactory,
-    columnTranslator: KijiColumnNameTranslator,
+    columnTranslator: HBaseColumnNameTranslator,
     encoderProvider: CellEncoderProvider,
     kiji: Kiji)
