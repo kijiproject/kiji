@@ -68,6 +68,7 @@ import org.kiji.scoring.KijiFreshnessManager;
 import org.kiji.scoring.KijiFreshnessPolicy;
 import org.kiji.scoring.ScoreFunction;
 import org.kiji.scoring.avro.KijiFreshenerRecord;
+import org.kiji.scoring.avro.ParameterDescription;
 import org.kiji.scoring.lib.AlwaysFreshen;
 import org.kiji.scoring.lib.NeverFreshen;
 import org.kiji.scoring.lib.NewerThan;
@@ -89,6 +90,8 @@ public class TestInternalFreshKijiTableReader {
   private static final KijiDataRequest MAP_QUALIFIER_R = KijiDataRequest.create("map", "qualifier");
 
   private static final Map<String, String> EMPTY_PARAMS = Collections.emptyMap();
+  private static final Map<String, ParameterDescription> EMPTY_DESCRIPTIONS =
+      Collections.emptyMap();
   private static final AlwaysFreshen ALWAYS = new AlwaysFreshen();
   private static final NeverFreshen NEVER = new NeverFreshen();
   private static final ScoreFunction TEST_SCORE_FN = new TestScoreFunction();
@@ -327,6 +330,7 @@ public class TestInternalFreshKijiTableReader {
           NEVER,
           TEST_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
     } finally {
@@ -365,6 +369,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           TEST_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
     } finally {
@@ -407,6 +412,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           TEST_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
       manager.registerFreshener(
@@ -415,6 +421,7 @@ public class TestInternalFreshKijiTableReader {
           NEVER,
           TEST_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
     } finally {
@@ -470,6 +477,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           TEST_TIMEOUT_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
     } finally {
@@ -509,6 +517,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           TEST_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
 
@@ -526,6 +535,7 @@ public class TestInternalFreshKijiTableReader {
             new NewerThan(Long.MAX_VALUE),
             TEST_SCORE_FN2,
             EMPTY_PARAMS,
+            EMPTY_DESCRIPTIONS,
             false,
             false);
 
@@ -561,6 +571,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           TEST_TIMEOUT_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
       manager.registerFreshener(
@@ -569,6 +580,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           TEST_TIMEOUT_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
     } finally {
@@ -612,6 +624,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           TEST_TIMEOUT_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
     } finally {
@@ -654,8 +667,8 @@ public class TestInternalFreshKijiTableReader {
     final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
     try {
       // The value in family:qual0 is newer than one, so it should not freshen.
-      manager.registerFreshener(
-          TABLE_NAME, FAMILY_QUAL0, new NewerThan(1), TEST_SCORE_FN, EMPTY_PARAMS, false, false);
+      manager.registerFreshener(TABLE_NAME, FAMILY_QUAL0, new NewerThan(1), TEST_SCORE_FN,
+          EMPTY_PARAMS, EMPTY_DESCRIPTIONS, false, false);
     } finally {
       manager.close();
     }
@@ -690,6 +703,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           TEST_TIMEOUT_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
 
@@ -743,6 +757,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           new TestMapScoreFunction(),
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
 
@@ -775,6 +790,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           new TestMapScoreFunction(),
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
     } finally {
@@ -808,6 +824,7 @@ public class TestInternalFreshKijiTableReader {
           NEVER,
           TEST_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
 
@@ -824,6 +841,7 @@ public class TestInternalFreshKijiTableReader {
             NEVER,
             TEST_TIMEOUT_SCORE_FN,
             EMPTY_PARAMS,
+            EMPTY_DESCRIPTIONS,
             true,
             false);
         freshReader.rereadFreshenerRecords();
@@ -838,6 +856,7 @@ public class TestInternalFreshKijiTableReader {
             NEVER,
             TEST_SCORE_FN,
             EMPTY_PARAMS,
+            EMPTY_DESCRIPTIONS,
             true,
             false);
         freshReader.rereadFreshenerRecords();
@@ -866,6 +885,7 @@ public class TestInternalFreshKijiTableReader {
           new TestUsesOwnRequestPolicy(),
           TEST_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
     } finally {
@@ -901,6 +921,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           TEST_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
       manager.registerFreshener(
@@ -909,6 +930,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           TEST_TIMEOUT_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
     } finally {
@@ -989,6 +1011,7 @@ public class TestInternalFreshKijiTableReader {
           new TestTimeoutPolicy(),
           TEST_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
     } finally {
@@ -1029,6 +1052,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           TEST_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
       manager.registerFreshener(
@@ -1037,6 +1061,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           TEST_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
     } finally {
@@ -1077,6 +1102,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           TEST_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
       manager.registerFreshener(
@@ -1085,6 +1111,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           TEST_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
     } finally {
@@ -1126,6 +1153,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           TEST_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
       manager.registerFreshener(
@@ -1134,6 +1162,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           TEST_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
     } finally {
@@ -1171,8 +1200,8 @@ public class TestInternalFreshKijiTableReader {
     final KijiFreshenerRecord record;
     final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
     try {
-      manager.registerFreshener(
-          TABLE_NAME, FAMILY_QUAL0, ALWAYS, TEST_SCORE_FN, EMPTY_PARAMS, false, false);
+      manager.registerFreshener(TABLE_NAME, FAMILY_QUAL0, ALWAYS, TEST_SCORE_FN, EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS, false, false);
       record = manager.retrieveFreshenerRecord(TABLE_NAME, FAMILY_QUAL0);
     } finally {
       manager.close();
@@ -1224,8 +1253,8 @@ public class TestInternalFreshKijiTableReader {
     final KijiFreshenerRecord record;
     final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
     try {
-      manager.registerFreshener(
-          TABLE_NAME, FAMILY_QUAL0, ALWAYS, TEST_TIMEOUT_SCORE_FN, EMPTY_PARAMS, false, false);
+      manager.registerFreshener(TABLE_NAME, FAMILY_QUAL0, ALWAYS, TEST_TIMEOUT_SCORE_FN,
+          EMPTY_PARAMS, EMPTY_DESCRIPTIONS, false, false);
       record = manager.retrieveFreshenerRecord(TABLE_NAME, FAMILY_QUAL0);
     } finally {
       manager.close();
@@ -1276,8 +1305,8 @@ public class TestInternalFreshKijiTableReader {
     final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
     final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
     try {
-      manager.registerFreshener(
-          TABLE_NAME, FAMILY_QUAL0, ALWAYS, TEST_SCORE_FN, EMPTY_PARAMS, false, false);
+      manager.registerFreshener(TABLE_NAME, FAMILY_QUAL0, ALWAYS, TEST_SCORE_FN, EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS, false, false);
     } finally {
       manager.close();
     }
@@ -1315,6 +1344,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           new TestTimestampScoreFunction(),
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
     } finally {
@@ -1342,8 +1372,8 @@ public class TestInternalFreshKijiTableReader {
     final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
     final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
     try {
-      manager.registerFreshener(
-          TABLE_NAME, FAMILY_QUAL0, ALWAYS, TEST_SCORE_FN, EMPTY_PARAMS, false, false);
+      manager.registerFreshener(TABLE_NAME, FAMILY_QUAL0, ALWAYS, TEST_SCORE_FN, EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS, false, false);
     } finally {
       manager.close();
     }
@@ -1371,8 +1401,8 @@ public class TestInternalFreshKijiTableReader {
     final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
     final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
     try {
-      manager.registerFreshener(
-          TABLE_NAME, FAMILY_QUAL0, ALWAYS, TEST_SCORE_FN, EMPTY_PARAMS, false, false);
+      manager.registerFreshener(TABLE_NAME, FAMILY_QUAL0, ALWAYS, TEST_SCORE_FN, EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS, false, false);
     } finally {
       manager.close();
     }
@@ -1413,6 +1443,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           new TestColumnReaderSpecOverrideScoreFunction(),
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
     } finally {
@@ -1458,6 +1489,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           TEST_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
     } finally {
@@ -1509,6 +1541,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           TEST_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
     } finally {
@@ -1563,6 +1596,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           TEST_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
     } finally {
@@ -1594,6 +1628,7 @@ public class TestInternalFreshKijiTableReader {
           ALWAYS,
           TEST_TIMEOUT_SCORE_FN,
           EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
     } finally {

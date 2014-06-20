@@ -20,6 +20,7 @@
 package org.kiji.scoring.tools;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -27,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +46,7 @@ import org.kiji.scoring.KijiFreshnessManager;
 import org.kiji.scoring.KijiFreshnessManager.FreshenerValidationException;
 import org.kiji.scoring.KijiFreshnessManager.ValidationFailure;
 import org.kiji.scoring.avro.KijiFreshenerRecord;
+import org.kiji.scoring.avro.ParameterDescription;
 
 /**
  * Command line interface tool for registering, retrieving, removing, and validating Fresheners.
@@ -103,6 +106,10 @@ public final class FreshTool extends BaseTool {
   @Flag(name="parameters", usage="JSON encoded mapping of configuration parameters to include in a "
       + "Freshener record. Assumed empty if unspecified.")
   private String mParametersFlag = "{}";
+
+  @Flag(name="descriptions", usage="JSON encoded mapping of parameter descriptions to include in a "
+      + "Freshener record. Assumed empty if unspecified. Ignored if instantiate-classes is true.")
+  private String mDescriptionsFlag = "{}";
 
   @Flag(name="instantiate-classes", usage="instruct the tool to instantiate classes to call their "
       + "serializeToParameters methods to include in the record. "
@@ -164,6 +171,20 @@ public final class FreshTool extends BaseTool {
       final String serializedMap
   ) {
     return GSON.fromJson(serializedMap, Map.class);
+  }
+
+  /**
+   * Parse a string-ParameterDescription map from JSON.
+   *
+   * @param serializedMap the JSON serialized map.
+   * @return the deserialized version of the map.
+   */
+  @SuppressWarnings("unchecked")
+  private static Map<String, ParameterDescription> descriptionMapFromJSON(
+      final String serializedMap
+  ) {
+    Type mapType = new TypeToken<Map<String, ParameterDescription>>() {}.getType();
+    return GSON.fromJson(serializedMap, mapType);
   }
 
   /**
@@ -284,6 +305,7 @@ public final class FreshTool extends BaseTool {
             mPolicyClassFlag,
             mScoreFunctionClassFlag,
             mapFromJSON(mParametersFlag),
+            descriptionMapFromJSON(mDescriptionsFlag),
             mOverwriteExistingFlag,
             mInstantiateClassesFlag,
             mSetupClassesFlag);

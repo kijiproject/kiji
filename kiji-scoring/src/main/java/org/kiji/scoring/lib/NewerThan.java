@@ -31,6 +31,8 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.scoring.FreshenerContext;
 import org.kiji.scoring.FreshenerSetupContext;
 import org.kiji.scoring.KijiFreshnessPolicy;
+import org.kiji.scoring.Parameters;
+import org.kiji.scoring.params.Param;
 
 /**
  * A stock {@link org.kiji.scoring.KijiFreshnessPolicy} which returns fresh if requested data was
@@ -83,7 +85,9 @@ public final class NewerThan extends KijiFreshnessPolicy {
   /** {@inheritDoc} */
   @Override
   public void setup(FreshenerSetupContext context) {
-    mNewerThanTimestamp = Long.valueOf(context.getParameter(NEWER_THAN_KEY));
+    final NewerThanParameters params = new NewerThanParameters();
+    params.parse(context);
+    mNewerThanTimestamp = params.getNewerThanTime();
   }
 
   // per-request methods ---------------------------------------------------------------------------
@@ -91,8 +95,9 @@ public final class NewerThan extends KijiFreshnessPolicy {
   /** {@inheritDoc} */
   @Override
   public boolean isFresh(KijiRowData rowData, FreshenerContext context) {
-    final String newerThanString = context.getParameter(NEWER_THAN_KEY);
-    final long newerThan = Long.valueOf(newerThanString);
+    final NewerThanParameters params = new NewerThanParameters();
+    params.parse(context);
+    final long newerThan = params.getNewerThanTime();
 
     final KijiColumnName columnName = context.getAttachedColumn();
 
@@ -106,5 +111,50 @@ public final class NewerThan extends KijiFreshnessPolicy {
     // If there are no values in the column in the row data, it is not fresh.  If there are values
     // but the newest value is older than mNewerThanTimestamp, it is not fresh.
     return !timestamps.isEmpty() && timestamps.first() >= newerThan;
+  }
+
+//Parameters ------------------------------------------------------------------------------------
+
+  /**
+   * Parameters for NewerThan Freshness Policy.
+   */
+  public static class NewerThanParameters extends Parameters {
+    /**
+     * The unix time in milliseconds before which data is stale.
+     */
+    @Param(name = NEWER_THAN_KEY,
+          description = "The unix time in milliseconds before which data is stale.")
+    private long mNewerThanTimestamp;
+
+    /**
+     * Get the newer-than time.
+     *
+     * @return the newer-than time.
+     */
+    public long getNewerThanTime() {
+      return mNewerThanTimestamp;
+    }
+
+    /**
+     * Set the newer-than time.
+     *
+     * @param timestamp
+     * the newer-than time.
+     */
+    public void setNewerThanTime(long timestamp) {
+      mNewerThanTimestamp = timestamp;
+    }
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public Parameters getSetupParameters() {
+    return new NewerThanParameters();
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public Parameters getRuntimeParameters() {
+    return new NewerThanParameters();
   }
 }

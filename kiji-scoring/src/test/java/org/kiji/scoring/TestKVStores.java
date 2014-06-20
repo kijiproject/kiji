@@ -48,6 +48,7 @@ import org.kiji.schema.avro.TableLayoutDesc;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
 import org.kiji.schema.util.ResourceUtils;
+import org.kiji.scoring.avro.ParameterDescription;
 import org.kiji.scoring.lib.AlwaysFreshen;
 
 /**
@@ -257,6 +258,7 @@ public class TestKVStores extends KijiClientTest {
     final String path = new Path("file:" + new File(getLocalTempDir(), KV_FILENAME)).toString();
     final Map<String, String> params = Maps.newHashMap();
     params.put(SimpleKVScoreFunction.PARAMETER_KEY, path);
+    final Map<String, ParameterDescription> emptyDescriptions = Collections.emptyMap();
 
     // Install a freshness policy.
     KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
@@ -267,6 +269,7 @@ public class TestKVStores extends KijiClientTest {
           AlwaysFreshen.class.getName(),
           SimpleKVScoreFunction.class.getName(),
           params,
+          emptyDescriptions,
           true,
           false,
           false);
@@ -307,6 +310,7 @@ public class TestKVStores extends KijiClientTest {
           policy,
           new UnconfiguredScoreFunction(),
           Collections.<String, String>emptyMap(),
+          Collections.<String, ParameterDescription>emptyMap(),
           true,
           false);
     } finally {
@@ -345,6 +349,7 @@ public class TestKVStores extends KijiClientTest {
           policy,
           new UnconfiguredScoreFunction(),
           Collections.<String, String>emptyMap(),
+          Collections.<String, ParameterDescription>emptyMap(),
           true,
           false);
     } finally {

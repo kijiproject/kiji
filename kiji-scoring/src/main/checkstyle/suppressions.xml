@@ -30,4 +30,8 @@
 
   <!-- Nested blocks used to structure tests. -->
   <suppress checks="AvoidNestedBlocks" files="src/test/java/"/>
+  
+  <!-- Param tests have small test classes that don't follow convention. -->
+  <suppress checks="MemberNameCheck" files="src/test/java/org/kiji/scoring/params/"/>
+  <suppress checks="VisibilityModifierCheck" files="src/test/java/org/kiji/scoring/params/"/>
 </suppressions>

@@ -36,6 +36,7 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.ResourceUtils;
+import org.kiji.scoring.avro.ParameterDescription;
 import org.kiji.scoring.lib.ShelfLife;
 
 /**
@@ -87,6 +88,7 @@ public class TestFreshnessDemo extends KijiClientTest {
           policy,
           new DemoScoreFunction(),
           Collections.<String, String>emptyMap(),
+          Collections.<String, ParameterDescription>emptyMap(),
           false,
           false);
       // Open a FreshKijiTableReader for the table with a timeout of 500 milliseconds.

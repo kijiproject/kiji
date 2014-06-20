@@ -52,6 +52,7 @@ import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout.FamilyLayout;
 import org.kiji.schema.util.ProtocolVersion;
 import org.kiji.scoring.avro.KijiFreshenerRecord;
+import org.kiji.scoring.avro.ParameterDescription;
 import org.kiji.scoring.impl.InternalFreshenerContext;
 import org.kiji.scoring.impl.ScoringUtils;
 
@@ -276,12 +277,14 @@ public final class KijiFreshnessManager implements Closeable {
    * @param policyClass fully qualified class name of the KijiFreshnessPolicy.
    * @param scoreFunctionClass fully qualified class name of the ScoreFunction.
    * @param parameters configuration parameters.
+   * @param descriptions optional parameter descriptions.
    * @return a new KijiFreshenerRecord built from the given strings.
    */
   private static KijiFreshenerRecord recordFromStrings(
       final String policyClass,
       final String scoreFunctionClass,
-      final Map<String, String> parameters
+      final Map<String, String> parameters,
+      final Map<String, ParameterDescription> descriptions
   ) {
     Preconditions.checkNotNull(policyClass, "KijiFreshnessPolicy class may not be null.");
     Preconditions.checkNotNull(scoreFunctionClass, "ScoreFunction class may not be null.");
@@ -291,6 +294,7 @@ public final class KijiFreshnessManager implements Closeable {
         .setFreshnessPolicyClass(policyClass)
         .setScoreFunctionClass(scoreFunctionClass)
         .setParameters(parameters)
+        .setDescriptions(descriptions)
         .build();
   }
 
@@ -569,6 +573,7 @@ public final class KijiFreshnessManager implements Closeable {
    * Register a Freshener record to the specified column in the specified table. The record will be
    * built from policy, scoreFunction, and parameters.
    *
+   * @deprecated Use the method that accepts ParameterDescriptions instead.
    * @param tableName the name of the table which holds the specified column.
    * @param columnName the name column to which to attach a Freshener.
    * @param policy an already initialized instance of the KijiFreshnessPolicy class to use in the
@@ -584,6 +589,7 @@ public final class KijiFreshnessManager implements Closeable {
    *     both objects and may open the KeyValueStores they return.
    * @throws IOException in case of an error writing to the meta table.
    */
+  @Deprecated
   public void registerFreshener(
       final String tableName,
       final KijiColumnName columnName,
@@ -593,6 +599,51 @@ public final class KijiFreshnessManager implements Closeable {
       final boolean overwriteExisting,
       final boolean setupClasses
   ) throws IOException {
+    final Map<String, ParameterDescription> emptyDescriptions = Collections.emptyMap();
+
+    registerFreshener(
+        tableName,
+        columnName,
+        policy,
+        scoreFunction,
+        parameters,
+        emptyDescriptions,
+        overwriteExisting,
+        setupClasses);
+  }
+
+  /**
+   * Register a Freshener record to the specified column in the specified table. The record will be
+   * built from policy, scoreFunction, parameters, and parameter descriptions.
+   *
+   * @param tableName the name of the table which holds the specified column.
+   * @param columnName the name column to which to attach a Freshener.
+   * @param policy an already initialized instance of the KijiFreshnessPolicy class to use in the
+   *     Freshener.
+   * @param scoreFunction an already initialized instance of the ScoreFunction class to use in the
+   *     Freshener.
+   * @param parameters configuration parameters which will be available to the KijiFreshnessPolicy
+   *     and ScoreFunction via their context objects.
+   * @param descriptions parameter descriptions to store in the KijiFreshenerRecord.
+   * @param overwriteExisting whether to overwrite an existing KijiFreshenerRecord in the target
+   *     column.
+   * @param setupClasses whether to setup the KijiFreshnessPolicy and ScoreFunction classes before
+   *     calling their serializeToParameters() methods. This will also call getRequiredStores on
+   *     both objects and may open the KeyValueStores they return.
+   * @throws IOException in case of an error writing to the meta table.
+   */
+  // CSOFF: ParameterNumber
+  public void registerFreshener(
+      final String tableName,
+      final KijiColumnName columnName,
+      final KijiFreshnessPolicy policy,
+      final ScoreFunction<?> scoreFunction,
+      final Map<String, String> parameters,
+      final Map<String, ParameterDescription> descriptions,
+      final boolean overwriteExisting,
+      final boolean setupClasses
+  ) throws IOException {
+    // CSON: ParameterNumber
     if (setupClasses) {
       final InternalFreshenerContext context =
           InternalFreshenerContext.create(columnName, parameters);
@@ -607,8 +658,13 @@ public final class KijiFreshnessManager implements Closeable {
     combinedParameters.putAll(policy.serializeToParameters());
     combinedParameters.putAll(parameters);
 
-    final KijiFreshenerRecord record = recordFromStrings(
-        policy.getClass().getName(), scoreFunction.getClass().getName(), combinedParameters);
+    final Map<String, ParameterDescription> combinedDescriptions = Maps.newHashMap();
+    combinedDescriptions.putAll(Parameters.getDescriptions(scoreFunction));
+    combinedDescriptions.putAll(Parameters.getDescriptions(policy));
+    combinedDescriptions.putAll(descriptions);
+
+    final KijiFreshenerRecord record = recordFromStrings(policy.getClass().getName(),
+        scoreFunction.getClass().getName(), combinedParameters, combinedDescriptions);
 
     final Map<ValidationFailure, Exception> validationFailures =
         validateRecord(tableName, columnName, record, overwriteExisting);
@@ -625,6 +681,7 @@ public final class KijiFreshnessManager implements Closeable {
    * built from policyClass, policyState, scoreFunctionClass, scoreFunctionState, and
    * parameters.
    *
+   * @deprecated Use the method that accepts ParameterDescriptions instead.
    * @param tableName the name of the table which holds the specified column.
    * @param columnName the name column to which to attach a Freshener.
    * @param policyClass fully qualified class name of the KijiFreshnessPolicy class to use in the
@@ -644,12 +701,62 @@ public final class KijiFreshnessManager implements Closeable {
    * @throws IOException in case of an error writing to the meta table.
    */
   // CSOFF: ParameterNumber
+  @Deprecated
   public void registerFreshener(
       final String tableName,
       final KijiColumnName columnName,
       final String policyClass,
       final String scoreFunctionClass,
       final Map<String, String> parameters,
+      final boolean overwriteExisting,
+      final boolean instantiateClasses,
+      final boolean setupClasses
+  ) throws IOException {
+    final Map<String, ParameterDescription> emptyDescriptions = Collections.emptyMap();
+    registerFreshener(
+        tableName,
+        columnName,
+        policyClass,
+        scoreFunctionClass,
+        parameters,
+        emptyDescriptions,
+        overwriteExisting,
+        instantiateClasses,
+        setupClasses);
+  }
+
+  /**
+   * Register a Freshener record to the specified column in the specified table. The record will be
+   * built from policyClass, policyState, scoreFunctionClass, scoreFunctionState, and
+   * parameters.
+   *
+   * @param tableName the name of the table which holds the specified column.
+   * @param columnName the name column to which to attach a Freshener.
+   * @param policyClass fully qualified class name of the KijiFreshnessPolicy class to use in the
+   *     Freshener.
+   * @param scoreFunctionClass fully qualified class name of the ScoreFunction class to use in the
+   *     Freshener.
+   * @param parameters configuration parameters which will be available to the KijiFreshnessPolicy
+   *     and ScoreFunction via their context objects.
+   * @param descriptions parameter descriptions to store in the KijiFreshenerRecord.
+   * @param overwriteExisting whether to overwrite an existing KijiFreshenerRecord in the target
+   *     column.
+   * @param instantiateClasses whether to instantiate classes in order to call
+   *     serializeToParameters(). (This requires classes on the classpath).
+   * @param setupClasses whether to setup the KijiFreshnessPolicy and ScoreFunction classes before
+   *     calling their serializeToParameters() methods. This will also call getRequiredStores on
+   *     both objects and may open the KeyValueStores they return. This option has no effect if
+   *     instantiateClasses is false.
+   * @throws IOException in case of an error writing to the meta table.
+   */
+  // CSOFF: ParameterNumber
+  public void registerFreshener(
+      final String tableName,
+      final KijiColumnName columnName,
+      final String policyClass,
+      final String scoreFunctionClass,
+      final Map<String, String> parameters,
+      final Map<String, ParameterDescription> descriptions,
       final boolean overwriteExisting,
       final boolean instantiateClasses,
       final boolean setupClasses
@@ -665,11 +772,12 @@ public final class KijiFreshnessManager implements Closeable {
           policy,
           scoreFunction,
           parameters,
+          descriptions,
           overwriteExisting,
           setupClasses);
     } else {
       final KijiFreshenerRecord record =
-          recordFromStrings(policyClass, scoreFunctionClass, parameters);
+          recordFromStrings(policyClass, scoreFunctionClass, parameters, descriptions);
       final Map<ValidationFailure, Exception> validationFailures =
           validateRecord(tableName, columnName, record, overwriteExisting);
 
@@ -717,6 +825,7 @@ public final class KijiFreshnessManager implements Closeable {
           policy,
           scoreFunction,
           record.getParameters(),
+          record.getDescriptions(),
           overwriteExisting,
           setupClasses);
     } else {
@@ -770,6 +879,10 @@ public final class KijiFreshnessManager implements Closeable {
         final ScoreFunction<?> scoreFunction =
             ScoringUtils.scoreFunctionForName(record.getScoreFunctionClass());
 
+        final Map<String, ParameterDescription> descriptions = Parameters
+            .getDescriptions(scoreFunction);
+        descriptions.putAll(Parameters.getDescriptions(policy));
+
         if (setupClasses) {
           final InternalFreshenerContext context =
               InternalFreshenerContext.create(recordEntry.getKey(), record.getParameters());
@@ -793,6 +906,7 @@ public final class KijiFreshnessManager implements Closeable {
                 .setFreshnessPolicyClass(record.getFreshnessPolicyClass())
                 .setScoreFunctionClass(record.getScoreFunctionClass())
                 .setParameters(newParameters)
+                .setDescriptions(descriptions)
                 .build(),
             overwriteExisting));
       } else {

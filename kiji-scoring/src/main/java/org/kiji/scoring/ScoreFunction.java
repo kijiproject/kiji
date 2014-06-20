@@ -78,7 +78,7 @@ import org.kiji.schema.KijiRowData;
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Extensible
-public abstract class ScoreFunction<T> {
+public abstract class ScoreFunction<T> implements ParameterProvider {
 
   /**
    * A Tuple class containing a <code>long</code> timestamp and a value of any type.
@@ -151,6 +151,26 @@ public abstract class ScoreFunction<T> {
     ) {
       return new TimestampedValue<U>(HConstants.LATEST_TIMESTAMP, value);
     }
+  }
+
+  // Parameter discovery --------------------------------------------------------------------------
+
+  /** {@inheritDoc} */
+  @Override
+  public Parameters getSetupParameters() {
+    // Nothing may go here because clients may implement without calling super method.
+    // Child classes should implement their own parameters class, and return an instance of that
+    // class here.
+    return Parameters.getEmptyParameters();
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public Parameters getRuntimeParameters() {
+    // Nothing may go here because clients may implement without calling super method.
+    // Child classes should implement their own parameters class, and return an instance of that
+    // class here.
+    return Parameters.getEmptyParameters();
   }
 
   // Attachment time methods -----------------------------------------------------------------------

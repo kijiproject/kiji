@@ -21,7 +21,6 @@ package org.kiji.scoring.lib;
 import java.util.Map;
 import java.util.NavigableSet;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
 import org.kiji.annotations.ApiAudience;
@@ -31,6 +30,8 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.scoring.FreshenerContext;
 import org.kiji.scoring.FreshenerSetupContext;
 import org.kiji.scoring.KijiFreshnessPolicy;
+import org.kiji.scoring.Parameters;
+import org.kiji.scoring.params.Param;
 
 /**
  * A stock {@link org.kiji.scoring.KijiFreshnessPolicy} which returns fresh if requested data was
@@ -85,7 +86,9 @@ public final class ShelfLife extends KijiFreshnessPolicy {
   /** {@inheritDoc} */
   @Override
   public void setup(FreshenerSetupContext context) {
-    mShelfLifeMillis = Long.valueOf(context.getParameter(SHELF_LIFE_KEY));
+    final ShelfLifeParameters params = new ShelfLifeParameters();
+    params.parse(context);
+    mShelfLifeMillis = params.getShelfLife();
   }
 
   // per-request methods ---------------------------------------------------------------------------
@@ -93,9 +96,9 @@ public final class ShelfLife extends KijiFreshnessPolicy {
   /** {@inheritDoc} */
   @Override
   public boolean isFresh(KijiRowData rowData, FreshenerContext context) {
-    final String shelfLifeString = context.getParameter(SHELF_LIFE_KEY);
-    Preconditions.checkNotNull(shelfLifeString, "ShelfLife parameter unset.");
-    final long shelfLife = Long.valueOf(shelfLifeString);
+    final ShelfLifeParameters params = new ShelfLifeParameters();
+    params.parse(context);
+    final long shelfLife = params.getShelfLife();
 
     final KijiColumnName columnName = context.getAttachedColumn();
 
@@ -109,5 +112,47 @@ public final class ShelfLife extends KijiFreshnessPolicy {
     // but the newest is more than mShelfLifeMillis old, it is not fresh.
     return !timestamps.isEmpty()
         && System.currentTimeMillis() - timestamps.first() <= shelfLife;
+  }
+
+  // Parameters ------------------------------------------------------------------------------------
+
+  /**
+   * Parameters for ShelfLife Freshness Policy.
+   */
+  public static class ShelfLifeParameters extends Parameters {
+    /**
+     * The age in milliseconds beyond which data becomes stale.
+     */
+    @Param(name = SHELF_LIFE_KEY,
+        description = "The age in milliseconds beyond which data becomes stale.")
+    private long mShelfLife;
+
+    /**
+     * Get the shelf life.
+     * @return the shelf life.
+     */
+    public long getShelfLife() {
+      return mShelfLife;
+    }
+
+    /**
+     * Set the shelf life.
+     * @param shelfLife the shelf life.
+     */
+    public void setShelfLife(long shelfLife) {
+      mShelfLife = shelfLife;
+    }
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public Parameters getSetupParameters() {
+    return new ShelfLifeParameters();
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public Parameters getRuntimeParameters() {
+    return new ShelfLifeParameters();
   }
 }

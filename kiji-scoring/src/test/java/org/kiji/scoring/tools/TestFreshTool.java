@@ -31,6 +31,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.gson.Gson;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -48,6 +49,8 @@ import org.kiji.scoring.KijiFreshnessManager;
 import org.kiji.scoring.KijiFreshnessPolicy;
 import org.kiji.scoring.ScoreFunction;
 import org.kiji.scoring.avro.KijiFreshenerRecord;
+import org.kiji.scoring.avro.ParameterDescription;
+import org.kiji.scoring.avro.ParameterScope;
 import org.kiji.scoring.lib.NeverFreshen;
 import org.kiji.scoring.lib.ShelfLife;
 
@@ -111,6 +114,8 @@ public class TestFreshTool extends KijiClientTest {
     PARAMS.put(ShelfLife.SHELF_LIFE_KEY, "10");
   }
   private static final Map<String, String> EMPTY_PARAMS = Collections.emptyMap();
+  private static final Map<String, ParameterDescription> EMPTY_DESCRIPTIONS =
+      Collections.emptyMap();
   private static final String PARAMS_STRING =
       String.format("{\"%s\":\"10\"}", ShelfLife.SHELF_LIFE_KEY);
   private static final String EMPTY_PARAMS_STRING = "{}";
@@ -135,12 +140,24 @@ public class TestFreshTool extends KijiClientTest {
   public void testRegister() throws Exception {
     getKiji().createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
 
+    final ParameterDescription testDescription =  ParameterDescription.newBuilder()
+        .setDefaultValue("foo")
+        .setDescription("bar")
+        .setRequired(false)
+        .setScope(ParameterScope.SETUP)
+        .setType("String")
+        .build();
+    Map<String, ParameterDescription> descriptions = Maps.newHashMap();
+    descriptions.put("baz", testDescription);
+    String descriptionsString = new Gson().toJson(descriptions, Map.class);
+
     assertEquals(BaseTool.SUCCESS, runTool(new FreshTool(),
         "--target=" + getNameURI(),
         "--do=register",
         "--policy-class=" + SHELF_LIFE_STRING,
         "--score-function-class=" + SCORE_FN_STRING,
-        "--parameters=" + PARAMS_STRING
+        "--parameters=" + PARAMS_STRING,
+        "--descriptions=" + descriptionsString
     ));
 
     final KijiFreshenerRecord record = KijiFreshenerRecord.newBuilder()
@@ -148,6 +165,7 @@ public class TestFreshTool extends KijiClientTest {
         .setFreshnessPolicyClass(SHELF_LIFE_STRING)
         .setScoreFunctionClass(SCORE_FN_STRING)
         .setParameters(PARAMS)
+        .setDescriptions(descriptions)
         .build();
     final KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
     try {
@@ -157,6 +175,7 @@ public class TestFreshTool extends KijiClientTest {
       assertEquals(BaseTool.SUCCESS, runTool(new FreshTool(),
           "--do=register",
           "--target=" + getVisitsURI(),
+          "--descriptions=" + descriptionsString,
           "--policy-class=" + SHELF_LIFE_STRING,
           "--parameters=" + PARAMS_STRING,
           "--score-function-class=" + SCORE_FN_STRING
@@ -200,8 +219,8 @@ public class TestFreshTool extends KijiClientTest {
     getKiji().createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
     final KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
     try {
-      manager.registerFreshener(
-          "user", INFO_NAME, NEVER, SCORE_FN, EMPTY_PARAMS, false, false);
+      manager.registerFreshener("user", INFO_NAME, NEVER, SCORE_FN, EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS, false, false);
 
       assertEquals(BaseTool.SUCCESS, runTool(new FreshTool(),
           "--target=" + getNameURI(),
@@ -220,8 +239,8 @@ public class TestFreshTool extends KijiClientTest {
     getKiji().createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
     final KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
     try {
-      manager.registerFreshener(
-          "user", INFO_NAME, NEVER, SCORE_FN, EMPTY_PARAMS, false, false);
+      manager.registerFreshener("user", INFO_NAME, NEVER, SCORE_FN, EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS, false, false);
     } finally {
       manager.close();
     }
@@ -243,8 +262,10 @@ public class TestFreshTool extends KijiClientTest {
     getKiji().createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
     final KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
     try {
-      manager.registerFreshener("user", INFO_NAME, NEVER, SCORE_FN, EMPTY_PARAMS, false, false);
-      manager.registerFreshener("user", INFO_VISITS, NEVER, SCORE_FN, EMPTY_PARAMS, false, false);
+      manager.registerFreshener("user", INFO_NAME, NEVER, SCORE_FN, EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS, false, false);
+      manager.registerFreshener("user", INFO_VISITS, NEVER, SCORE_FN, EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS, false, false);
     } finally {
       manager.close();
     }
@@ -273,8 +294,10 @@ public class TestFreshTool extends KijiClientTest {
     getKiji().createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
     final KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
     try {
-      manager.registerFreshener("user", INFO_NAME, NEVER, SCORE_FN, EMPTY_PARAMS, false, false);
-      manager.registerFreshener("user", INFO_VISITS, NEVER, SCORE_FN, EMPTY_PARAMS, false, false);
+      manager.registerFreshener("user", INFO_NAME, NEVER, SCORE_FN, EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS, false, false);
+      manager.registerFreshener("user", INFO_VISITS, NEVER, SCORE_FN, EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS, false, false);
 
       assertEquals(BaseTool.SUCCESS, runTool(new FreshTool(),
           "--target=" + getUserURI(),

@@ -67,4 +67,17 @@
   <!--
     Other one-off exclusions should go below.
   -->
+  <Match>
+    <Class name="org.kiji.scoring.params.parser.NullableTruth" />
+      <Or>
+      <Bug pattern="NP_BOOLEAN_RETURN_NULL" />
+    </Or>
+  </Match>
+
+  <Match>
+    <Class name="org.kiji.scoring.params.parser.StringMapParser" />
+      <Or>
+      <Bug pattern="NP_LOAD_OF_KNOWN_NULL_VALUE" />
+    </Or>
+  </Match>
 </FindBugsFilter>

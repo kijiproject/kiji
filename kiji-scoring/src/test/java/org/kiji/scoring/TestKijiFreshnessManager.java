@@ -47,6 +47,7 @@ import org.kiji.scoring.KijiFreshnessManager.FreshenerValidationException;
 import org.kiji.scoring.KijiFreshnessManager.MultiFreshenerValidationException;
 import org.kiji.scoring.KijiFreshnessManager.ValidationFailure;
 import org.kiji.scoring.avro.KijiFreshenerRecord;
+import org.kiji.scoring.avro.ParameterDescription;
 import org.kiji.scoring.impl.InternalFreshenerContext;
 import org.kiji.scoring.lib.NeverFreshen;
 import org.kiji.scoring.lib.ShelfLife;
@@ -102,12 +103,14 @@ public class TestKijiFreshnessManager {
   private static final KijiColumnName INFO_EMAIL = new KijiColumnName("info", "email");
   private static final KijiColumnName INFO_INVALID = new KijiColumnName("info", "invalid");
   private static final Map<String, String> EMPTY_PARAMS = Collections.emptyMap();
+  private static final Map<String, ParameterDescription> EMPTY_DESCRIPTIONS = Collections
+      .emptyMap();
 
   /** Tests that we can store a policy and retrieve it. */
   @Test
   public void testRegisterFreshener() throws Exception {
     mFreshManager.registerFreshener(
-        "user", INFO_NAME, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+        "user", INFO_NAME, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, EMPTY_DESCRIPTIONS, false, false);
     final KijiFreshenerRecord record = mFreshManager.retrieveFreshenerRecord("user", INFO_NAME);
     assertEquals(SCORE_FUNCTION.getClass().getName(), record.getScoreFunctionClass());
     assertEquals(POLICY.getClass().getName(), record.getFreshnessPolicyClass());
@@ -127,6 +130,7 @@ public class TestKijiFreshnessManager {
         policyClassString,
         scoreFunctionClassString,
         EMPTY_PARAMS,
+        EMPTY_DESCRIPTIONS,
         false,
         false,
         false);
@@ -139,9 +143,9 @@ public class TestKijiFreshnessManager {
   @Test
   public void testRetrievePolicies() throws Exception {
     mFreshManager.registerFreshener(
-        "user", INFO_NAME, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+        "user", INFO_NAME, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, EMPTY_DESCRIPTIONS, false, false);
     mFreshManager.registerFreshener(
-        "user", INFO_EMAIL, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+        "user", INFO_EMAIL, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, EMPTY_DESCRIPTIONS, false, false);
     Map<KijiColumnName, KijiFreshenerRecord> records =
         mFreshManager.retrieveFreshenerRecords("user");
     assertEquals(2, records.size());
@@ -159,7 +163,7 @@ public class TestKijiFreshnessManager {
   @Test
   public void testPolicyRemoval() throws Exception {
     mFreshManager.registerFreshener(
-        "user", INFO_NAME, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+        "user", INFO_NAME, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, EMPTY_DESCRIPTIONS, false, false);
     final KijiFreshenerRecord record = mFreshManager.retrieveFreshenerRecord("user", INFO_NAME);
     assertNotNull(record);
     mFreshManager.removeFreshener("user", INFO_NAME);
@@ -169,8 +173,8 @@ public class TestKijiFreshnessManager {
   @Test
   public void testInvalidColumnAttachment() throws IOException {
     try {
-      mFreshManager.registerFreshener(
-          "user", INFO_INVALID, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+      mFreshManager.registerFreshener("user", INFO_INVALID, POLICY, SCORE_FUNCTION, EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS, false, false);
       fail("registerFreshener should have thrown FreshenerValidationException because the column "
           + "does not exist.");
     } catch (FreshenerValidationException fve) {
@@ -179,8 +183,8 @@ public class TestKijiFreshnessManager {
     }
 
     try {
-      mFreshManager.registerFreshener("user",
-          new KijiColumnName("info"), POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+      mFreshManager.registerFreshener("user", new KijiColumnName("info"), POLICY, SCORE_FUNCTION,
+          EMPTY_PARAMS, EMPTY_DESCRIPTIONS, false, false);
       fail("registerFreshener should have thrown FreshenerValidationException because the column "
           + "is not fully qualified.");
     } catch (FreshenerValidationException fve) {
@@ -189,11 +193,11 @@ public class TestKijiFreshnessManager {
           fve.getExceptions().containsKey(ValidationFailure.GROUP_FAMILY_ATTACHMENT));
     }
 
-    mFreshManager.registerFreshener(
-        "user", INFO_NAME, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+    mFreshManager.registerFreshener("user", INFO_NAME, POLICY, SCORE_FUNCTION, EMPTY_PARAMS,
+        EMPTY_DESCRIPTIONS, false, false);
     try {
-      mFreshManager.registerFreshener(
-          "user", INFO_NAME, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+      mFreshManager.registerFreshener("user", INFO_NAME, POLICY, SCORE_FUNCTION, EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS, false, false);
       fail("registerFreshener should have thrown FreshenerValidationException because there is "
           + "already a Freshener attached.");
     } catch (FreshenerValidationException fve) {
@@ -212,20 +216,20 @@ public class TestKijiFreshnessManager {
 
   @Test
   public void testRemovePolicies() throws IOException {
-    mFreshManager.registerFreshener(
-        "user", INFO_NAME, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
-    mFreshManager.registerFreshener(
-        "user", INFO_EMAIL, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+    mFreshManager.registerFreshener("user", INFO_NAME, POLICY, SCORE_FUNCTION, EMPTY_PARAMS,
+        EMPTY_DESCRIPTIONS, false, false);
+    mFreshManager.registerFreshener("user", INFO_EMAIL, POLICY, SCORE_FUNCTION, EMPTY_PARAMS,
+        EMPTY_DESCRIPTIONS, false, false);
     assertEquals(Sets.newHashSet(INFO_NAME, INFO_EMAIL), mFreshManager.removeFresheners("user"));
     assertEquals(Collections.<KijiColumnName>emptySet(), mFreshManager.removeFresheners("user"));
   }
 
   @Test
   public void testStorePolicies() throws IOException {
-    mFreshManager.registerFreshener(
-        "user", INFO_NAME, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
-    mFreshManager.registerFreshener(
-        "user", INFO_EMAIL, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+    mFreshManager.registerFreshener("user", INFO_NAME, POLICY, SCORE_FUNCTION, EMPTY_PARAMS,
+        EMPTY_DESCRIPTIONS, false, false);
+    mFreshManager.registerFreshener("user", INFO_EMAIL, POLICY, SCORE_FUNCTION, EMPTY_PARAMS,
+        EMPTY_DESCRIPTIONS, false, false);
     final Map<KijiColumnName, KijiFreshenerRecord> records =
         mFreshManager.retrieveFreshenerRecords("user");
     assertEquals(2, records.size());

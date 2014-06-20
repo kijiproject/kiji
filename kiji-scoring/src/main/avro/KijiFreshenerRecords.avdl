@@ -24,6 +24,38 @@
 protocol KijiFreshenerRecords {
 
   /**
+   * Enum to describe when the parameter is used.
+   */
+  enum ParameterScope {
+    /** Parameter is only used at setup. */
+    SETUP,
+    /** Parameter is used for runtime scoring. */
+    SCORING,
+    /** Parameter is used at setup and scoring. */
+    SETUP_AND_SCORING
+  }
+
+  /**
+   * Record that describes the type and usage of a parameter.
+   */
+  record ParameterDescription {
+    /** Type of the parameter, e.g. "int" */
+    string type;
+
+    /** User-friendly description of the parameter. */
+    string description;
+
+    /** Whether or not the parameter is required */
+    boolean required;
+
+    /** String representation of the default value (if not required) */
+    union { null, string } default_value = null;
+
+    /** Whether the parameter is used at setup or runtime (or both) */
+    ParameterScope scope;
+  }
+
+  /**
    * Record that encapsulates everything needed to perform freshening.  Stored in a KijiMetaTable.
    */
   record KijiFreshenerRecord {
@@ -38,5 +70,8 @@ protocol KijiFreshenerRecords {
 
     /** Configuration parameters which will be passed to the freshness policy and score function. */
     map<string> parameters = {};
+
+    /** Optional descriptions of the parameters. Map key is the parameter name. */
+    map<ParameterDescription> descriptions = {};
   }
 }

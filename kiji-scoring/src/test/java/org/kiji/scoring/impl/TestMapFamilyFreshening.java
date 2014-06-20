@@ -44,6 +44,7 @@ import org.kiji.scoring.FreshenerContext;
 import org.kiji.scoring.KijiFreshnessManager;
 import org.kiji.scoring.KijiFreshnessPolicy;
 import org.kiji.scoring.ScoreFunction;
+import org.kiji.scoring.avro.ParameterDescription;
 import org.kiji.scoring.lib.NewerThan;
 
 public class TestMapFamilyFreshening extends KijiClientTest {
@@ -62,7 +63,8 @@ public class TestMapFamilyFreshening extends KijiClientTest {
   private static final String NEW_VAL = "new-val";
   private static final String FOO_NAME = "foo-name";
   private static final String NEW_NAME = "new-name";
-  private static final Map<String, String> EMPTY = Maps.newHashMap();
+  private static final Map<String, String> EMPTY_PARAMS = Maps.newHashMap();
+  private static final Map<String, ParameterDescription> EMPTY_DESCRIPTIONS = Maps.newHashMap();
 
   private static final class TestMapFamilyScoreFunction extends ScoreFunction<String> {
     public KijiDataRequest getDataRequest(
@@ -134,7 +136,8 @@ public class TestMapFamilyFreshening extends KijiClientTest {
           new KijiColumnName(MAP),
           policy,
           new TestMapFamilyScoreFunction(),
-          EMPTY,
+          EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
       manager.registerFreshener(
@@ -142,7 +145,8 @@ public class TestMapFamilyFreshening extends KijiClientTest {
           new KijiColumnName(INFO, NAME),
           policy,
           new TestNameScoreFunction(),
-          EMPTY,
+          EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
           false,
           false);
     } finally {
