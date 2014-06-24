@@ -21,7 +21,11 @@ package org.kiji.rest;
 
 import static org.junit.Assert.*;
 
+import java.util.List;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.codehaus.jettison.json.JSONObject;
@@ -210,6 +214,54 @@ public class TestKijiRestEntityId {
       assertEquals(originalEid, restEid3.resolve(layout));
       assertEquals(originalEid, restEid4.resolve(layout));
       assertEquals(toolUtilsEid, restEid4.resolve(layout));
+    }
+
+    @Test
+    public void testShouldCreateListsOfEntityIds() throws Exception {
+      final TableLayoutDesc desc =
+        KijiTableLayouts.getLayout("org/kiji/rest/layouts/rkf_hashprefixed.json");
+      final KijiTableLayout layout = KijiTableLayout.newLayout(desc);
+      final EntityIdFactory factory = EntityIdFactory.getFactory(layout);
+      final byte[] rowKey = Bytes.toBytes(UNUSUAL_STRING_EID);
+      final EntityId originalEid = factory.getEntityIdFromHBaseRowKey(rowKey);
+
+      // test the creation of entity ids from raw hbase rowkey
+      final KijiRestEntityId restEid1 = KijiRestEntityId.createFromUrl(
+          String.format("hbase_hex=%s", new String(Hex.encodeHex(originalEid.getHBaseRowKey()))),
+          layout);
+      final KijiRestEntityId restEid2 = KijiRestEntityId.createFromUrl(
+          String.format("hbase=%s", Bytes.toStringBinary(originalEid.getHBaseRowKey())),
+          layout);
+
+      final JsonNodeFactory jsonNodeFactory = new JsonNodeFactory(true);
+      final JsonNode hbaseHexStringNode = jsonNodeFactory.textNode(
+          String.format("hbase_hex=%s", new String(Hex.encodeHex(originalEid.getHBaseRowKey()))));
+      final JsonNode hbaseBinaryStringNode = jsonNodeFactory.textNode(
+          String.format("hbase_hex=%s", new String(Hex.encodeHex(originalEid.getHBaseRowKey()))));
+      ArrayNode hbaseListNode = jsonNodeFactory.arrayNode();
+      hbaseListNode.add(hbaseHexStringNode);
+      hbaseListNode.add(hbaseBinaryStringNode);
+
+      final List<KijiRestEntityId> restEidList1 = KijiRestEntityId.createListFromUrl(
+          hbaseListNode.toString(), layout);
+
+      assertEquals(restEid1.resolve(layout), restEidList1.get(0).resolve(layout));
+      assertEquals(restEid2.resolve(layout), restEidList1.get(1).resolve(layout));
+
+      // test the creation of entity ids from various json strings
+      final KijiRestEntityId restEid3 = KijiRestEntityId.createFromUrl(
+          "[\"Hello\",\"World\"]", layout);
+      final List<KijiRestEntityId> restEidList3 = KijiRestEntityId.createListFromUrl(
+          "[[\"Hello\",\"World\"]]", layout);
+      final KijiRestEntityId restEid4 = KijiRestEntityId.createFromUrl(
+          "[[],\"World\"]", layout);
+      final List<KijiRestEntityId> restEidList4 = KijiRestEntityId.createListFromUrl(
+          "[[[],\"World\"],[\"Hello\",\"World\"]]", layout);
+
+      assertEquals(restEid3.resolve(layout), restEidList3.get(0).resolve(layout));
+      assertEquals(restEid4.getStringEntityId(), restEidList4.get(0).getStringEntityId());
+      assertEquals(1, restEidList3.size());
+      assertEquals(2, restEidList4.size());
     }
 
     @Test

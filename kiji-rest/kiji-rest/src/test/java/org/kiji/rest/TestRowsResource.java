@@ -41,6 +41,8 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -241,6 +243,22 @@ public class TestRowsResource extends ResourceTest {
     String entityIdString = eid.toShellString();
     fakeTable.release();
     return entityIdString;
+  }
+
+  protected final String createJsonArray(String... components) throws IOException {
+    final JsonNodeFactory factory = new JsonNodeFactory(true);
+    ArrayNode arrayNode = factory.arrayNode();
+    for (String component : components) {
+      JsonNode node;
+      if (component.startsWith(KijiRestEntityId.HBASE_ROW_KEY_PREFIX)
+          || component.startsWith(KijiRestEntityId.HBASE_HEX_ROW_KEY_PREFIX)) {
+        node = factory.textNode(component);
+      } else {
+        node = stringToJsonNode(component);
+      }
+      arrayNode.add(node);
+    }
+    return arrayNode.toString();
   }
 
   protected final JsonNode stringToJsonNode(String input) throws IOException {
@@ -1188,6 +1206,149 @@ public class TestRowsResource extends ResourceTest {
     assertTrue(target.toString().contains(
         "/v1/instances/default/tables/players/rows?eid=" + URLEncoder.encode(eid, UTF_8)));
     assertEquals(1234567890987L, returnRow.getCells().get("info").get("logins").get(0).getValue());
+  }
+
+  @Test
+  public void testShouldDeleteRow() throws Exception {
+
+    String eid = getUrlEncodedEntityIdString("sample_table", 12345L);
+    URI resourceURI = UriBuilder.fromResource(RowsResource.class)
+        .queryParam("eid", eid)
+        .build("default", "sample_table");
+    assertTrue(client().resource(resourceURI).delete(Boolean.class));
+
+    KijiRestRow returnRow = client().resource(resourceURI).get(KijiRestRow.class);
+    // make sure that row has been deleted
+    assertEquals(null, returnRow.getCells().get("group_family"));
+  }
+
+  @Test
+  public void testShouldDeleteRows() throws Exception {
+
+    String eid1 = getEntityIdString("sample_table", 12345L);
+    String eid2 = getEntityIdString("sample_table", 2345L);
+    String eids = createJsonArray(eid1, eid2);
+    eids = URLEncoder.encode(eids, "UTF-8");
+    URI resourceURI = UriBuilder.fromResource(RowsResource.class)
+        .queryParam("eids", eids)
+        .build("default", "sample_table");
+    assertTrue(client().resource(resourceURI).delete(Boolean.class));
+
+    String eid = getUrlEncodedEntityIdString("sample_table", 12345L);
+    resourceURI = UriBuilder
+        .fromResource(RowsResource.class)
+        .queryParam("eid", eid)
+        .build("default", "sample_table");
+    KijiRestRow returnRow = client().resource(resourceURI).get(KijiRestRow.class);
+    // make sure that row has been deleted
+    assertEquals(null, returnRow.getCells().get("group_family"));
+
+    eid = getUrlEncodedEntityIdString("sample_table", 2345L);
+    resourceURI = UriBuilder
+        .fromResource(RowsResource.class)
+        .queryParam("eid", eid)
+        .build("default", "sample_table");
+    returnRow = client().resource(resourceURI).get(KijiRestRow.class);
+    // make sure that row has been deleted
+    assertEquals(null, returnRow.getCells().get("group_family"));
+
+    eid = getUrlEncodedEntityIdString("sample_table", 56789L);
+    resourceURI = UriBuilder
+        .fromResource(RowsResource.class)
+        .queryParam("eid", eid)
+        .build("default", "sample_table");
+    returnRow = client().resource(resourceURI).get(KijiRestRow.class);
+    // make sure that other row has not been affected
+    returnRow.getCells().get("group_family").get("string_qualifier").get(0);
+  }
+
+  @Test
+  public void testShouldDeleteColumns() throws Exception {
+
+    String eid = getUrlEncodedEntityIdString("sample_table", 12345L);
+    URI resourceURI = UriBuilder.fromResource(RowsResource.class)
+        .queryParam("eid", eid)
+        .queryParam("cols", "group_family:team_qualifier,group_family:long_qualifier")
+        .build("default", "sample_table");
+    assertTrue(client().resource(resourceURI).delete(Boolean.class));
+
+    resourceURI = UriBuilder
+        .fromResource(RowsResource.class)
+        .queryParam("eid", eid)
+        .queryParam("cols", "group_family:long_qualifier,group_family:string_qualifier")
+        .build("default", "sample_table");
+    KijiRestRow returnRow = client().resource(resourceURI).get(KijiRestRow.class);
+    // make sure that column has been deleted
+    assertEquals(null, returnRow.getCells().get("group_family").get("long_qualifier"));
+    // make sure that other column remains unaffected
+    assertEquals(
+        "some_value",
+        returnRow.
+            getCells().
+            get("group_family").
+            get("string_qualifier").
+            get(0).
+            getValue().
+            toString());
+
+  }
+
+  @Test
+  public void testShouldDeleteColumnsInRows() throws Exception {
+
+    String eid1 = getEntityIdString("sample_table", 12345L);
+    String eid2 = getEntityIdString("sample_table", 2345L);
+    String eids = createJsonArray(eid1, eid2);
+    eids = URLEncoder.encode(eids, "UTF-8");
+    URI resourceURI = UriBuilder.fromResource(RowsResource.class)
+        .queryParam("eids", eids)
+        .queryParam("cols", "group_family:string_qualifier")
+        .build("default", "sample_table");
+    assertTrue(client().resource(resourceURI).delete(Boolean.class));
+
+    // make sure that string_qualifier has been deleted in row 2345L
+    String eid = getUrlEncodedEntityIdString("sample_table", 2345L);
+    resourceURI = UriBuilder
+        .fromResource(RowsResource.class)
+        .queryParam("eid", eid)
+        .queryParam("cols", "group_family:string_qualifier")
+        .build("default", "sample_table");
+    KijiRestRow returnRow = client().resource(resourceURI).get(KijiRestRow.class);
+    assertEquals(null, returnRow.getCells().get("group_family"));
+
+    // make sure that the other columns in row are not affected
+    eid = getUrlEncodedEntityIdString("sample_table", 12345L);
+    resourceURI = UriBuilder
+        .fromResource(RowsResource.class)
+        .queryParam("eid", eid)
+        .queryParam("cols", "group_family:long_qualifier")
+        .build("default", "sample_table");
+    returnRow = client().resource(resourceURI).get(KijiRestRow.class);
+    assertEquals(
+        1000,
+        returnRow.getCells().get("group_family").get("long_qualifier").get(0).getValue());
+  }
+
+  @Test
+  public void testShouldFailDeleteRows() throws Exception {
+
+    String eid1 = getEntityIdString("sample_table", 12345L);
+    String eid2 = getEntityIdString("sample_table", 2345L);
+    String eids = createJsonArray(eid1, eid2);
+    eids = URLEncoder.encode(eids, "UTF-8");
+
+    // Delete.
+    try {
+      URI resourceURI = UriBuilder.fromResource(RowsResource.class)
+          .queryParam("eid", eid1)
+          .queryParam("eids", eids)
+          .build("default", "sample_table");
+      client().resource(resourceURI).delete(Boolean.class);
+      fail("DELETE succeeded when it should have failed because of an improperly formatted "
+           + "request.");
+    } catch (UniformInterfaceException e) {
+      assertEquals(400, e.getResponse().getStatus());
+    }
   }
 
   private void addCellToRow(KijiRestRow rowToModify, KijiCell<?> cellToPost) throws IOException {

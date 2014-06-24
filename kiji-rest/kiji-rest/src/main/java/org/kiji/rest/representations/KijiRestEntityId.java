@@ -20,6 +20,7 @@
 package org.kiji.rest.representations;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -29,6 +30,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -142,6 +144,43 @@ public final class KijiRestEntityId {
       final JsonNode node = BASIC_MAPPER.readTree(parser);
       return create(node, layout);
     }
+  }
+
+  /**
+   * Create a list of KijiRestEntityIds from a string input, which can be a json array of valid
+   * entity id strings and/or valid hbase row keys.
+   * This method is used for entity ids specified from the URL.
+   *
+   * @param entityIdListString string of a json array of rows identifiers.
+   * @param layout of the table in which the entity id belongs.
+   *        If null, then long components may not be recognized.
+   * @return a properly constructed list of KijiRestEntityIds.
+   * @throws IOException if KijiRestEntityId list can not be properly constructed.
+   */
+  public static List<KijiRestEntityId> createListFromUrl(
+      final String entityIdListString,
+      final KijiTableLayout layout) throws IOException {
+    final JsonParser parser = new JsonFactory().createJsonParser(entityIdListString)
+        .enable(Feature.ALLOW_COMMENTS)
+        .enable(Feature.ALLOW_SINGLE_QUOTES)
+        .enable(Feature.ALLOW_UNQUOTED_FIELD_NAMES);
+    final JsonNode jsonNode = BASIC_MAPPER.readTree(parser);
+
+    List<KijiRestEntityId> kijiRestEntityIds = Lists.newArrayList();
+
+    if (jsonNode.isArray()) {
+      for (JsonNode node : jsonNode) {
+        if (node.isTextual()) {
+          kijiRestEntityIds.add(createFromUrl(node.textValue(), layout));
+        } else {
+          kijiRestEntityIds.add(createFromUrl(node.toString(), layout));
+        }
+      }
+    } else {
+      throw new IOException("The entity id list string is not a valid json array.");
+    }
+
+    return kijiRestEntityIds;
   }
 
   /**

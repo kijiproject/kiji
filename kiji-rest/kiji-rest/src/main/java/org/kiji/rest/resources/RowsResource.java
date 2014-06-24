@@ -37,8 +37,10 @@ import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -64,6 +66,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.yammer.metrics.annotation.Timed;
 
 import org.apache.hadoop.hbase.HConstants;
@@ -76,6 +79,7 @@ import org.kiji.rest.representations.KijiRestEntityId;
 import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.rest.util.RowResourceUtil;
 import org.kiji.schema.EntityId;
+import org.kiji.schema.KijiBufferedWriter;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
@@ -124,6 +128,11 @@ public class RowsResource {
    * Configuration values to use while freshening.
    */
   private final FresheningConfiguration mFreshenConfig;
+
+  /**
+   * Special constant to denote that all columns are to be selected.
+   */
+  public static final String ALL_COLS = "*";
 
   /**
    * Default constructor.
@@ -250,6 +259,31 @@ public class RowsResource {
   }
 
   /**
+   * Resolves an iterable collection of KijiRestEntityIds to EntityId object.
+   * This does not handle wildcards
+   *
+   * @param kijiRestEntityIds list of entity ids to be resolved.
+   * @param layout KijiTableLayout to resolve the ids.
+   * @return a map of strings to strings of freshening parameters.
+   * @throws IOException if resolving an id fails
+   */
+  private Set<EntityId> getEntityIdsFromKijiRestEntityIds(
+      Iterable<KijiRestEntityId> kijiRestEntityIds,
+      KijiTableLayout layout)
+      throws IOException {
+    Set<EntityId> entityIds = Sets.newHashSet();
+
+    for (KijiRestEntityId kijiRestEntityId : kijiRestEntityIds) {
+      EntityId eid = kijiRestEntityId.resolve(layout);
+      if (!entityIds.contains(eid)) {
+        entityIds.add(eid);
+      }
+    }
+
+    return entityIds;
+  }
+
+  /**
    * GETs a list of Kiji rows.
    *
    * @param instance is the instance where the table resides.
@@ -281,7 +315,7 @@ public class RowsResource {
       @QueryParam("start_eid") String startEidString,
       @QueryParam("end_eid") String endEidString,
       @QueryParam("limit") @DefaultValue("100") int limit,
-      @QueryParam("cols") @DefaultValue("*") String columns,
+      @QueryParam("cols") @DefaultValue(ALL_COLS) String columns,
       @QueryParam("versions") @DefaultValue("1") String maxVersionsString,
       @QueryParam("timerange") String timeRange,
       @QueryParam("freshen") Boolean freshen,
@@ -555,4 +589,83 @@ public class RowsResource {
     returnedResults.put("targets", results);
     return returnedResults;
   }
+
+  /**
+   * DELETEs a Kiji row, a list of columns in a row, a list of rows, or a list of columns in a list
+   * of rows using a buffered write. This method does not support wildcards.
+   *
+   * @param instance is the instance where the table resides.
+   * @param table is the table where the rows from which the rows will be deleted.
+   * @param jsonEntityId the entity id or row key of the row to delete.
+   * @param jsonEntityIds a JSON array of entity ids or row keys rows to delete. Will cause an error
+   *        if the jsonEntityId is also specified.
+   * @param columns is a comma separated list of columns (either family or family:qualifier) to
+   *        delete.
+   * @param timestamp is the time stamp that denotes which cells to delete. All cells with
+   *        time stamps before the supplied time stamp will be deleted.
+   * @return whether the method completed successfully (true unless exception occurred)
+   */
+  @DELETE
+  @Timed
+  @ApiStability.Experimental
+  public boolean deleteRows(
+      @PathParam(INSTANCE_PARAMETER) String instance,
+      @PathParam(TABLE_PARAMETER) String table,
+      @QueryParam("eid") String jsonEntityId,
+      @QueryParam("eids") String jsonEntityIds,
+      @QueryParam("cols") @DefaultValue(ALL_COLS) String columns,
+      @QueryParam("timestamp") @DefaultValue("-1") Long timestamp) {
+    KijiTable kijiTable = mKijiClient.getKijiTable(instance, table);
+    KijiTableLayout layout = kijiTable.getLayout();
+
+    if (jsonEntityId != null && jsonEntityIds != null) {
+      throw new WebApplicationException(new IllegalArgumentException("Ambiguous request. "
+          + "Specified both jsonEntityId and jsonEntityIds."), Status.BAD_REQUEST);
+    } else if (jsonEntityId == null && jsonEntityIds == null) {
+      throw new WebApplicationException(new IllegalArgumentException("Ambiguous request. "
+          + "Specified neither jsonEntityId or jsonEntityIds."), Status.BAD_REQUEST);
+    }
+
+    try {
+      List<KijiRestEntityId> kijiRestEntityIds = Lists.newArrayList();
+
+      if (jsonEntityId != null) {
+        kijiRestEntityIds.add(KijiRestEntityId.createFromUrl(jsonEntityId, layout));
+      } else {
+        kijiRestEntityIds.addAll(KijiRestEntityId.createListFromUrl(jsonEntityIds, layout));
+      }
+
+      Set<EntityId> entityIds = getEntityIdsFromKijiRestEntityIds(kijiRestEntityIds, layout);
+
+      final KijiBufferedWriter writer = kijiTable.getWriterFactory().openBufferedWriter();
+
+      for (EntityId eid : entityIds) {
+        if (columns.equals(ALL_COLS)) {
+            if (timestamp >= 0) {
+              writer.deleteRow(eid, timestamp);
+            } else {
+              writer.deleteRow(eid);
+            }
+        } else {
+          String[] requestedColumnArray = columns.split(",");
+          for (String s : requestedColumnArray) {
+            KijiColumnName columnName = new KijiColumnName(s);
+            if (timestamp >= 0) {
+              writer.deleteColumn(
+                  eid, columnName.getFamily(), columnName.getQualifier(), timestamp);
+            } else {
+              writer.deleteColumn(eid, columnName.getFamily(), columnName.getQualifier());
+            }
+          }
+        }
+      }
+
+      writer.flush();
+      writer.close();
+    } catch (IOException ioe) {
+      throw new WebApplicationException(ioe, Status.BAD_REQUEST);
+    }
+    return true;
+  }
+
 }
