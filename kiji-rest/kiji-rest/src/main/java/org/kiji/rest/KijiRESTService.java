@@ -80,8 +80,7 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
   public final void run(final KijiRESTConfiguration configuration, final Environment environment)
       throws IOException {
     final KijiURI clusterURI = KijiURI.newBuilder(configuration.getClusterURI()).build();
-
-    final ManagedKijiClient managedKijiClient = new ManagedKijiClient(clusterURI);
+    final ManagedKijiClient managedKijiClient = new ManagedKijiClient(configuration);
     environment.manage(managedKijiClient);
 
     // Setup the health checker for the KijiClient

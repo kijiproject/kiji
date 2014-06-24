@@ -42,6 +42,10 @@ public class KijiRESTConfiguration extends Configuration {
   @JsonProperty("freshening")
   private FresheningConfiguration mFresheningConfiguration = new FresheningConfiguration();
 
+  /** Set cache timeout in minutes. */
+  @JsonProperty("cacheTimeout")
+  private long mCacheTimeout = 10;
+
   /** Set global CORS support. */
   @JsonProperty("cors")
   private boolean mCORS = false;
@@ -62,6 +66,11 @@ public class KijiRESTConfiguration extends Configuration {
   /** @return The freshening configuration. */
   public FresheningConfiguration getFresheningConfiguration() {
     return mFresheningConfiguration;
+  }
+
+  /** @return The caching timeout. */
+  public final long getCacheTimeout() {
+    return mCacheTimeout;
   }
 
   /** @return Is global CORS turned on or off. */

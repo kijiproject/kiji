@@ -69,6 +69,8 @@ There is optional key to turn on global cross-origin resource sharing (CORS).
 
 "cors" : "true" #If not set, defaults to false
 
+"cacheTimeout" sets the timeout in minutes before clearing the cache of instances and tables
+
 KijiREST is implemented using DropWizard. See
 [Dropwizard's User Manual](http://dropwizard.codahale.com/manual/core/#configuration-defaults)
 for additional Dropwizard-specific configuration options such as server settings

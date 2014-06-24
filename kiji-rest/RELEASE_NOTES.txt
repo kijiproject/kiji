@@ -3,6 +3,7 @@
 
 Version 1.4.0
   * REST-139. Add REST service discovery service
+  * REST-133. Make Kiji/KijiTable connection expiration configurable
 
 Version 1.2.2
   * REST-90. Allow KijiREST to be started in foreground mode, via the

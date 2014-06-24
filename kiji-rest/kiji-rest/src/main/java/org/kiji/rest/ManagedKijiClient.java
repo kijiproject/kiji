@@ -68,6 +68,8 @@ import org.kiji.scoring.FreshKijiTableReader;
 public class ManagedKijiClient implements KijiClient, Managed {
   private static final Logger LOG = LoggerFactory.getLogger(ManagedKijiClient.class);
 
+  private static final long DEFAULT_TIMEOUT = 10;
+
   /** Holds instances currently being served. */
   private final LoadingCache<String, KijiInstanceCache> mInstanceCaches;
 
@@ -103,10 +105,34 @@ public class ManagedKijiClient implements KijiClient, Managed {
   /**
    * Constructs a ManagedKijiClient.
    *
+   * @param configuration of HBase cluster to serve.
+   * @throws IOException if error while creating connections to the cluster.
+   */
+  public ManagedKijiClient(final KijiRESTConfiguration configuration) throws IOException {
+    this(KijiURI.newBuilder(configuration.getClusterURI()).build(),
+         configuration.getCacheTimeout());
+  }
+
+  /**
+   * Constructs a ManagedKijiClient.
+   *
    * @param clusterURI of HBase cluster to serve.
    * @throws IOException if error while creating connections to the cluster.
    */
   public ManagedKijiClient(final KijiURI clusterURI) throws IOException {
+    this(clusterURI, DEFAULT_TIMEOUT);
+  }
+
+
+  /**
+   * Constructs a ManagedKijiClient.
+   *
+   * @param clusterURI of HBase cluster to serve.
+   * @param cacheTimeout time to hold open connections to instances and tables before clearing them
+   *        from the cache.
+   * @throws IOException if error while creating connections to the cluster.
+   */
+  private ManagedKijiClient(final KijiURI clusterURI, final long cacheTimeout) throws IOException {
     mZKFramework = ZooKeeperUtils.getZooKeeperClient(clusterURI);
     mZKInstances =
         new PathChildrenCache(
@@ -115,9 +141,7 @@ public class ManagedKijiClient implements KijiClient, Managed {
             true);
     mInstanceCaches = CacheBuilder
         .newBuilder()
-        // Expire instances if they have not been used in 10 minutes
-        // TODO (REST-133): Make this value configurable
-        .expireAfterAccess(10, TimeUnit.MINUTES)
+        .expireAfterAccess(cacheTimeout, TimeUnit.MINUTES)
         .removalListener(new RemovalListener<String, KijiInstanceCache>() {
           @Override
           public void onRemoval(RemovalNotification<String, KijiInstanceCache> notification) {
