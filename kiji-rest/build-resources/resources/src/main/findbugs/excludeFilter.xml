@@ -40,4 +40,11 @@
     <Bug pattern="SIC_INNER_SHOULD_BE_STATIC_ANON" />
   </Match>
 
+
+  <Match>
+    <!-- These anonymous classes are compact and not performance sensitive. -->
+    <Class name="~org\.kiji\.rest\.resources\.ShutdownTask.*" />
+    <Bug pattern="DM_EXIT" />
+  </Match>
+
 </FindBugsFilter>

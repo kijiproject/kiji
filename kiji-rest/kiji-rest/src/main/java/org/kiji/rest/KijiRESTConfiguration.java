@@ -50,6 +50,10 @@ public class KijiRESTConfiguration extends Configuration {
   @JsonProperty("cors")
   private boolean mCORS = false;
 
+  /** Set support for admin REST shutdown commands. */
+  @JsonProperty("remote-shutdown")
+  private boolean mShutdownEnabled = true;
+
   /** For plugins to add arbitary properties. */
   @JsonProperty("plugin-properties")
   private Map<String, String> mPluginProperties = Collections.emptyMap();
@@ -76,6 +80,11 @@ public class KijiRESTConfiguration extends Configuration {
   /** @return Is global CORS turned on or off. */
   public boolean getCORS() {
     return mCORS;
+  }
+
+  /** @return Is remote shutdown via REST enabled. */
+  public boolean isShutdownEnabled() {
+    return mShutdownEnabled;
   }
 
   /** @return register this REST instance with service discovery. */

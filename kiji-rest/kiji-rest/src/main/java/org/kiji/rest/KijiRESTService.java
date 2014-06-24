@@ -38,6 +38,7 @@ import org.kiji.rest.health.KijiClientHealthCheck;
 import org.kiji.rest.plugins.KijiRestPlugin;
 import org.kiji.rest.resources.CloseTask;
 import org.kiji.rest.resources.RefreshInstancesTask;
+import org.kiji.rest.resources.ShutdownTask;
 import org.kiji.schema.KijiURI;
 
 /**
@@ -108,7 +109,8 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
     environment.addTask(new RefreshInstancesTask(managedKijiClient));
     // Load admin task to manually close instances and tables.
     environment.addTask(new CloseTask(managedKijiClient));
-
+    // Load admin task to manually shutdown the system.
+    environment.addTask(new ShutdownTask(managedKijiClient, configuration));
 
     // Load resources.
     for (KijiRestPlugin plugin : Lookups.get(KijiRestPlugin.class)) {

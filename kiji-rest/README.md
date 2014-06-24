@@ -71,6 +71,8 @@ There is optional key to turn on global cross-origin resource sharing (CORS).
 
 "cacheTimeout" sets the timeout in minutes before clearing the cache of instances and tables
 
+"remote-shutdown" #when set to true, the admin task to shutdown the kiji-rest via REST command is enabled
+
 KijiREST is implemented using DropWizard. See
 [Dropwizard's User Manual](http://dropwizard.codahale.com/manual/core/#configuration-defaults)
 for additional Dropwizard-specific configuration options such as server settings
