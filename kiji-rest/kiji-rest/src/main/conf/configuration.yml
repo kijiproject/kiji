@@ -2,7 +2,6 @@
 
 ########## KijiREST Configuration ##########
 # The cluster property defines the URI of the Kiji cluster.
-# All instances on the cluster are surfaced to clients.
 
 cluster: "kiji://.env/"
 cors: false
@@ -12,6 +11,8 @@ freshening:
   timeout: 100           # default amount of time in ms to wait for freshening to finish
 service-discovery: true  # whether to register this REST instance with service discovery
 remote-shutdown: true    # enable/disable admin command that allows the server to be shut down via REST
+#instances:              # list the instances that you want make visible to track via REST
+#  - default             # if no instances are listed, all will be available
 
 
 ########## Dropwizard Configuration ##########

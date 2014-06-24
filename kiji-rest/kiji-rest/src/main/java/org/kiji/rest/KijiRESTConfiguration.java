@@ -21,8 +21,10 @@ package org.kiji.rest;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Sets;
 import com.yammer.dropwizard.config.Configuration;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -45,6 +47,10 @@ public class KijiRESTConfiguration extends Configuration {
   /** Set cache timeout in minutes. */
   @JsonProperty("cacheTimeout")
   private long mCacheTimeout = 10;
+
+  /** Subconfiguration controlling the visibility of instances. */
+  @JsonProperty("instances")
+  private Set<String> mInstances = Sets.newHashSet();
 
   /** Set global CORS support. */
   @JsonProperty("cors")
@@ -75,6 +81,11 @@ public class KijiRESTConfiguration extends Configuration {
   /** @return The caching timeout. */
   public final long getCacheTimeout() {
     return mCacheTimeout;
+  }
+
+  /** @return The set of visible instances. */
+  public Set<String> getVisibleInstances() {
+    return mInstances;
   }
 
   /** @return Is global CORS turned on or off. */

@@ -65,6 +65,10 @@ The following is an example of the contents of a proper configuration.yml file:
 
 "cluster" : "kiji://localhost:2181/" #The base cluster URI
 
+- "instances" is an array of instances that will be made visible to users of the REST service.
+
+If there is no instance array, or it has nothing in it, all instances will be made available.
+
 There is optional key to turn on global cross-origin resource sharing (CORS).
 
 "cors" : "true" #If not set, defaults to false

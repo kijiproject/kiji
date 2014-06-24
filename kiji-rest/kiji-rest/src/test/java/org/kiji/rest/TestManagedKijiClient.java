@@ -102,6 +102,32 @@ public class TestManagedKijiClient extends KijiClientTest {
   }
 
   @Test
+  public void testShouldAllowAccessToVisibleInstancesOnly() throws Exception {
+    mClusterURI = createTestHBaseURI();
+
+    Set<Kiji> kijis = Sets.newHashSet();
+    kijis.add(createTestKiji(mClusterURI));
+    kijis.add(createTestKiji(mClusterURI));
+    installTables(kijis);
+
+    Set<String> visibleInstances = Sets.newHashSet();
+    ImmutableSet.Builder<String> instances = ImmutableSet.builder();
+    for (Kiji kiji : kijis) {
+      instances.add(kiji.getURI().getInstance());
+    }
+    mInstanceNames = instances.build();
+    visibleInstances.add(mInstanceNames.iterator().next());
+
+    mKijiClient = new ManagedKijiClient(
+        mClusterURI,
+        ManagedKijiClient.DEFAULT_TIMEOUT,
+        visibleInstances);
+    mKijiClient.start();
+
+    assertEquals(1, mKijiClient.getInstances().size());
+  }
+
+  @Test
   public void testKeepsKijisCached() throws Exception {
     for (String instance : mInstanceNames) {
       assertTrue(mKijiClient.getKiji(instance) == mKijiClient.getKiji(instance));

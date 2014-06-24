@@ -6,6 +6,7 @@ Version 1.4.0
   * REST-133. Make Kiji/KijiTable connection expiration configurable
   * REST-105. Add endpoint to gracefully (or forcefully) shut down server.
   * REST-137. Kiji-REST now supports DELETE commands
+  * REST-98.  Re-introduce control on Kiji instance visibility in KijiREST
 
 Version 1.2.2
   * REST-90. Allow KijiREST to be started in foreground mode, via the

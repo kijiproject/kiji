@@ -21,6 +21,7 @@ package org.kiji.rest;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -40,6 +41,7 @@ import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.yammer.dropwizard.lifecycle.Managed;
 import com.yammer.metrics.core.HealthCheck;
 import org.apache.curator.framework.CuratorFramework;
@@ -68,7 +70,7 @@ import org.kiji.scoring.FreshKijiTableReader;
 public class ManagedKijiClient implements KijiClient, Managed {
   private static final Logger LOG = LoggerFactory.getLogger(ManagedKijiClient.class);
 
-  private static final long DEFAULT_TIMEOUT = 10;
+  public static final long DEFAULT_TIMEOUT = 10;
 
   /** Holds instances currently being served. */
   private final LoadingCache<String, KijiInstanceCache> mInstanceCaches;
@@ -88,6 +90,7 @@ public class ManagedKijiClient implements KijiClient, Managed {
    * any check and set semantics.
    */
   private volatile Set<String> mKijiInstances;
+  private final Set<String> mVisibleKijiInstances;
 
   /** Tracks the lifecycle state of this ManagedKijiClient. */
   private final AtomicReference<State> mState;
@@ -110,7 +113,8 @@ public class ManagedKijiClient implements KijiClient, Managed {
    */
   public ManagedKijiClient(final KijiRESTConfiguration configuration) throws IOException {
     this(KijiURI.newBuilder(configuration.getClusterURI()).build(),
-         configuration.getCacheTimeout());
+         configuration.getCacheTimeout(),
+         configuration.getVisibleInstances());
   }
 
   /**
@@ -120,7 +124,7 @@ public class ManagedKijiClient implements KijiClient, Managed {
    * @throws IOException if error while creating connections to the cluster.
    */
   public ManagedKijiClient(final KijiURI clusterURI) throws IOException {
-    this(clusterURI, DEFAULT_TIMEOUT);
+    this(clusterURI, DEFAULT_TIMEOUT, new HashSet<String>());
   }
 
 
@@ -130,9 +134,16 @@ public class ManagedKijiClient implements KijiClient, Managed {
    * @param clusterURI of HBase cluster to serve.
    * @param cacheTimeout time to hold open connections to instances and tables before clearing them
    *        from the cache.
+   * @param visibleInstances is the set of instances that are specified as visible in the
+   *        configuration.yml file. If this set is empty, all instances are considered to be
+   *        visible.
    * @throws IOException if error while creating connections to the cluster.
    */
-  private ManagedKijiClient(final KijiURI clusterURI, final long cacheTimeout) throws IOException {
+  public ManagedKijiClient(final KijiURI clusterURI,
+                           final long cacheTimeout,
+                           final Set<String> visibleInstances)
+      throws IOException {
+    mVisibleKijiInstances = visibleInstances;
     mZKFramework = ZooKeeperUtils.getZooKeeperClient(clusterURI);
     mZKInstances =
         new PathChildrenCache(
@@ -324,11 +335,19 @@ public class ManagedKijiClient implements KijiClient, Managed {
     Preconditions.checkState(state == State.STARTED,
         "Can not invalidate instance while in state %s.", state);
     LOG.info("Refreshing instances.");
-    final ImmutableSet.Builder<String> instances = ImmutableSet.builder();
+
+    Set<String> instances = Sets.newHashSet();
     for (ChildData node : mZKInstances.getCurrentData()) {
       instances.add(Iterables.getLast(Splitter.on('/').split(node.getPath())));
     }
-    mKijiInstances = instances.build();
+    // Keep the intersection of the visible and actual sets.
+    if (!mVisibleKijiInstances.isEmpty()) {
+      instances.retainAll(mVisibleKijiInstances);
+    }
+
+    final ImmutableSet.Builder<String> instancesBuilder = ImmutableSet.builder();
+    instancesBuilder.addAll(instances);
+    mKijiInstances = instancesBuilder.build();
   }
 
   /**
