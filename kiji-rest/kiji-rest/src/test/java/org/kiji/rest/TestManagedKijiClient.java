@@ -103,11 +103,12 @@ public class TestManagedKijiClient extends KijiClientTest {
 
   @Test
   public void testShouldAllowAccessToVisibleInstancesOnly() throws Exception {
-    mClusterURI = createTestHBaseURI();
+    KijiURI clusterURI = createTestHBaseURI();
 
     Set<Kiji> kijis = Sets.newHashSet();
-    kijis.add(createTestKiji(mClusterURI));
-    kijis.add(createTestKiji(mClusterURI));
+    // Create two instances with arbitrary names.
+    kijis.add(createTestKiji(clusterURI));
+    kijis.add(createTestKiji(clusterURI));
     installTables(kijis);
 
     Set<String> visibleInstances = Sets.newHashSet();
@@ -115,16 +116,21 @@ public class TestManagedKijiClient extends KijiClientTest {
     for (Kiji kiji : kijis) {
       instances.add(kiji.getURI().getInstance());
     }
-    mInstanceNames = instances.build();
-    visibleInstances.add(mInstanceNames.iterator().next());
+    final ImmutableSet<String> instanceNames = instances.build();
+    // Select only the first instance to be visible.
+    visibleInstances.add(instanceNames.iterator().next());
 
-    mKijiClient = new ManagedKijiClient(
-        mClusterURI,
+    ManagedKijiClient kijiClient = new ManagedKijiClient(
+        clusterURI,
         ManagedKijiClient.DEFAULT_TIMEOUT,
         visibleInstances);
-    mKijiClient.start();
+    kijiClient.start();
 
-    assertEquals(1, mKijiClient.getInstances().size());
+    try {
+      assertEquals(1, kijiClient.getInstances().size());
+    } finally {
+      kijiClient.stop();
+    }
   }
 
   @Test
