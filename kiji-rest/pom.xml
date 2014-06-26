@@ -131,7 +131,6 @@
                   <include>*.avdl</include>
                 </includes>
                 <testSourceDirectory>${project.basedir}/src/test/avro/</testSourceDirectory>
-                <!-- <outputDirectory>${project.basedir}/src/main/java/</outputDirectory> -->
               </configuration>
             </execution>
           </executions>

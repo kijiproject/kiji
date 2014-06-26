@@ -2,7 +2,6 @@
                               KijiREST Release Notes
 
 Version 1.4.0
-  * REST-139. Add REST service discovery service
   * REST-133. Make Kiji/KijiTable connection expiration configurable
   * REST-105. Add endpoint to gracefully (or forcefully) shut down server.
   * REST-137. Kiji-REST now supports DELETE commands

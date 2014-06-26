@@ -19,8 +19,6 @@
     limitations under the License.
   -->
   <modelVersion>4.0.0</modelVersion>
-
-  <groupId>org.kiji.rest</groupId>
   <artifactId>kiji-rest</artifactId>
 
   <parent>
@@ -86,7 +84,6 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-client</artifactId>
-      <version>${hadoop.version}</version>
       <scope>compile</scope>
       <exclusions>
         <!-- Dropwizard works with the internals of logback which conflict
@@ -109,7 +106,6 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-core</artifactId>
-      <version>${hadoop.version}</version>
       <scope>compile</scope>
       <exclusions>
         <!-- Dropwizard works with the internals of logback which conflict
@@ -147,7 +143,6 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
-      <version>${hadoop-common.version}</version>
       <scope>compile</scope>
       <exclusions>
         <!-- Dropwizard works with the internals of logback which conflict
@@ -185,7 +180,6 @@
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase</artifactId>
-      <version>${hbase.version}</version>
       <scope>compile</scope>
       <exclusions>
         <!-- Dropwizard works with the internals of logback which conflict
@@ -219,6 +213,13 @@
       </exclusions>
     </dependency>
 
+    <!--  For CORS support -->
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-servlets</artifactId>
+      <version>8.1.10.v20130312</version>
+    </dependency>
+
     <!-- Testing Dependencies -->
     <dependency>
       <groupId>com.yammer.dropwizard</groupId>
@@ -227,17 +228,9 @@
       <scope>test</scope>
     </dependency>
 
-    <!--  For CORS support -->
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-servlets</artifactId>
-      <version>8.1.10.v20130312</version>
-    </dependency>
-
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.11</version>
       <scope>test</scope>
     </dependency>
 
@@ -272,21 +265,6 @@
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-test</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-framework</artifactId>
-      <version>${curator.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-recipes</artifactId>
-      <version>${curator.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-x-discovery</artifactId>
-      <version>${curator.version}</version>
-    </dependency>
   </dependencies>
 
   <build>
@@ -294,7 +272,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.3.2</version>
         <!-- compile for Java 1.6 -->
         <configuration>
           <source>1.6</source>
@@ -322,19 +299,6 @@
       <plugin>
         <groupId>org.apache.avro</groupId>
         <artifactId>avro-maven-plugin</artifactId>
-        <!-- Don't know why yet but this seems to help get the target/generated-<blah>-sources/ into
-        the Eclipse classpath to make the build work without any manual changes. -->
-        <executions>
-          <execution>
-            <id>compile-avro-idl</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>schema</goal>
-              <goal>protocol</goal>
-              <goal>idl-protocol</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
 
       <plugin>
