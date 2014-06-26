@@ -129,6 +129,5 @@ class SongRecommenderSuite extends KijiSuite {
       .sink(userSourceOut) { validateTest }
       .runHadoop
       .finish
-      println("Finished Hadoop job!!!")
   }
 }
