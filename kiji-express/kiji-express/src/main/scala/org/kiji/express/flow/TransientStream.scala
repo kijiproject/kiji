@@ -57,22 +57,42 @@ import org.kiji.annotations.ApiStability
  * mutating the underlying collection, but if the collection is mutated by another actor, then the
  * `TransientStream` may see the modifications, and thus referential transparency will be broken.
  *
+ * Note that when a TransientStream is serialized, the genItr function and associated closures
+ * are serialized.  A deserialized TransientStream will not have any cached state from the one
+ * that was originally serialized.
+ *
  * @tparam T type of contained elements.
  * @param genItr function produces a new iterator over the underlying collection of elements.
  */
 @ApiAudience.Framework
 @ApiStability.Stable
-class TransientStream[T](genItr: () => Iterator[T]) extends Stream[T] {
+class TransientStream[T](val genItr: () => Iterator[T]) extends Stream[T] {
 
-  @volatile private var streamCache: WeakReference[Stream[T]] = new WeakReference(null)
+  @volatile @transient private var streamCache: WeakReference[Stream[T]] = new WeakReference(null)
 
   override def toStream: Stream[T] =
-    streamCache.get.getOrElse {
+    if (null == streamCache) {
       this.synchronized {
-        streamCache.get.getOrElse {
+        if (null == streamCache) {
           val newStream = genItr().toStream
           streamCache = new WeakReference(newStream)
           newStream
+        } else {
+          streamCache.get.getOrElse {
+            val newStream = genItr().toStream
+            streamCache = new WeakReference(newStream)
+            newStream
+          }
+        }
+      }
+    } else {
+      streamCache.get.getOrElse {
+        this.synchronized {
+          streamCache.get.getOrElse {
+            val newStream = genItr().toStream
+            streamCache = new WeakReference(newStream)
+            newStream
+          }
         }
       }
     }
@@ -90,8 +110,7 @@ class TransientStream[T](genItr: () => Iterator[T]) extends Stream[T] {
   override def isEmpty: Boolean = toStream.isEmpty
 
   override def toString: String =
-    streamCache
-        .get
+    Option(streamCache)
         .map(s => "Transient" + s.toString)
         .getOrElse("TransientStream(?)")
 }

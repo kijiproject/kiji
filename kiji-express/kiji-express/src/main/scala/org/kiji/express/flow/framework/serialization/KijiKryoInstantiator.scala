@@ -25,10 +25,15 @@ import com.twitter.scalding.serialization.KryoHadoop
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericContainer
 import org.apache.avro.specific.SpecificRecord
+import org.apache.hadoop.hbase.client.Result
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
+import org.kiji.schema.KijiDataRequest
+import org.kiji.schema.KijiURI
+import org.kiji.schema.impl.hbase.HBaseKijiRowData
+import org.kiji.schema.layout.ColumnReaderSpec
 
 /**
  * Kryo specification that adds avro schema, generic record, and specific record serialization
@@ -48,6 +53,14 @@ class KijiKryoInstantiator(config: Config) extends KryoHadoop(config) {
     //     a subclass of GenericContainer.
     kryo.addDefaultSerializer(classOf[SpecificRecord], classOf[AvroSpecificSerializer])
     kryo.addDefaultSerializer(classOf[GenericContainer], classOf[AvroGenericSerializer])
+
+    kryo.addDefaultSerializer(classOf[ColumnReaderSpec], classOf[ColumnReaderSpecSerializer])
+    kryo.addDefaultSerializer(classOf[HBaseKijiRowData], classOf[HBaseKijiRowDataSerializer])
+    kryo.addDefaultSerializer(classOf[KijiDataRequest], classOf[KijiDataRequestSerializer])
+    kryo.addDefaultSerializer(classOf[KijiURI], classOf[KijiURISerializer])
+    kryo.addDefaultSerializer(classOf[Result], classOf[ResultSerializer])
+
+
     kryo
   }
 }

@@ -27,42 +27,23 @@ import com.twitter.scalding.JobTest
 import com.twitter.scalding.TextLine
 import com.twitter.scalding.Tsv
 import org.apache.avro.generic.GenericRecord
-import org.apache.avro.generic.GenericRecordBuilder
 import org.apache.avro.specific.SpecificRecord
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
+import org.kiji.express.KijiJobSuiteSampleData
 import org.kiji.express.KijiSuite
 import org.kiji.express.avro.SimpleRecord
 import org.kiji.express.flow.util.ResourceUtil
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
-import org.kiji.schema.layout.KijiTableLayout
 
 @RunWith(classOf[JUnitRunner])
 class KijiJobSuite extends KijiSuite {
-  val avroLayout: KijiTableLayout = ResourceUtil.layout("layout/avro-types.json")
+  import KijiJobSuiteSampleData._
+
   val uri: String = ResourceUtil.doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
     table.getURI.toString
-  }
-
-  val rawInputs: List[(Long, String)] = List(
-    (1, "input 1"),
-    (2, "input 2"),
-    (3, "input 3"),
-    (4, "input 4"),
-    (5, "input 5"))
-
-  val eids: List[EntityId] = List("row-1", "row-2", "row-3", "row-4", "row-5").map(EntityId(_))
-
-  val genericInputs: List[GenericRecord] = {
-    val builder = new GenericRecordBuilder(SimpleRecord.getClassSchema)
-    rawInputs.map { case (l: Long, s: String) => builder.set("l", l).set("s", s).build }
-  }
-
-  val specificInputs: List[SimpleRecord] = {
-    val builder = SimpleRecord.newBuilder()
-    rawInputs.map { case (l: Long, s: String) => builder.setL(l).setS(s).build }
   }
 
   def validateUnpacking(output: mutable.Buffer[(Long, String, String)]): Unit = {

@@ -20,10 +20,11 @@
 package org.kiji.express.flow
 
 import java.io.Serializable
+import java.util.Properties
+
+import scala.collection.JavaConversions.asScalaIterator
 import scala.collection.JavaConverters.collectionAsScalaIterableConverter
 import scala.collection.JavaConverters.mapAsScalaMapConverter
-
-import java.util.Properties
 
 import cascading.flow.Flow
 import cascading.flow.FlowListener
@@ -31,11 +32,14 @@ import cascading.flow.hadoop.util.HadoopUtil
 import cascading.pipe.Checkpoint
 import cascading.pipe.Pipe
 import cascading.pipe.assembly.AggregateBy
+import cascading.stats.FlowStepStats
+import cascading.stats.hadoop.HadoopStepStats
+import cascading.stats.local.LocalStepStats
 import cascading.tap.Tap
 import cascading.tuple.collect.SpillableProps
 import com.google.common.base.Preconditions
 import com.twitter.chill.config.ConfiguredInstantiator
-import com.twitter.chill.config.ScalaMapConfig
+import com.twitter.chill.config.ScalaAnyRefMapConfig
 import com.twitter.scalding.Args
 import com.twitter.scalding.HadoopTest
 import com.twitter.scalding.Hdfs
@@ -60,12 +64,9 @@ import org.kiji.express.flow.framework.hfile.HFileKijiTap
 import org.kiji.express.flow.framework.serialization.KijiKryoInstantiator
 import org.kiji.express.flow.util.AvroTupleConversions
 import org.kiji.express.flow.util.PipeConversions
+import org.kiji.express.flow.util.ResourcesShutdown
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiURI
-import cascading.stats.FlowStepStats
-import cascading.stats.hadoop.HadoopStepStats
-import scala.collection.JavaConversions.asScalaIterator
-import cascading.stats.local.LocalStepStats
 
 /**
  * KijiJob is KijiExpress's extension of Scalding's `Job`, and users should extend it when writing
@@ -84,6 +85,10 @@ class KijiJob(args: Args)
     with AvroTupleConversions {
   /** FlowListener for collecting flowCounters from this Job. */
   private val counterListener: CounterListener = new CounterListener
+
+  // We have to reference ResourcesShutdown from here, or else the class never gets loaded into
+  // the jvm.
+  ResourcesShutdown.initialize()
 
   override def buildFlow: Flow[_] = {
     val taps: List[Tap[_, _, _]] = (
@@ -179,7 +184,7 @@ class KijiJob(args: Args)
         AggregateBy.AGGREGATE_BY_THRESHOLD -> defaultSpillThreshold.toString
     )
     // Set up the keys for chill
-    val chillConf = ScalaMapConfig(lowPriorityDefaults)
+    val chillConf = ScalaAnyRefMapConfig(lowPriorityDefaults)
     ConfiguredInstantiator.setReflect(chillConf, classOf[KijiKryoInstantiator])
 
     // Append all the new keys.

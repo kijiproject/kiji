@@ -109,6 +109,11 @@ final private[express] case class InputContext(
  * Note: Warnings about a missing serialVersionUID are ignored here. When KijiScheme is
  * serialized, the result is not persisted anywhere making serialVersionUID unnecessary.
  *
+ * Note: If sourcing from a KijiTable, it is never closed.  The reason for this is that if any of
+ * the columns in the request are paged, they might still need an open KijiTable for the rest of
+ * the flow.  It is expected that any job using this as a source is not long-running and is
+ * contained to a single JVM.
+ *
  * @see [[org.kiji.express.flow.framework.KijiScheme]]
  *
  * @param uri of table to be written to.
@@ -213,7 +218,11 @@ private[express] case class LocalKijiScheme(
     if (context.iterator.hasNext) {
       // Get the current row.
       val row: KijiRowData = context.iterator.next()
-      val result: Tuple = KijiScheme.rowToTuple(inputColumns, getSourceFields, timestampField, row)
+      val result: Tuple = KijiScheme.rowToTuple(
+        inputColumns,
+        getSourceFields,
+        timestampField,
+        row)
 
       // Set the result tuple and return from this method.
       sourceCall.getIncomingEntry.setTuple(result)
@@ -227,16 +236,16 @@ private[express] case class LocalKijiScheme(
   /**
    * Cleans up any resources used to read from a Kiji table.
    *
+   * Note: This does not close the KijiTable!  If one of the columns of the request was paged,
+   * it will potentially still need access to the Kiji table even after the tuples have been
+   * sourced.
+   *
    * @param process Current Cascading flow being run.
    * @param sourceCall Object containing the context for this source.
    */
   override def sourceCleanup(
       process: FlowProcess[Properties],
       sourceCall: SourceCall[InputContext, InputStream]) {
-    val context: InputContext = sourceCall.getContext
-    context.reader.close()
-    context.scanner.close()
-
     // Set the context to null so that we no longer hold any references to it.
     sourceCall.setContext(null)
   }
