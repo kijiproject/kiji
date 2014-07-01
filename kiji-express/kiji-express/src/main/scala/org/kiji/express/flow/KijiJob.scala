@@ -22,7 +22,7 @@ package org.kiji.express.flow
 import java.io.Serializable
 import java.util.Properties
 
-import scala.collection.JavaConversions.asScalaIterator
+import scala.collection.JavaConverters.asScalaIteratorConverter
 import scala.collection.JavaConverters.collectionAsScalaIterableConverter
 import scala.collection.JavaConverters.mapAsScalaMapConverter
 
@@ -49,6 +49,7 @@ import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.security.User
 import org.apache.hadoop.hbase.security.token.TokenUtil
 import org.apache.hadoop.mapred.JobConf
+import org.apache.hadoop.mapred.RunningJob
 import org.apache.hadoop.mapreduce.Counter
 import org.apache.hadoop.security.UserGroupInformation
 
@@ -385,18 +386,26 @@ object KijiJob {
         flowStepStats: FlowStepStats =>
           flowStepStats match {
             //In case this is a hadoop job, pull stats from cascading.
-            case hadoopStepStats: HadoopStepStats => hadoopStepStats.getRunningJob.getCounters
-              .getGroupNames.asScala.toSet.flatMap {
-              group: String =>
-                hadoopStepStats
-                  .getRunningJob
-                  .getCounters
-                  .getGroup(group)
-                  .iterator
-                  .map { counter: Counter =>
-                  (group, counter.getName, counter.getValue)
-                }
-            }
+            case hadoopStepStats: HadoopStepStats =>
+              val jobOption: Option[RunningJob] = Option(hadoopStepStats.getRunningJob)
+              jobOption match {
+                case Some(runningJob) => runningJob
+                    .getCounters
+                    .getGroupNames
+                    .asScala
+                    .toSet
+                    .flatMap { group: String =>
+                      runningJob
+                          .getCounters
+                          .getGroup(group)
+                          .iterator
+                          .asScala
+                          .map { counter: Counter =>
+                            (group, counter.getName, counter.getValue)
+                          }
+                    }
+                case None => Set[(String, String, Long)]()
+              }
             //In case this is a local job, only pull available stats.
             case localStepStats: LocalStepStats =>
               localStepStats.getCounterGroups.asScala.toSet.flatMap {
