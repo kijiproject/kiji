@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.1.6</version>
+    <version>1.1.8</version>
   </parent>
 
   <modules>
@@ -29,10 +29,10 @@
 
   <properties>
     <!-- Kiji versions -->
-    <kiji-express.version>2.0.1</kiji-express.version>
-    <kiji-mapreduce.version>1.2.6</kiji-mapreduce.version>
-    <kiji-schema.version>1.4.0</kiji-schema.version>
-    <kiji-schema-shell.version>1.3.5</kiji-schema-shell.version>
+    <kiji-express.version>2.0.4</kiji-express.version>
+    <kiji-mapreduce.version>1.2.9</kiji-mapreduce.version>
+    <kiji-schema.version>1.5.0</kiji-schema.version>
+    <kiji-schema-shell.version>1.3.8</kiji-schema-shell.version>
 
     <!-- Dependency versions -->
     <algebird-core.version>0.4.0</algebird-core.version>
