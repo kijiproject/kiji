@@ -136,6 +136,10 @@
       <scope>test</scope>
       <version>${fake-hbase.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.curator</groupId>
+      <artifactId>curator-test</artifactId>
+    </dependency>
 
   </dependencies>
 
