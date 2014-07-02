@@ -354,7 +354,7 @@
       <!-- kiji-model-repository -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>model-repo</outputDirectory>
-      <directory>target/prereqs-dir/kiji-model-repository-${kiji-modelrepo.version}</directory>
+      <directory>target/prereqs-dir/kiji-model-repository-${kiji-model-repository.version}</directory>
       <filtered>false</filtered>
       <excludes>
         <exclude>RELEASE_NOTES.txt</exclude>
@@ -485,7 +485,7 @@
     </file>
     <file>
       <!-- kiji-model-repository release notes -->
-      <source>target/prereqs-dir/kiji-model-repository-${kiji-modelrepo.version}/RELEASE_NOTES.txt</source>
+      <source>target/prereqs-dir/kiji-model-repository-${kiji-model-repository.version}/RELEASE_NOTES.txt</source>
       <outputDirectory>release-notes</outputDirectory>
       <destName>MODEL_REPO_RELEASE_NOTES.txt</destName>
       <fileMode>0644</fileMode>

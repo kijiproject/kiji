@@ -290,7 +290,7 @@
     <dependency>
       <groupId>org.kiji.modelrepo</groupId>
       <artifactId>kiji-model-repository</artifactId>
-      <version>${kiji-modelrepo.version}</version>
+      <version>${kiji-model-repository.version}</version>
       <classifier>release</classifier>
       <type>tar.gz</type>
     </dependency>

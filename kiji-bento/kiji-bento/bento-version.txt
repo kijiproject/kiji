@@ -15,7 +15,7 @@ kiji-express-tools: ${kiji-express-tools.version}
 kiji-hive-adapter: ${kiji-hive-adapter.version}
 kiji-mapreduce: ${kiji-mapreduce.version}
 kiji-mapreduce-lib: ${kiji-mapreduce-lib.version}
-kiji-model-repository: ${kiji-modelrepo.version}
+kiji-model-repository: ${kiji-model-repository.version}
 kiji-modeling: ${kiji-modeling.version}
 kiji-music: ${kiji-music.version}
 kiji-phonebook: ${kiji-phonebook.version}

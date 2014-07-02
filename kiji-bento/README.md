@@ -39,7 +39,7 @@ This kiji-bento release (${project.version}) includes:
 * `kiji-scoring` ${kiji-scoring.version}: Included in the `scoring` directory,
   kiji-scoring is a library and server that supports the real-time per-row
   calculations on kiji tables.
-* `kiji-model-repository` {kiji-modelrepo.version}: Included in the
+* `kiji-model-repository` {kiji-model-repository.version}: Included in the
   `model-repo` directory, the kiji-model-repository is a library which permits
   storage of trained kiji-modeling in a maven repository, indexed by a kiji
   table. kiji-scoring can use this models stored in this repository to for its
