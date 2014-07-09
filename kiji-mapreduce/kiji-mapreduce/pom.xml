@@ -233,8 +233,8 @@
       <groupId>org.apache.mrunit</groupId>
       <artifactId>mrunit</artifactId>
       <classifier>hadoop2</classifier>
-      <!-- I do not know if this version number is correct-->
-      <version>0.9.0-incubating</version>
+      <version>1.1.0</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>commons-lang</groupId>
