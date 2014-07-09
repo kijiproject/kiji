@@ -33,13 +33,18 @@ import org.apache.hadoop.hbase.client.Get
 import org.apache.hadoop.hbase.client.HTableInterface
 import org.apache.hadoop.hbase.client.Put
 import org.apache.hadoop.hbase.client.Scan
+import org.apache.hadoop.hbase.filter.ColumnPrefixFilter
 import org.apache.hadoop.hbase.filter.ColumnRangeFilter
 import org.apache.hadoop.hbase.filter.KeyOnlyFilter
 import org.apache.hadoop.hbase.util.Bytes
-import org.junit.Test
 import org.junit.Assert
+import org.junit.Test
+import org.apache.hadoop.hbase.filter.FirstKeyOnlyFilter
+import org.slf4j.LoggerFactory
 
 class TestFakeHTable {
+  private final val Log = LoggerFactory.getLogger(classOf[TestFakeHTable])
+
   type Bytes = Array[Byte]
 
   /**
@@ -385,6 +390,31 @@ class TestFakeHTable {
     }
   }
 
+  /**
+   * Test a get request with the FirstKeyOnly filter.
+   *
+   * This validates some behaviors around ReturnCode.NEXT_ROW.
+   */
+  @Test
+  def testGetWithFirstKeyOnlyFilter(): Unit = {
+    val table = new FakeHTable(
+        name = "table",
+        conf = HBaseConfiguration.create(),
+        desc = null
+    )
+
+    val count = 2
+    populateTable(table, count=count)
+
+    val get = new Get("key1")
+        .setMaxVersions()
+        .setFilter(new FirstKeyOnlyFilter)
+    val result = table.get(get)
+
+    Assert.assertEquals(1, result.getMap.size)
+    Assert.assertTrue(result.containsColumn("family0", "qualifier0"))
+  }
+
   /** Test a get request with max versions. */
   @Test
   def testGetWithMaxVersions(): Unit = {
@@ -438,6 +468,38 @@ class TestFakeHTable {
       val rows = scanner.iterator().asScala.toList
       Assert.assertEquals(1, rows.size)
       Assert.assertEquals("key2", Bytes.toString(rows(0).getRow))
+    }
+  }
+
+  /** Test scanning with a prefix filter. */
+  @Test
+  def testScanWithFilter(): Unit = {
+    val table = new FakeHTable(
+      name = "table",
+      conf = HBaseConfiguration.create(),
+      desc = null
+    )
+
+    val rowKey = "key"
+    val family = "family"
+    for (qualifier <- List("non-prefixed", "prefix:a")) {
+      table.put(new Put(rowKey).add(family, qualifier, qualifier))
+    }
+
+    {
+      val get = new Get(rowKey).setFilter(new ColumnPrefixFilter("prefix"))
+      val result = table.get(get)
+      val values = result.raw().toList.map(kv => Bytes.toString(kv.getValue))
+      Assert.assertEquals(List("prefix:a"), values)
+    }
+
+    {
+      val scan = new Scan(rowKey).setFilter(new ColumnPrefixFilter("prefix"))
+      val scanner = table.getScanner(scan)
+      val rows = scanner.iterator().asScala.toList
+
+      val values = rows(0).raw().toList.map(kv => Bytes.toString(kv.getValue))
+      Assert.assertEquals(List("prefix:a"), values)
     }
   }
 

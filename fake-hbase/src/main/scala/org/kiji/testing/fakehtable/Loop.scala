@@ -64,11 +64,11 @@ class Loop {
         try {
           op
         } catch {
-          case _: ContinueControl => // Loop over
+          case cc: ContinueControl => if (cc != continueException) throw cc // else loop over
         }
       }
     } catch {
-      case _: BreakControl => // Break the loop
+      case bc: BreakControl => if (bc != breakException) throw bc // else break this loop
     }
   }
 

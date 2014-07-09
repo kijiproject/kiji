@@ -191,7 +191,10 @@ object ProcessRow {
             }
             case Filter.ReturnCode.SKIP => // Skip this key/value pair.
             case Filter.ReturnCode.NEXT_COL => TimestampLoop.break
-            case Filter.ReturnCode.NEXT_ROW => FamilyLoop.break
+            case Filter.ReturnCode.NEXT_ROW => {
+              // Semantically, NEXT_ROW apparently means NEXT_FAMILY
+              QualifierLoop.break
+            }
             case Filter.ReturnCode.SEEK_NEXT_USING_HINT => {
               Option(filter.getNextKeyHint(kv)) match {
                 case None => // No hint
