@@ -21,6 +21,7 @@ If you are using an earlier version of Kiji, user guides appropriate
 to the Kiji version you are using are available here:
 
 #### KijiSchema User Guide
+* [KijiSchema 1.5.0]({{site.userguide_url}}/schema/1.5.0/kiji-schema-overview/)
 * [KijiSchema 1.4.2]({{site.userguide_url}}/schema/1.4.2/kiji-schema-overview/)
 * [KijiSchema 1.4.1]({{site.userguide_url}}/schema/1.4.1/kiji-schema-overview/)
 * [KijiSchema 1.4.0]({{site.userguide_url}}/schema/1.4.0/kiji-schema-overview/)
@@ -48,6 +49,7 @@ to the Kiji version you are using are available here:
 * [KijiSchema 1.0.0-rc1]({{site.userguide_url}}/schema/1.0.0-rc1/kiji-schema-overview/)
 
 #### KijiMR User Guide
+* [KijiMR 1.2.9]({{site.userguide_url}}/mapreduce/1.2.9/kiji-mr-overview/)
 * [KijiMR 1.2.8]({{site.userguide_url}}/mapreduce/1.2.8/kiji-mr-overview/)
 * [KijiMR 1.2.7]({{site.userguide_url}}/mapreduce/1.2.7/kiji-mr-overview/)
 * [KijiMR 1.2.6]({{site.userguide_url}}/mapreduce/1.2.6/kiji-mr-overview/)
@@ -68,6 +70,7 @@ to the Kiji version you are using are available here:
 * [KijiMR 1.0.0-rc4]({{site.userguide_url}}/mapreduce/1.0.0-rc4/kiji-mr-overview/)
 
 #### KijiREST User Guide
+* [KijiREST 1.4.0]({{site.userguide_url}}/rest/1.4.0/rest-overview/)
 * [KijiREST 1.3.2]({{site.userguide_url}}/rest/1.3.2/rest-overview/)
 * [KijiREST 1.3.1]({{site.userguide_url}}/rest/1.3.1/rest-overview/)
 * [KijiREST 1.3.0]({{site.userguide_url}}/rest/1.3.0/rest-overview/)
@@ -81,6 +84,7 @@ to the Kiji version you are using are available here:
 * [KijiREST 0.3.0]({{site.userguide_url}}/rest/0.3.0/rest-overview/)
 
 #### KijiExpress User Guide
+* [KijiExpress 2.0.4]({{site.userguide_url}}/express/2.0.4/overview/)
 * [KijiExpress 2.0.3]({{site.userguide_url}}/express/2.0.3/overview/)
 * [KijiExpress 2.0.2]({{site.userguide_url}}/express/2.0.2/overview/)
 * [KijiExpress 2.0.1]({{site.userguide_url}}/express/2.0.1/overview/)
@@ -91,6 +95,7 @@ to the Kiji version you are using are available here:
 * [KijiExpress 0.13.0]({{site.userguide_url}}/express/0.13.0/overview/)
 
 #### KijiScoring User Guide
+* [KijiScoring 0.16.0]({{site.userguide_url}}/scoring/0.16.0/what-is-scoring/)
 * [KijiScoring 0.15.0]({{site.userguide_url}}/scoring/0.15.0/what-is-scoring/)
 * [KijiScoring 0.14.0]({{site.userguide_url}}/scoring/0.14.0/what-is-scoring/)
 * [KijiScoring 0.13.0]({{site.userguide_url}}/scoring/0.13.0/what-is-scoring/)
