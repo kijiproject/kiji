@@ -81,8 +81,8 @@
         <artifactId>elephant-bird-core</artifactId>
         <version>${elephant-bird.version}</version>
         <scope>compile</scope>
-	<exclusions>
-	  <exclusion>
+        <exclusions>
+          <exclusion>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
           </exclusion>

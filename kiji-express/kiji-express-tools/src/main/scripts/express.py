@@ -206,7 +206,7 @@ class Command(cli.Action):
     """
     bin_path = os.path.join(env.get(key), 'bin', binary_name)
     cmd = [bin_path, 'classpath']
-    cp_str = subprocess.check_output(cmd,  universal_newlines=True)
+    cp_str = subprocess.check_output(cmd, universal_newlines=True)
     cp_str_sans_endline = cp_str.replace('\n', '')
     cp_str_sans_slf4j = cp_str_sans_endline.replace('slf4j', '')
     cp = cp_str_sans_slf4j.split(':')
