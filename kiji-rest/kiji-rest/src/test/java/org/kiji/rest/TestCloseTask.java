@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import org.kiji.rest.resources.CloseTask;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiClientTest;
-import org.kiji.schema.KijiInstaller;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.avro.TableLayoutDesc;
@@ -45,29 +44,21 @@ import org.kiji.schema.layout.KijiTableLayouts;
  */
 public class TestCloseTask extends KijiClientTest {
   private static final Logger LOG = LoggerFactory.getLogger(TestCloseTask.class);
-  private static final String INSTANCE_NAME = "test_close_task_instance";
   private static final String TABLE_NAME = "test_close_task_table";
 
   private ManagedKijiClient mKijiClient;
   private CloseTask mCloseTask;
+  private Kiji mKiji;
 
   @Before
   public void setUp() throws Exception {
     final KijiURI clusterURI = createTestHBaseURI();
-    final KijiURI instanceURI =
-        KijiURI.newBuilder(clusterURI).withInstanceName(INSTANCE_NAME).build();
     // Create the instance
-    KijiInstaller.get().install(instanceURI, getConf());
-
-    Kiji kiji = Kiji.Factory.get().open(instanceURI);
-    try {
+    mKiji = createTestKiji(clusterURI);
       TableLayoutDesc layout =
           KijiTableLayouts.getLayout("org/kiji/rest/layouts/sample_table.json");
       layout.setName(TABLE_NAME);
-      kiji.createTable(layout);
-    } finally {
-      kiji.release();
-    }
+      mKiji.createTable(layout);
 
     mKijiClient = new ManagedKijiClient(clusterURI);
     mKijiClient.start();
@@ -81,33 +72,35 @@ public class TestCloseTask extends KijiClientTest {
 
   @Test
   public void testCloseInstance() throws Exception {
-    final Kiji kiji = mKijiClient.getKiji(INSTANCE_NAME);
+    final String instanceName = mKiji.getURI().getInstance();
+    final Kiji kiji = mKijiClient.getKiji(instanceName);
 
     Assert.assertEquals(ImmutableList.of(TABLE_NAME), kiji.getTableNames());
-    Assert.assertEquals(ImmutableSet.of(INSTANCE_NAME), mKijiClient.getInstances());
+    Assert.assertEquals(ImmutableSet.of(instanceName), mKijiClient.getInstances());
 
     mCloseTask.execute(
-        ImmutableMultimap.of(CloseTask.INSTANCE_KEY, INSTANCE_NAME),
+        ImmutableMultimap.of(CloseTask.INSTANCE_KEY, instanceName),
         new PrintWriter(System.out));
 
     // Kiji should be closed at this point
     try {
       kiji.getTableNames();
+      Assert.fail("A call to a Kiji method succeeded when it should have failed.");
     } catch (IllegalStateException e) {
-      return; // good
+      Assert.assertTrue(e.getMessage().contains("Cannot get table names in Kiji instance"));
     }
-    Assert.fail();
   }
 
   @Test
   public void testCloseTable() throws Exception {
-    final Kiji kiji = mKijiClient.getKiji(INSTANCE_NAME);
-    final KijiTable table = mKijiClient.getKijiTable(INSTANCE_NAME, TABLE_NAME);
+    final String instanceName = mKiji.getURI().getInstance();
+    final Kiji kiji = mKijiClient.getKiji(instanceName);
+    final KijiTable table = mKijiClient.getKijiTable(instanceName, TABLE_NAME);
     table.retain().release(); // Will throw if closed
 
     mCloseTask.execute(
         ImmutableMultimap.of(
-            CloseTask.INSTANCE_KEY, INSTANCE_NAME, CloseTask.TABLE_KEY, TABLE_NAME),
+            CloseTask.INSTANCE_KEY, instanceName, CloseTask.TABLE_KEY, TABLE_NAME),
         new PrintWriter(System.out));
 
     // Kiji should still be open
