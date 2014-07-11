@@ -45,25 +45,20 @@ http://maven.apache.org/xsd/assembly-1.1.2.xsd">
     <fileSet>
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>bin</outputDirectory>
-      <directory>src/main/scripts</directory>
+      <directory>${project.basedir}/../kiji-rest/src/main/scripts</directory>
       <fileMode>0755</fileMode>
       <filtered>false</filtered>
     </fileSet>
     <fileSet>
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>conf</outputDirectory>
-      <directory>src/main/conf</directory>
-    </fileSet>
-    <fileSet>
-      <useDefaultExcludes>true</useDefaultExcludes>
-      <outputDirectory>lib</outputDirectory>
-      <directory>src/main/lib</directory>
+      <directory>${project.basedir}/../kiji-rest/src/main/conf</directory>
     </fileSet>
     <fileSet>
       <!-- java api documentation -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>docs/apidocs</outputDirectory>
-      <directory>${project.build.directory}/apidocs</directory>
+      <directory>${project.basedir}/../kiji-rest/target/apidocs</directory>
       <fileMode>0644</fileMode>
       <excludes>
         <exclude>options</exclude>
@@ -73,12 +68,13 @@ http://maven.apache.org/xsd/assembly-1.1.2.xsd">
       <!-- rest clients -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>clients</outputDirectory>
-      <directory>${project.basedir}/../clients</directory>
+      <directory>${project.basedir}/../kiji-rest/../clients</directory>
     </fileSet>
   </fileSets>
   <dependencySets>
     <dependencySet>
       <outputDirectory>lib</outputDirectory>
+      <useProjectArtifact>false</useProjectArtifact>
       <scope>runtime</scope>
       <useTransitiveFiltering>true</useTransitiveFiltering>
       <fileMode>0644</fileMode>

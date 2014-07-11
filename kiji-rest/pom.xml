@@ -53,6 +53,8 @@
     <module>kiji-rest</module>
     <module>load-testing</module>
     <module>plugin-archetype</module>
+    <module>cdh4</module>
+    <module>cdh5</module>
   </modules>
 
   <build>
