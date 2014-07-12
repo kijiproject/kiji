@@ -47,6 +47,7 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.junit.Test;
 
+import org.kiji.mapreduce.framework.HBaseKijiTableInputFormat;
 import org.kiji.mapreduce.framework.KijiTableInputFormat;
 import org.kiji.schema.DecodedCell;
 import org.kiji.schema.EntityId;
@@ -125,7 +126,7 @@ public class IntegrationTestKijiTableInputFormat
     // Setup the InputFormat.
     KijiTableInputFormat.configureJob(job, getFooTable().getURI(), request,
         startKey, limitKey, filter);
-    job.setInputFormatClass(KijiTableInputFormat.class);
+    job.setInputFormatClass(HBaseKijiTableInputFormat.class);
 
     // Duplicate functionality from MapReduceJobBuilder, since we are not using it here:
     final List<Path> jarFiles = Lists.newArrayList();

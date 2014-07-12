@@ -32,8 +32,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.kiji.mapreduce.framework.HBaseKijiTableInputFormat;
 import org.kiji.mapreduce.framework.KijiConfKeys;
-import org.kiji.mapreduce.framework.KijiTableInputFormat;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.RequiredStores;
 import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
@@ -120,7 +120,7 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
 
     // Verify that the MR Job was configured correctly.
     final Job job = produceJob.getHadoopJob();
-    assertEquals(KijiTableInputFormat.class, job.getInputFormatClass());
+    assertEquals(HBaseKijiTableInputFormat.class, job.getInputFormatClass());
     assertEquals(ProduceMapper.class, job.getMapperClass());
     assertEquals(MyProducer.class,
         job.getConfiguration().getClass(KijiConfKeys.KIJI_PRODUCER_CLASS, null));

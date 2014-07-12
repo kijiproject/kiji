@@ -22,7 +22,6 @@ package org.kiji.mapreduce.testlib;
 import java.io.IOException;
 
 import com.google.common.base.Preconditions;
-
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 

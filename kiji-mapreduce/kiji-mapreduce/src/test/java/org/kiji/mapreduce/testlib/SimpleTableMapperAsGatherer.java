@@ -26,7 +26,6 @@ import org.apache.hadoop.io.NullWritable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.framework.HFileKeyValue;
 import org.kiji.mapreduce.gather.GathererContext;

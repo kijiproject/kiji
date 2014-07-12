@@ -58,8 +58,8 @@ import org.kiji.mapreduce.framework.KijiConfKeys;
 import org.kiji.mapreduce.output.framework.KijiHFileOutputFormat;
 import org.kiji.mapreduce.platform.KijiMRPlatformBridge;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiInstaller;
 import org.kiji.schema.KijiURI;
+import org.kiji.schema.impl.hbase.HBaseKijiInstaller;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.layout.impl.ColumnId;
@@ -168,7 +168,7 @@ public class TestKijiHFileOutputFormat {
     mConf.set("fs.defaultFS", "file://" + mTempDir.toString());
     mConf.set("mapred.output.dir", "file://" + mTempDir.toString());
 
-    KijiInstaller.get().install(mTableURI, mConf);
+    HBaseKijiInstaller.get().install(mTableURI, mConf);
     mKiji = Kiji.Factory.open(mTableURI);
 
     mLayout = KijiTableLayout.newLayout(KijiTableLayouts.getLayout(KijiTableLayouts.FULL_FEATURED));

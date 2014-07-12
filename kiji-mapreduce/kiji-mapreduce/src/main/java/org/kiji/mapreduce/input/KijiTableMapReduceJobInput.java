@@ -210,16 +210,21 @@ public final class KijiTableMapReduceJobInput extends MapReduceJobInput {
   public void configure(Job job) throws IOException {
     // Configure the input format class.
     super.configure(job);
+    KijiTableInputFormat inputFormat =
+        KijiTableInputFormat.Factory.get(mInputTableURI).getInputFormat();
+    job.setInputFormatClass(inputFormat.getClass());
     KijiTableInputFormat.configureJob(job, mInputTableURI, mDataRequest,
-        null != mRowOptions ? mRowOptions.getStartRow() : null,
-        null != mRowOptions ? mRowOptions.getLimitRow() : null,
-        null != mRowOptions ? mRowOptions.getRowFilter() : null);
+          null != mRowOptions ? mRowOptions.getStartRow() : null,
+          null != mRowOptions ? mRowOptions.getLimitRow() : null,
+          null != mRowOptions ? mRowOptions.getRowFilter() : null);
   }
 
   /** {@inheritDoc} */
   @Override
   protected Class<? extends InputFormat<?, ?>> getInputFormatClass() {
-    return KijiTableInputFormat.class;
+    KijiTableInputFormat inputFormat =
+        KijiTableInputFormat.Factory.get(mInputTableURI).getInputFormat();
+    return inputFormat.getClass();
   }
 
   /** @return Input table URI. */

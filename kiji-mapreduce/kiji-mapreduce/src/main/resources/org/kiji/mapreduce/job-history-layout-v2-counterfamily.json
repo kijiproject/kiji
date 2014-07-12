@@ -19,7 +19,7 @@
 {
   name: "job_history",
   description: "History of MapReduce jobs run through Kiji: record metrics on run MapReduce jobs.",
-  keys_format: {"encoding": "RAW"},
+  keys_format : {'org.kiji.schema.avro.RowKeyFormat2': { encoding : "RAW" }},
   locality_groups: [
     {
       name: "default",
@@ -89,7 +89,7 @@
       ]
     }
   ],
-  version: "layout-1.1",
+  version: "layout-1.4",
   layout_id : "2",
   reference_layout : "1"
 }

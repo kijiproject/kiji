@@ -24,7 +24,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.mapreduce.framework.KijiTableInputFormat.KijiTableRecordReader;
+import org.kiji.mapreduce.framework.HBaseKijiTableInputFormat.KijiTableRecordReader;
 import org.kiji.schema.KijiClientTest;
 
 /** Runs a producer job in-process against a fake HBase instance. */

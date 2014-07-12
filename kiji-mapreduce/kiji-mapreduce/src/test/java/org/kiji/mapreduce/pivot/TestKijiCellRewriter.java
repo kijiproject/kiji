@@ -21,7 +21,6 @@ package org.kiji.mapreduce.pivot;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericRecordBuilder;
