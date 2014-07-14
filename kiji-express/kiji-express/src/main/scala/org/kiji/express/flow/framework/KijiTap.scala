@@ -19,7 +19,6 @@
 
 package org.kiji.express.flow.framework
 
-import scala.collection.JavaConverters.asScalaIteratorConverter
 import java.util.UUID
 
 import cascading.flow.FlowProcess
@@ -40,9 +39,6 @@ import org.apache.hadoop.mapred.lib.NullOutputFormat
 import org.apache.hadoop.security.UserGroupInformation
 import org.apache.hadoop.security.token.Token
 import org.apache.hadoop.security.token.TokenIdentifier
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.flow.ColumnInputSpec
@@ -51,13 +47,17 @@ import org.kiji.express.flow.InvalidKijiTapException
 import org.kiji.express.flow.util.ResourceUtil.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.mapreduce.framework.KijiTableInputFormat
+import org.kiji.schema.layout.KijiTableLayout
+import org.kiji.schema.{EntityId => JEntityId}
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
-import org.kiji.schema.layout.KijiTableLayout
-import org.kiji.schema.{EntityId => JEntityId}
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+import scala.collection.JavaConverters.asScalaIteratorConverter
 
 /**
  * A Kiji-specific implementation of a Cascading `Tap`, which defines the location of a Kiji table.
@@ -133,7 +133,9 @@ final class KijiTap(
    */
   override def sourceConfInit(flow: FlowProcess[JobConf], conf: JobConf) {
     // Configure the job's input format.
-    MapredInputFormatWrapper.setInputFormat(classOf[KijiTableInputFormat], conf)
+    val uri: KijiURI = KijiURI.newBuilder(tableUri).build()
+    val inputFormat: KijiTableInputFormat = KijiTableInputFormat.Factory.get(uri).getInputFormat
+    MapredInputFormatWrapper.setInputFormat(inputFormat.getClass, conf)
 
     // Store the input table.
     conf.set(KijiConfKeys.KIJI_INPUT_TABLE_URI, tableUri)
