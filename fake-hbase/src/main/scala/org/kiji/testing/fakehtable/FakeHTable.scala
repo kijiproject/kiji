@@ -99,7 +99,7 @@ class FakeHTable(
   /** A fake connection. */
   private val connection: FakeHConnection = new FakeHConnection()
 
-  /** Region splits and locations. */
+  /** Region splits and locations. Protected by `this`. */
   private var regions: Seq[HRegionLocation] = Seq()
 
   /** Byte array shortcut. */
@@ -237,20 +237,21 @@ class FakeHTable(
   override def get(get: Get): Result = {
     // get() could be built around scan(), to ensure consistent filters behavior.
     // For now, we use a shortcut:
-    val filter: Filter = getFilter(get.getFilter)
-    filter.reset()
-    if (filter.filterAllRemaining()) {
-      return new Result()
-    }
-    val rowKey = get.getRow
-    if (filter.filterRowKey(rowKey, 0, rowKey.size)) {
-      return new Result()
-    }
-    val row = rows.get(rowKey)
-    if (row == null) {
-      return new Result()
-    }
-    val result = ProcessRow.makeResult(
+    synchronized {
+      val filter: Filter = getFilter(get.getFilter)
+      filter.reset()
+      if (filter.filterAllRemaining()) {
+        return new Result()
+      }
+      val rowKey = get.getRow
+      if (filter.filterRowKey(rowKey, 0, rowKey.size)) {
+        return new Result()
+      }
+      val row = rows.get(rowKey)
+      if (row == null) {
+        return new Result()
+      }
+      val result = ProcessRow.makeResult(
         table = this,
         rowKey = rowKey,
         row = row,
@@ -258,11 +259,12 @@ class FakeHTable(
         timeRange = get.getTimeRange,
         maxVersions = get.getMaxVersions,
         filter = filter
-    )
-    if (filter.filterRow()) {
-      return new Result()
+      )
+      if (filter.filterRow()) {
+        return new Result()
+      }
+      return result
     }
-    return result
   }
 
   override def get(gets: JList[Get]): Array[Result] = {
@@ -324,7 +326,7 @@ class FakeHTable(
   }
 
   /**
-   * Checks the value of a cell.
+   * Checks the value of a cell. Caller <em>must</em> synchronize before calling.
    *
    * @param row Row key.
    * @param family Family.
@@ -371,7 +373,8 @@ class FakeHTable(
   }
 
   /**
-   * Removes empty maps for a specified row, family and/or qualifier.
+   * Removes empty maps for a specified row, family and/or qualifier. Caller <em>must</em>
+   * synchronize before calling.
    *
    * @param rowKey Key of the row to clean up.
    * @param family Optional family to clean up. None means clean all families.
@@ -566,16 +569,22 @@ class FakeHTable(
   }
 
   override def setAutoFlush(autoFlush: Boolean, clearBufferOnFail: Boolean): Unit = {
-    this.autoFlush = autoFlush
-    // Ignore clearBufferOnFail
+    synchronized {
+      this.autoFlush = autoFlush
+      // Ignore clearBufferOnFail
+    }
   }
 
   override def setAutoFlush(autoFlush: Boolean): Unit = {
-    this.autoFlush = autoFlush
+    synchronized {
+      this.autoFlush = autoFlush
+    }
   }
 
   override def isAutoFlush(): Boolean = {
-    return autoFlush
+    synchronized {
+      return autoFlush
+    }
   }
 
   override def flushCommits(): Unit = {
@@ -583,15 +592,21 @@ class FakeHTable(
   }
 
   override def setWriteBufferSize(writeBufferSize: Long): Unit = {
-    this.writeBufferSize = writeBufferSize
+    synchronized {
+      this.writeBufferSize = writeBufferSize
+    }
   }
 
   override def getWriteBufferSize(): Long = {
-    return writeBufferSize
+    synchronized {
+      return writeBufferSize
+    }
   }
 
   override def close(): Unit = {
-    this.closed = true
+    synchronized {
+      this.closed = true
+    }
   }
 
   override def lockRow(row: Bytes): RowLock = {
@@ -633,8 +648,10 @@ class FakeHTable(
   /** @return the regions info for this table. */
   private[fakehtable] def getRegions(): JList[HRegionInfo] = {
     val list = new java.util.ArrayList[HRegionInfo]()
-    for (region <- regions) {
-      list.add(region.getRegionInfo)
+    synchronized {
+      for (region <- regions) {
+        list.add(region.getRegionInfo)
+      }
     }
     return list
   }
@@ -670,7 +687,9 @@ class FakeHTable(
       val regionInfo = new HRegionInfo(tableName, start, end)
       newRegions += new HRegionLocation(regionInfo, fakeHost, fakePort)
     }
-    this.regions = newRegions.toSeq
+    synchronized {
+      this.regions = newRegions.toSeq
+    }
   }
 
   // -----------------------------------------------------------------------------------------------
@@ -688,13 +707,15 @@ class FakeHTable(
 
   /** See HTable.getRegionLocation(). */
   def getRegionLocation(row: Bytes, reload: Boolean): HRegionLocation = {
-    for (region <- regions) {
-      val start = region.getRegionInfo.getStartKey
-      val end = region.getRegionInfo.getEndKey
-      // start ≤ row < end:
-      if ((Bytes.compareTo(start, row) <= 0)
-          && (end.isEmpty || (Bytes.compareTo(row, end) < 0))) {
-        return region
+    synchronized {
+      for (region <- regions) {
+        val start = region.getRegionInfo.getStartKey
+        val end = region.getRegionInfo.getEndKey
+        // start ≤ row < end:
+        if ((Bytes.compareTo(start, row) <= 0)
+            && (end.isEmpty || (Bytes.compareTo(row, end) < 0))) {
+          return region
+        }
       }
     }
     sys.error("Invalid region split: last region must does not end with empty row key")
@@ -703,8 +724,10 @@ class FakeHTable(
   /** See HTable.getRegionLocations(). */
   def getRegionLocations(): NavigableMap[HRegionInfo, ServerName] = {
     val map = new JTreeMap[HRegionInfo, ServerName]()
-    for (region <- regions) {
-      map.put(region.getRegionInfo, new ServerName(region.getHostname, region.getPort, 0))
+    synchronized {
+      for (region <- regions) {
+        map.put(region.getRegionInfo, new ServerName(region.getHostname, region.getPort, 0))
+      }
     }
     return map
   }
@@ -752,16 +775,18 @@ class FakeHTable(
    * @param out Optional print stream to write to.
    */
   def dump(out: PrintStream = Console.out): Unit = {
-    for ((rowKey, familyMap) <- rows.asScalaIterator) {
-      for ((family, qualifierMap) <- familyMap.asScalaIterator) {
-        for ((qualifier, timeSeries) <- qualifierMap.asScalaIterator) {
-          for ((timestamp, value) <- timeSeries.asScalaIterator) {
-            out.println("row=%s family=%s qualifier=%s timestamp=%d value=%s".format(
+    synchronized {
+      for ((rowKey, familyMap) <- rows.asScalaIterator) {
+        for ((family, qualifierMap) <- familyMap.asScalaIterator) {
+          for ((qualifier, timeSeries) <- qualifierMap.asScalaIterator) {
+            for ((timestamp, value) <- timeSeries.asScalaIterator) {
+              out.println("row=%s family=%s qualifier=%s timestamp=%d value=%s".format(
                 toString(rowKey),
                 toString(family),
                 toString(qualifier),
                 timestamp,
                 toHex(value)))
+            }
           }
         }
       }
@@ -839,12 +864,14 @@ class FakeHTable(
 
     /** Key of the row to return on the next call to next(). Null means no more row. */
     private var key: Bytes = {
-      if (rows.isEmpty) {
-        null
-      } else if (scan.getStartRow.isEmpty) {
-        rows.firstKey
-      } else {
-        rows.ceilingKey(scan.getStartRow)
+      synchronized {
+        if (rows.isEmpty) {
+          null
+        } else if (scan.getStartRow.isEmpty) {
+          rows.firstKey
+        } else {
+          rows.ceilingKey(scan.getStartRow)
+        }
       }
     }
     if (!scan.getStopRow.isEmpty
@@ -884,7 +911,10 @@ class FakeHTable(
       sys.error("dead code")
     }
 
-    /** @return the next row key, or null if there is no more row. */
+    /**
+     * @return the next row key, or null if there is no more row. Caller <em>must</em> synchronize
+     * on `FakeHTable.this`.
+     */
     private def nextRowKey(): Bytes = {
       if (key == null) { return null }
       val rowKey = key
@@ -899,21 +929,22 @@ class FakeHTable(
 
     /** @return a Result, potentially empty, for the next row. */
     private def getResultForNextRow(): Option[Result] = {
-      filter.reset()
-      if (filter.filterAllRemaining) { return None }
+      FakeHTable.this.synchronized {
+        filter.reset()
+        if (filter.filterAllRemaining) { return None }
 
-      val rowKey = nextRowKey()
-      if (rowKey == null) { return None }
-      if (filter.filterRowKey(rowKey, 0, rowKey.size)) {
-        // Row is filtered out based on its key, return an empty Result:
-        return Some(new Result())
-      }
+        val rowKey = nextRowKey()
+        if (rowKey == null) { return None }
+        if (filter.filterRowKey(rowKey, 0, rowKey.size)) {
+          // Row is filtered out based on its key, return an empty Result:
+          return Some(new Result())
+        }
 
-      /** Map: family -> qualifier -> time stamp -> cell value */
-      val row = rows.get(rowKey)
-      require(row != null)
+        /** Map: family -> qualifier -> time stamp -> cell value */
+        val row = rows.get(rowKey)
+        require(row != null)
 
-      val result = ProcessRow.makeResult(
+        val result = ProcessRow.makeResult(
           table = FakeHTable.this,
           rowKey = rowKey,
           row = row,
@@ -921,12 +952,13 @@ class FakeHTable(
           timeRange = scan.getTimeRange,
           maxVersions = scan.getMaxVersions,
           filter = filter
-      )
-      if (filter.filterRow()) {
-        // Filter finally decided to exclude the row, return an empty Result:
-        return Some(new Result())
+        )
+        if (filter.filterRow()) {
+          // Filter finally decided to exclude the row, return an empty Result:
+          return Some(new Result())
+        }
+        return Some(result)
       }
-      return Some(result)
     }
 
     override def next(nrows: Int): Array[Result] = {

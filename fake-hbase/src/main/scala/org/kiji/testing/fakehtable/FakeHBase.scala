@@ -61,7 +61,9 @@ class FakeHBase
    *     When disabled, TableNotFoundException is raised.
    */
   def setCreateUnknownTable(createUnknownTableFlag: Boolean): Unit = {
-    this.createUnknownTable = createUnknownTableFlag
+    synchronized {
+      this.createUnknownTable = createUnknownTableFlag
+    }
   }
 
   // -----------------------------------------------------------------------------------------------
