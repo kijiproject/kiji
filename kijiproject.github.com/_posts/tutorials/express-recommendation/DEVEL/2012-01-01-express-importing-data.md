@@ -28,7 +28,7 @@ and the target Kiji table.
 
 <div class="userinput">
 {% highlight bash %}
-express.py job -libjars=${MUSIC_EXPRESS_HOME}/lib/* \
+express.py job -libjars="${MUSIC_EXPRESS_HOME}/lib/*" \
     --user_jar=${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
     --job-name=org.kiji.express.music.SongMetadataImporter --mode=hdfs \
     --input express-tutorial/song-metadata.json \
@@ -40,7 +40,7 @@ express.py job -libjars=${MUSIC_EXPRESS_HOME}/lib/* \
 
 <div class="userinput">
 {% highlight bash %}
-express.py job -libjars=${MUSIC_EXPRESS_HOME}/lib/* \
+express.py job -libjars="${MUSIC_EXPRESS_HOME}/lib/*" \
     --user-jar=${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
     --job-name=org.kiji.express.music.SongPlaysImporter --mode=hdfs \
     --input express-tutorial/song-plays.json \
