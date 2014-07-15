@@ -275,7 +275,7 @@
     </dependency>
     <dependency>
       <groupId>org.kiji.rest</groupId>
-      <artifactId>kiji-rest</artifactId>
+      <artifactId>kiji-rest-cdh4</artifactId>
       <version>${kiji-rest.version}</version>
       <classifier>release</classifier>
       <type>tar.gz</type>

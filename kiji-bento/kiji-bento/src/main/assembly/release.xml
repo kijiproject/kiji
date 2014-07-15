@@ -323,7 +323,7 @@
       <!-- kiji-rest -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>rest</outputDirectory>
-      <directory>target/prereqs-dir/kiji-rest-${kiji-rest.version}</directory>
+      <directory>target/prereqs-dir/kiji-rest-cdh4-${kiji-rest.version}</directory>
       <filtered>false</filtered>
       <excludes>
         <exclude>bin/**</exclude>
@@ -334,7 +334,7 @@
       <!-- kiji-rest binaries -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>rest/bin</outputDirectory>
-      <directory>target/prereqs-dir/kiji-rest-${kiji-rest.version}/bin</directory>
+      <directory>target/prereqs-dir/kiji-rest-cdh4-${kiji-rest.version}/bin</directory>
       <filtered>false</filtered>
       <fileMode>0755</fileMode>
     </fileSet>

@@ -145,7 +145,7 @@
     <dependencySet>
       <outputDirectory>.</outputDirectory>
       <includes>
-        <include>org.kiji.rest:kiji-rest:tar.gz</include>
+        <include>org.kiji.rest:kiji-rest-cdh4:tar.gz</include>
       </includes>
       <unpack>true</unpack>
       <useProjectArtifact>false</useProjectArtifact>
