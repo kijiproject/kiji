@@ -1,0 +1,291 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>kiji-mapreduce-cassandra</artifactId>
+  <packaging>jar</packaging>
+
+  <parent>
+    <groupId>org.kiji.mapreduce</groupId>
+    <artifactId>kiji-mapreduce-root</artifactId>
+    <version>1.2.10-SNAPSHOT</version>
+    <relativePath>..</relativePath>
+  </parent>
+
+  <name>KijiMR - Cassandra</name>
+  <description>A framework for interacting with Kiji Through MapReduce</description>
+  <url>http://www.kiji.org</url>
+
+  <properties>
+    <kiji-schema.classifier />
+  </properties>
+
+  <build>
+    <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!--
+            Increase heap space to fix failing test (org.kiji.mapreduce.TestGathererReducer)
+            on OSX - see KIJIMR-247.
+          -->
+          <argLine>-Xmx2048m</argLine>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>make-javadoc-jar</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>2.2.1</version>
+        <executions>
+          <execution>
+            <id>make-source-jar</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>findbugs-maven-plugin</artifactId>
+      </plugin>
+
+      <!-- Need to package Cassandra MR package separately. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+      </plugin>
+
+    </plugins>
+  </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>15.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.annotations</groupId>
+      <artifactId>annotations</artifactId>
+    </dependency>
+
+    <!-- Schema and Cassandra Schema -->
+    <dependency>
+      <groupId>org.kiji.schema</groupId>
+      <artifactId>kiji-schema</artifactId>
+      <version>${kiji-schema.version}</version>
+      <classifier>${kiji-schema.classifier}</classifier>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.schema</groupId>
+      <artifactId>kiji-schema-cassandra</artifactId>
+      <version>${kiji-schema.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.schema</groupId>
+      <artifactId>kiji-schema</artifactId>
+      <version>${kiji-schema.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.schema</groupId>
+      <artifactId>kiji-schema-cassandra</artifactId>
+      <version>${kiji-schema.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Depend on the normal KijiMR! -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>kiji-mapreduce-hadoop2</artifactId>
+      <version>${project.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>kiji-mapreduce-hadoop2</artifactId>
+      <version>${project.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Test only -->
+    <dependency>
+      <groupId>org.apache.curator</groupId>
+      <artifactId>curator-test</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>1.6</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+
+    <!-- All platform bridge implementations that should be bundled with the redistributable. -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>kiji-mapreduce-cdh4mr1-bridge</artifactId>
+      <version>${project.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>kiji-mapreduce-hadoop1-bridge</artifactId>
+      <version>${project.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>kiji-mapreduce-hadoop2-hbase96-bridge</artifactId>
+      <version>${project.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+
+  </dependencies>
+
+  <profiles>
+    <profile>
+      <!--
+         Active by default: cdh4 build. Override with -Dplatform=hadoop1 to use
+         an Apache Hadoop 1.x-based platform.
+      -->
+
+      <id>cdh4</id>
+      <activation>
+        <property>
+          <name>!platform</name>
+        </property>
+      </activation>
+
+      <build>
+        <plugins>
+          <!-- Activate integration tests for Hadoop 2 / CDH 4 -->
+
+          <plugin>
+            <groupId>org.kiji.maven.plugins</groupId>
+            <artifactId>hbase-maven-plugin</artifactId>
+          </plugin>
+
+          <plugin>
+            <groupId>org.kiji.maven.plugins</groupId>
+            <artifactId>cassandra-maven-plugin</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>start</goal>
+                  <goal>stop</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <numnodes>2</numnodes>
+              <initial.ip>127.0.0.10</initial.ip>
+            </configuration>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <additionalClasspathElements>
+                <additionalClasspathElement>
+                  ${project.build.directory}/${project.artifactId}-${project.version}.jar
+                </additionalClasspathElement>
+                <additionalClasspathElement>
+                  ${project.build.directory}/${project.artifactId}-${project.version}-tests.jar
+                </additionalClasspathElement>
+              </additionalClasspathElements>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+
+      <dependencies>
+        <!-- Default Hadoop/HBase versions in kiji-root-pom provide these dependencies. -->
+        <!-- Marked as 'optional' to prevent propagation to transitive projects. -->
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-core</artifactId>
+          <scope>compile</scope>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-client</artifactId>
+          <scope>compile</scope>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-minicluster</artifactId>
+          <scope>test</scope>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase</artifactId>
+          <type>test-jar</type>
+          <scope>test</scope>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase</artifactId>
+          <scope>compile</scope>
+          <optional>true</optional>
+        </dependency>
+      </dependencies>
+    </profile>
+
+  </profiles>
+
+</project>
