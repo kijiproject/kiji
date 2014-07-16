@@ -63,6 +63,12 @@ import org.kiji.scoring.ScoreFunction;
  *     <li>
  *       org.kiji.scoring.lib.server.ScoringServerScoreFunction.base_url_key stores the base URL of
  *       the scoring server. The system table value should be a UTF-8 encoded string.
+ *       This can be added to Kiji's system table via a command of the form:
+ *
+ *       kiji system-table &lt;kiji uri&gt; \
+ *           --do=put org.kiji.scoring.lib.server.ScoringServerScoreFunction.base_url_key \
+ *           &lt;base_uri_value&gt;
+ *
  *     </li>
  *   </ul>
  * </p>
