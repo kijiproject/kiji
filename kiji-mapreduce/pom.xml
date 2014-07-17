@@ -50,7 +50,8 @@
     <module>hadoop1-bridge</module>
     <module>hadoop2-hbase96-bridge</module>
     <module>kiji-mapreduce</module> <!-- hadoop2-based build -->
-    <module>mr-hadoop1x</module> <!-- hadoop1-based build -->
+    <module>profiling</module>      <!-- hadoop2-based build -->
+    <module>mr-hadoop1x</module>    <!-- hadoop1-based build -->
     <module>dist</module>
     <module>kiji-mapreduce-archetype</module>
   </modules>

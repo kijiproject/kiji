@@ -32,7 +32,7 @@
     <relativePath>..</relativePath>
   </parent>
 
-  <name>KijiMR (tarball)</name>
+  <name>KijiMR Distribution (tarball)</name>
   <description>Tarball distribution of KijiMR</description>
   <url>http://www.kiji.org</url>
 
