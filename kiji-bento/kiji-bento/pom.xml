@@ -195,9 +195,8 @@
       <!-- This is packed into lib/profiling/ in its own dependencySet by assembly:single -->
       <!-- See src/main/assembly/release.xml. -->
       <groupId>org.kiji.schema</groupId>
-      <artifactId>kiji-schema</artifactId>
+      <artifactId>kiji-schema-profiling</artifactId>
       <version>${kiji-schema.version}</version>
-      <classifier>profiling</classifier>
       <type>jar</type>
     </dependency>
     <dependency>
@@ -233,9 +232,8 @@
       <!-- This is packed into lib/profiling/ in its own dependencySet by assembly:single -->
       <!-- See src/main/assembly/release.xml. -->
       <groupId>org.kiji.mapreduce</groupId>
-      <artifactId>kiji-mapreduce-hadoop2</artifactId>
+      <artifactId>kiji-mapreduce-profiling</artifactId>
       <version>${kiji-mapreduce.version}</version>
-      <classifier>profiling</classifier>
       <type>jar</type>
     </dependency>
     <dependency>

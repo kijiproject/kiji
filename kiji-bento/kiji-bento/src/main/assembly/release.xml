@@ -498,8 +498,8 @@
       <outputFileNameMapping>${artifact.artifactId}-${artifact.baseVersion}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
       <fileMode>0644</fileMode>
       <includes>
-        <include>org.kiji.schema:kiji-schema:jar:profiling:${kiji-schema.version}</include>
-        <include>org.kiji.mapreduce:kiji-mapreduce-hadoop2:jar:profiling:${kiji-mapreduce.version}</include>
+        <include>org.kiji.schema:kiji-schema-profiling:jar:${kiji-schema.version}</include>
+        <include>org.kiji.mapreduce:kiji-mapreduce-profiling:jar:${kiji-mapreduce.version}</include>
         <include>org.aspectj:aspectjrt:jar:${aspectjrt.version}</include>
       </includes>
       <useProjectArtifact>false</useProjectArtifact>
