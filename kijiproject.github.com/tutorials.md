@@ -59,7 +59,7 @@ to the Kiji version you are using are available here:
 
 #### KijiExpress
 
-* [KijiExpress Tutorial 2.0.3](tutorials/express-recommendation/2.0.3/express-overview)
+* [KijiExpress Tutorial 2.0.4](tutorials/express-recommendation/2.0.4/express-overview)
 * [KijiExpress Tutorial 2.0.2](tutorials/express-recommendation/2.0.2/express-overview)
 * [KijiExpress Tutorial 2.0.1](tutorials/express-recommendation/2.0.1/express-overview)
 * [KijiExpress Tutorial 1.0.1](tutorials/express-recommendation/1.0.1/express-overview)
