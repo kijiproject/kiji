@@ -31,9 +31,9 @@
 
   <dependencies>
     <dependency>
-      <groupId>${parent.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>kiji-rest</artifactId>
-      <version>${parent.version}</version>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>
