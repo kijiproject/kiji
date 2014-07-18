@@ -67,6 +67,11 @@
       </plugin>
 
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+      </plugin>
+
+      <plugin>
         <!-- must supply src/main/findbugs/excludeFilter.xml and includeFilter.xml -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>findbugs-maven-plugin</artifactId>
@@ -86,7 +91,7 @@
     <dependency>
       <groupId>org.kiji.annotations</groupId>
       <artifactId>annotations</artifactId>
-      <version>1.1.0</version>
+      <version>1.1.1</version>
     </dependency>
   </dependencies>
 
