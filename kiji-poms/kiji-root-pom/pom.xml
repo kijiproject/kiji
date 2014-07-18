@@ -32,7 +32,6 @@
     <it.threadCount>1</it.threadCount>
 
     <!-- versions for program dependencies -->
-    <annotations.version>1.0.2</annotations.version>
     <avro.version>1.7.5</avro.version>
     <commons-codec.version>1.6</commons-codec.version>
     <commons-io.version>2.1</commons-io.version>
@@ -48,7 +47,6 @@
     <hbase.version>0.94.6-cdh4.3.0</hbase.version>
     <jsr305.version>1.3.9</jsr305.version>
     <junit.version>4.10</junit.version>
-    <kiji-common-flags.version>1.0.7</kiji-common-flags.version>
     <log4j.version>1.2.16</log4j.version>
     <scala.version>2.10</scala.version>
     <scala-library.version>2.10.3</scala-library.version>
@@ -547,18 +545,6 @@
         <groupId>com.google.code.findbugs</groupId>
         <artifactId>jsr305</artifactId>
         <version>${jsr305.version}</version>
-        <scope>compile</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.kiji.common</groupId>
-        <artifactId>kiji-common-flags</artifactId>
-        <version>${kiji-common-flags.version}</version>
-        <scope>compile</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.kiji.annotations</groupId>
-        <artifactId>annotations</artifactId>
-        <version>${annotations.version}</version>
         <scope>compile</scope>
       </dependency>
       <dependency>
