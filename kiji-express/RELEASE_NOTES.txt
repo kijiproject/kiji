@@ -1,6 +1,9 @@
 
                              Kiji Express Release Notes
 
+Version 2.1.0
+  * POM-40. Require JDK 7 to compile Kiji projects.
+
 Version 2.0.2
   * EXP-432. Protocol Buffer is now a provided scope dependency for better compatibility.
       This assumes that protobuf jars will be on your classpath from some other source,
