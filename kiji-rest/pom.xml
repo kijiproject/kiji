@@ -22,13 +22,13 @@
 
   <groupId>org.kiji.rest</groupId>
   <artifactId>kiji-rest-root</artifactId>
-  <version>1.4.1-SNAPSHOT</version>
+  <version>1.5.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.1.8</version>
+    <version>1.2.0</version>
   </parent>
 
   <name>The Kiji REST Servlet top-level project</name>
@@ -40,10 +40,10 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <kiji-schema.version>1.5.0</kiji-schema.version>
-    <kiji-scoring.version>0.16.0</kiji-scoring.version>
-    <kiji-mapreduce.version>1.2.9</kiji-mapreduce.version>
-    <fake-hbase.version>0.1.5</fake-hbase.version>
+    <kiji-schema.version>1.6.0-SNAPSHOT</kiji-schema.version>
+    <kiji-scoring.version>0.17.0-SNAPSHOT</kiji-scoring.version>
+    <kiji-mapreduce.version>1.3.0-SNAPSHOT</kiji-mapreduce.version>
+    <fake-hbase.version>0.2.0-SNAPSHOT</fake-hbase.version>
     <dropwizard.version>0.6.2</dropwizard.version>
     <guava.version>14.0.1</guava.version>
   </properties>
@@ -84,6 +84,10 @@
             <version>${kiji-schema.version}</version>
           </dependency>
         </dependencies>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
       </plugin>
     </plugins>
 
@@ -159,5 +163,4 @@
     <url>scm:git:git@github.com:kijiproject/kiji-rest.git</url>
     <developerConnection>scm:git:git@github.com:kijiproject/kiji-rest.git</developerConnection>
   </scm>
-
 </project>

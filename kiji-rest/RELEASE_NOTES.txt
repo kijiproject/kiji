@@ -1,6 +1,9 @@
 
                               KijiREST Release Notes
 
+Version 1.5.0
+  * POM-40. Require JDK 7 to compile Kiji projects.
+
 Version 1.4.0
   * REST-133. Make Kiji/KijiTable connection expiration configurable
   * REST-105. Add endpoint to gracefully (or forcefully) shut down server.
