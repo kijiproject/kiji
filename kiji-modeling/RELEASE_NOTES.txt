@@ -1,6 +1,9 @@
 
                              KijiModeling Release Notes
 
+Version 0.11.0
+  * POM-40. Require JDK 7 to compile Kiji projects.
+
 Version 0.7.0
   * MODELING-27. Removed the Model Lifecycle.
 
