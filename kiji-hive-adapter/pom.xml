@@ -28,7 +28,7 @@
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.1.8</version>
+    <version>1.2.0</version>
   </parent>
 
   <name>The Kiji Hive Adapter top-level project</name>
@@ -38,7 +38,7 @@
   <properties>
     <hive.version>0.10.0-cdh4.3.0</hive.version>
     <kiji-schema.version>1.5.0</kiji-schema.version>
-    <fake-hbase.version>0.1.5</fake-hbase.version>
+    <fake-hbase.version>0.2.0-SNAPSHOT</fake-hbase.version>
   </properties>
 
   <modules>
@@ -74,6 +74,10 @@
             <version>${kiji-schema.version}</version>
           </dependency>
         </dependencies>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
       </plugin>
     </plugins>
 

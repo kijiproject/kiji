@@ -2,6 +2,9 @@
 
                         Kiji Hive Adapter Release Notes
 
+Version 0.14.0
+  * POM-40. Require JDK 7 to compile Kiji projects.
+
 Version 0.9.2
   * KIJIHIVE-24. bento-hive.sh now will use an existing Hive installation
       when present(running on an existing cluster).
