@@ -21,13 +21,13 @@
 
   <groupId>org.kiji.schema-shell</groupId>
   <artifactId>kiji-schema-shell</artifactId>
-  <version>1.3.9-SNAPSHOT</version>
+  <version>1.4.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.1.8</version>
+    <version>1.2.0</version>
   </parent>
 
   <name>kiji-schema-shell</name>
@@ -35,15 +35,15 @@
   <inceptionYear>2012</inceptionYear>
 
   <properties>
-    <kiji-schema.version>1.5.0</kiji-schema.version>
+    <kiji-schema.version>1.6.0-SNAPSHOT</kiji-schema.version>
     <kiji-cdh4-platform.version>1.1.0</kiji-cdh4-platform.version>
-    <kiji-delegation.version>1.0.2</kiji-delegation.version>
-    <fake-hbase.version>0.1.5</fake-hbase.version>
+    <kiji-delegation.version>1.1.1</kiji-delegation.version>
+    <kiji-common-flags.version>1.1.0</kiji-common-flags.version>
+    <fake-hbase.version>0.2.0-SNAPSHOT</fake-hbase.version>
   </properties>
 
   <build>
     <plugins>
-
       <plugin>
         <!--
             Schema shell is built depending on the oldest version of KijiSchema that supports it.
@@ -133,6 +133,10 @@
         <groupId>org.scalastyle</groupId>
         <artifactId>scalastyle-maven-plugin</artifactId>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+      </plugin>
     </plugins>
   </build>
 
@@ -140,6 +144,7 @@
     <dependency>
       <groupId>org.kiji.common</groupId>
       <artifactId>kiji-common-flags</artifactId>
+      <version>${kiji-common-flags.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
