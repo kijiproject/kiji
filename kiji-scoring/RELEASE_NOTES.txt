@@ -1,6 +1,9 @@
 
                               Kiji Scoring Release Notes
 
+Version 0.17.0
+    * POM-40. Require JDK 7 to compile Kiji projects.
+
 Version 0.14.0
     * SCORE-177. A Freshener may now be attached to a map-type family. This attachment behaves as
         if a Freshener were attached to every qualifier within that family. Because the qualifiers
@@ -166,4 +169,3 @@ Version 0.2.0
   * SCORE-36. Makes the fresh CLI tool visible to the kiji tool launcher.
 
 Version 0.1.0
-
