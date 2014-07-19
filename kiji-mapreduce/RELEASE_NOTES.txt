@@ -1,7 +1,11 @@
 
 
                               KijiMR Release Notes
+
 Version 1.3.0
+  * POM-40. Require JDK 7 to compile Kiji projects.
+
+Version 1.2.6
   * KIJIMR-268. Updates many ApiStability annotations. In particular, all
       job builders and contexts are now 'Stable.'
 
