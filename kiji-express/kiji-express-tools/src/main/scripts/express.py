@@ -380,8 +380,10 @@ class ExpressTool(object):
         Returns:
           Iterable of paths to send to the distributed cache.
         """
-        express_classpath = ":".join(self.get_classpath())
-        cmd = ["java", "-classpath", express_classpath, TMP_JARS_TOOL, ":".join(lib_jars)]
+        express_classpath = ":".join(self.get_classpath(lib_jars=lib_jars))
+        # Note: we might be including too many things in the dist cache.
+        # Someday, we should investigate and determine what is the strict minimum.
+        cmd = ["java", "-classpath", express_classpath, TMP_JARS_TOOL, express_classpath]
         logging.debug("Running command:\n%s\n", " \\\n\t".join(map(repr, cmd)))
         output = subprocess.check_output(cmd, universal_newlines=True).strip()
         jars = output.split(",")
