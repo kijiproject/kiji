@@ -264,11 +264,11 @@ public class RowsResource {
    *
    * @param kijiRestEntityIds list of entity ids to be resolved.
    * @param layout KijiTableLayout to resolve the ids.
-   * @return a map of strings to strings of freshening parameters.
+   * @return a list of entity ids.
    * @throws IOException if resolving an id fails
    */
-  private Set<EntityId> getEntityIdsFromKijiRestEntityIds(
-      Iterable<KijiRestEntityId> kijiRestEntityIds,
+  private List<EntityId> getEntityIdsFromKijiRestEntityIds(
+      List<KijiRestEntityId> kijiRestEntityIds,
       KijiTableLayout layout)
       throws IOException {
     Set<EntityId> entityIds = Sets.newHashSet();
@@ -280,7 +280,23 @@ public class RowsResource {
       }
     }
 
-    return entityIds;
+    return Lists.newArrayList(entityIds);
+  }
+
+  /**
+   * Returns the number of true parameters inputted.
+   *
+   * @param cases array of cases to be tested.
+   * @return number of true cases.
+   */
+  private int countTrue(boolean... cases) {
+    int result = 0;
+    for (boolean c : cases) {
+      if (c) {
+        result++;
+      }
+    }
+    return result;
   }
 
   /**
@@ -289,6 +305,8 @@ public class RowsResource {
    * @param instance is the instance where the table resides.
    * @param table is the table where the rows from which the rows will be streamed
    * @param jsonEntityId the entity_id of the row to return.
+   * @param jsonEntityIds a JSON array of the entity_ids of the rows to bulk return. Wildcards are
+   *        not supported when using this parameter.
    * @param startEidString the left endpoint eid of the range scan.
    * @param endEidString the right endpoint eid of the range scan.
    * @param limit the maximum number of rows to return. Set to -1 to stream all rows.
@@ -312,6 +330,7 @@ public class RowsResource {
   public Response getRows(@PathParam(INSTANCE_PARAMETER) String instance,
       @PathParam(TABLE_PARAMETER) String table,
       @QueryParam("eid") String jsonEntityId,
+      @QueryParam("eids") String jsonEntityIds,
       @QueryParam("start_eid") String startEidString,
       @QueryParam("end_eid") String endEidString,
       @QueryParam("limit") @DefaultValue("100") int limit,
@@ -346,10 +365,18 @@ public class RowsResource {
     ColumnsDef colsRequested = dataBuilder.newColumnsDef().withMaxVersions(maxVersions);
     List<KijiColumnName> requestedColumns = addColumnDefs(layout, colsRequested,
         columns);
-    if (jsonEntityId != null && (startEidString != null || endEidString != null)) {
+
+    /* Check that the row retrieval method is valid, only one of the following may be true:
+     *  @eid has a value for single gets,
+     *  @eids has a value for bulk gets,
+     *  @start_eid or @end_eid has a value for scanned gets.
+     */
+    if (countTrue(jsonEntityId != null, (startEidString != null || endEidString != null),
+        jsonEntityIds != null) > 1) {
       throw new WebApplicationException(new IllegalArgumentException("Ambiguous request. "
-          + "Specified both jsonEntityId and start/end entity Ids."), Status.BAD_REQUEST);
+          + "Specified more than one entity Id search method."), Status.BAD_REQUEST);
     }
+
     KijiTableReader reader = null;
     try {
       if (jsonEntityId != null) {
@@ -379,6 +406,15 @@ public class RowsResource {
               timeout != null ? timeout : mFreshenConfig.getTimeout(),
               getFresheningParameters(uriInfo.getQueryParameters())));
         }
+      } else if (jsonEntityIds != null) {
+        // If there are wildcards in the json array, creating and entity id list will
+        // throw and exception.
+        final List<KijiRestEntityId> kijiRestEntityIds =
+            KijiRestEntityId.createListFromUrl(jsonEntityIds, layout);
+        reader = kijiTable.openTableReader();
+        scanner = reader.bulkGet(
+            getEntityIdsFromKijiRestEntityIds(kijiRestEntityIds, layout),
+            dataBuilder.build());
       } else {
         // Single eid not provided. Continue with a range scan.
         final KijiScannerOptions scanOptions = new KijiScannerOptions();
@@ -635,7 +671,7 @@ public class RowsResource {
         kijiRestEntityIds.addAll(KijiRestEntityId.createListFromUrl(jsonEntityIds, layout));
       }
 
-      Set<EntityId> entityIds = getEntityIdsFromKijiRestEntityIds(kijiRestEntityIds, layout);
+      List<EntityId> entityIds = getEntityIdsFromKijiRestEntityIds(kijiRestEntityIds, layout);
 
       final KijiBufferedWriter writer = kijiTable.getWriterFactory().openBufferedWriter();
 

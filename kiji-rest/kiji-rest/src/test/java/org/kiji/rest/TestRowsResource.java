@@ -607,6 +607,23 @@ public class TestRowsResource extends ResourceTest {
   }
 
   @Test
+  public void testShouldBulkFetchMultipleRows() throws Exception {
+
+    String eid1 = getEntityIdString("sample_table", 12345L);
+    String eid2 = getEntityIdString("sample_table", 2345L);
+    String eids = createJsonArray(eid1, eid2);
+    eids = URLEncoder.encode(eids, "UTF-8");
+
+    URI resourceURI = UriBuilder.fromResource(RowsResource.class)
+        .queryParam("eids", eids)
+        .build("default", "sample_table");
+
+    String returnRows = client().resource(resourceURI).get(String.class);
+    assertTrue(returnRows.contains("12345"));
+    assertTrue(returnRows.contains("2345"));
+  }
+
+  @Test
   public void testShouldSendAllRows() throws Exception {
     String out = client().resource(DEFAULT_ROWS_RESOURCE).get(String.class);
     assertEquals(3, out.split("\r\n").length);
