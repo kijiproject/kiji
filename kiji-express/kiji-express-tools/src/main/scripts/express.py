@@ -1,907 +1,871 @@
 #!/usr/bin/env python3
+# -*- mode: python -*-
+# -*- coding: utf-8 -*-
+
+# --------------------------------------------------------------------------------------------------
+
+# (c) Copyright 2014 WibiData, Inc.
 #
-#   (c) Copyright 2014 WibiData, Inc.
+# See the NOTICE file distributed with this work for additional
+# information regarding copyright ownership.
 #
-#   See the NOTICE file distributed with this work for additional
-#   information regarding copyright ownership.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#       http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# --------------------------------------------------------------------------------------------------
+
+# The express script provides tools for running Express jobs and interacting with KijiExpress.
+# For full usage information, run:
 #
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
-#
-#
-#   The express script provides tools for running Express jobs and
-#   interacting with the KijiExpress system.
-#   Tools are run as:
-#
-#   bash> $EXPRESS_HOME/bin/express.py <command-name> [--flags] args...
-#
-#   For full usage information, use:
-#
-#   bash> $EXPRESS_HOME/bin/express.py help
-#
+#   ${EXPRESS_HOME}/bin/express.py --help
 
 
+import hashlib
+import argparse
+import glob
+import itertools
 import logging
 import os
+import re
 import subprocess
-
-from base import base
-from base import cli
-from base import command
-
-FLAGS = base.FLAGS
-LogLevel = base.LogLevel
-Default = base.Default
-
-KIJI_EXPRESS_TOOL = 'org.kiji.express.flow.ExpressTool'
+import sys
+import time
 
 
-# ------------------------------------------------------------------------------
+EXPRESS_TOOL = "org.kiji.express.flow.ExpressTool"
+TMP_JARS_TOOL = "org.kiji.express.tool.TmpJarsTool"
+
+EXPRESS_HOME = "EXPRESS_HOME"
+HADOOP_HOME = "HADOOP_HOME"
+HBASE_HOME = "HBASE_HOME"
+KIJI_HOME = "KIJI_HOME"
+SCHEMA_SHELL_HOME = "SCHEMA_SHELL_HOME"
+
+KIJI_CLASSPATH = "KIJI_CLASSPATH"
 
 
-class Command(cli.Action):
-  """CLI action with express script specifics."""
+class Error(Exception):
+  """Errors used in this module."""
+  pass
 
-  def __init__(self):
-    """Initializes a CLI action and add environment as property.
 
-    """
-    super(Command, self).__init__()
-    self._env = dict(os.environ)
+# --------------------------------------------------------------------------------------------------
+# Utilities
 
-  @property
-  def env(self):
-    """Returns: Dictionary representing the environment."""
-    return self._env
 
-  def add_to_list(self,x, y):
-    """ Add a list of strings to a list, if you add a list of a single string,
-        extend will break up the string into its characters.
+def md5_sum(file_path):
+    """Computes the MD5 sum of a file.
 
     Args:
-      x: list to append to.
-      y: list to add.
+      file_path: Path of the file to compute the MD5 sum for.
     Returns:
-      The list that looks like x::y
+      The file MD5 sum, represented as an hex string (32 characters).
     """
-    if len(y) > 1:
-      x.extend(y)
-    elif len(y) == 1:
-      x.append(y[0])
-    return x
+    md5 = hashlib.md5()
+    with open(file_path, "rb") as f:
+        md5.update(f.read())
+    return md5.hexdigest()
 
-  def add_string(self, l, string, delimeter):
-    """ Add a string of elements separated by a delimeter to a list.
 
-    Args:
-      l: list to append to.
-      string: string
-      delimeter: delimeter to split the string up by.
-    Returns:
-      The string split up by the delimeter concatenated onto the list l.
+def expand_classpath_entry(entry):
+    """Expand the specified classpath entry if it contains a wildcard.
+
+    Expand the '*' classpath wildcard by applying the glob '*.jar'.
+
+    Yields:
+      Expanded classpath entries.
     """
-    assert(type(string) == str)
-    assert(type(l) == list)
-    new_list = l
-    if string != '':
-      new_list = self.add_to_list(l, string.split(delimeter))
-    return new_list
-
-
-  def check_env(self):
-    """ Checks that all env vars used by script are set. Raises exception if one
-        of them is not found.
-
-    Args:
-      env: A dictionary mapping environment variables name to values.
-    Returns:
-      Nothing.
-    """
-    keys = ['EXPRESS_HOME', 'HBASE_HOME', 'HADOOP_HOME', 'KIJI_HOME',
-        'KIJI_MR_HOME', 'SCHEMA_SHELL_HOME']
-    for key in keys:
-      if (self.env.get(key) == None):
-        raise Exception('Please set your %s environment variable.' % (key))
-
-  def hadoop_ver(self, env, hadoop_ver):
-    """ Uses hadoop binary to find the hadoop version if user does not specify
-        their own.
-
-    Args:
-      env: A dictionary mapping environment variables name to values.
-      hadoop_ver: Manually overrides the hadoop binary setting the version.
-    Returns:
-      The hadoop major version to use, e.g. 'hadoop2'.
-    """
-    hadoop_mjr_ver = hadoop_ver
-    if hadoop_mjr_ver == "":
-      path = os.path.join(env.get('HADOOP_HOME'), 'bin/hadoop')
-      cmd = [path, 'version']
-      version_str = subprocess.check_output(cmd,  universal_newlines=True)
-      hadoop_mjr_ver = 'hadoop' + version_str.split()[1][0]
-      logging.debug('No hadoop version sepcified by a flag. Detected \'%s\' as '
-          'hadoop version.' % (hadoop_mjr_ver))
-    return hadoop_mjr_ver
-
-  def jars_dir(self, env, key):
-    """ Make the jars for a project available by appending their lib/*
-        directory to the classpath.
-
-    Args:
-      env: A dictionary mapping environment variables name to values.
-      key: The env dictionary key to return jars for. Env var should point to
-          the root dir for a project (e.g. env['SCHEMA_HOME']=path/to/schema)
-
-    Returns:
-      A string for the directory containing the jars for the given project.
-    """
-    path = os.path.join(os.path.abspath(env.get(key)), 'lib/*')
-    logging.debug('The jars for the project %s are located in %s.' %
-      (key, path))
-    return path
-
-  def dist_specific_jars(self, env, key, hadoop_ver):
-    """Schema and MR need jars specific to the version of Hadoop, this function
-      finds those.
-
-    Args:
-      env: A dictionary mapping environment variables name to values.
-      key: The env dictionary key to return jars for.
-      hadoop_ver: String representing hadoop distribution version, e.g. hadoop2.
-    Returns:
-      A string for the directory containing the dist specific jars for the given
-      project.
-    """
-    dir_path = os.path.join(
-        os.path.abspath(env.get(key)),
-        'lib/distribution',
-        '%s/*' % (hadoop_ver))
-    logging.debug('The distribution specific jars for the project %s are '
-      'located in %s.' % (key, dir_path))
-    return dir_path
-
-  def lib_jar_classpath(self, env, hadoop_ver):
-    """ Finds all the jars from the various kiji projects express requires.
-
-    Args:
-      env: A dictionary mapping environment variables name to values.
-      hadoop_ver: String representing hadoop distribution version, e.g. hadoop2.
-    Returns:
-      Lib jars from the source folders of the following projects in a list:
-      express, mr dist specific jars, mr, schema dist specific jars, schema,
-      schema shell, and modeling.
-    """
-    cp = []
-    cp.append(self.jars_dir(env, 'EXPRESS_HOME'))
-    if (env.get('KIJI_MR_HOME') != env.get('KIJI_HOME')):
-      cp.append(self.dist_specific_jars(env, 'KIJI_MR_HOME', hadoop_ver))
-      cp.append(self.jars_dir(env, 'KIJI_MR_HOME'))
-    cp.append(self.dist_specific_jars(env, 'KIJI_HOME', hadoop_ver))
-    cp.append(self.jars_dir(env, 'KIJI_HOME'))
-    cp.append(self.jars_dir(env, 'SCHEMA_SHELL_HOME'))
-    if env.get('MODELING_HOME') != None:
-      cp.append(self.jars_dir(env, 'MODELING_HOME'))
+    if os.path.basename(entry) != "*":
+        yield entry
     else:
-      logging.warning('MODELING_HOME environment variable not set.')
-    logging.debug('This is the libjars_cp:\n %s' % (cp))
-    return cp
+        expanded = glob.glob(os.path.join(os.path.dirname(entry), "*.jar"))
+        expanded = sorted(expanded)
+        yield from expanded
 
-  def classpath_from_executable(self, env, key, binary_name):
-    """ Used to get output of "${ROOT_DIR}/bin/${executable} classpath"
+
+def flat_map(operator, iterable):
+    """Concatenates the collections produced by an operator mapped on a given collection.
 
     Args:
-      env: Dictionary representing the environment and its variables.
-      key: The env dictionary key holding the ${ROOT_DIR} above.
+      operator: Operator to apply on each input element from iterable.
+          The expected signature for operator is: element -> iterable.
+      iterable: Iterable of elements to apply the operator onto.
     Returns:
-      A list of strings, representing the classpath of jars for the binary.
+      An iterable of the concatenation of the resulting collections.
     """
-    bin_path = os.path.join(env.get(key), 'bin', binary_name)
-    cmd = [bin_path, 'classpath']
-    cp_str = subprocess.check_output(cmd, universal_newlines=True)
-    cp_str_sans_endline = cp_str.replace('\n', '')
-    cp_str_sans_slf4j = cp_str_sans_endline.replace('slf4j', '')
-    cp = cp_str_sans_slf4j.split(':')
-    logging.debug('The classpath provided by the binary %s is:\n%s' % (
-        bin_path, '\n'.join(cp)))
-    return cp
+    return itertools.chain.from_iterable(map(operator, iterable))
 
-  def create_classpath(self, env, hadoop_ver):
-    """
+
+def unique(iterable, key=None):
+    """Removes duplicate items from the specified iterable.
+
     Args:
-      env: A dictionary mapping environment variables name to values.
-      hadoop_ver: String representing hadoop distribution version, e.g. hadoop2.
+      iterable: Collection of items to filter duplicates from.
+      key: Optional function with a signature: item -> item_key.
+          Specifying a custom key allows to identify duplicates through some indirect attributes
+          of the items.
     Returns:
-      List of Strings to be used as class path with java command.
+      Original iterable with duplicate items removed.
     """
-    cp = []
-    # prepend the user's jars along with value of $KIJI_CLASSPATH
-    cp = self.add_string(cp, self.flags.libjars, ',')
-    cp = self.add_string(cp, env.get('KIJI_CLASSPATH', ''),':')
-    cp.append(os.path.join(os.path.abspath(env.get('EXPRESS_HOME')), 'conf'))
-    cp.extend(self.lib_jar_classpath(env, hadoop_ver))
-    hadoop_jars = self.classpath_from_executable(env, 'HADOOP_HOME', 'hadoop')
-    hbase_jars = self.classpath_from_executable(env, 'HBASE_HOME', 'hbase')
-    cp.extend(hadoop_jars)
-    cp.extend(hbase_jars)
-    return cp
+    watched = set()
+    if key is None:
+        key = lambda x: x  # identity
 
-  def tmpjar_classpath(self, env, hadoop_ver):
-    """ Use TmpJarsTool to prepare jars to be sent to the distributed cache.
-
-    Args:
-      env: A dictionary mapping environment variables name to values.
-      hadoop_ver: String of hadoop distribution version, e.g. 'hadoop2'.
-    Returns:
-      Comma separated string of jars to be sent to distributed cache for use
-      locally on nodes.
-    """
-    tmpjars_cp=self.flags.libjars.split(',')
-    tmpjars_cp.extend(self.lib_jar_classpath(env, hadoop_ver))
-    express_cp = ":".join(self.create_classpath(env, hadoop_ver))
-    cmd = ['java',
-        '-cp',
-        express_cp,
-        'org.kiji.express.tool.TmpJarsTool',
-        ':'.join(tmpjars_cp)]
-    output = subprocess.check_output(cmd)
-    tmpjars = output.decode().strip()
-    logging.debug('The generated temp jars classpath, which will be sent to the'
-        'distributed cache, is:\n%s' % (tmpjars.split(',')))
-    return tmpjars
-
-class Classpath(Command):
-  USAGE = """
-    |
-    |Prints the classpath used for express script related commands.
-    |
-    |Usage:
-    |  %(this)s --libjars=path/to/jar1,path/to/jar2 --hadoop_ver=hadoop1|hadoop2
-  """
-
-  def RegisterFlags(self):
-    self.flags.AddString(
-        name='hadoop_ver',
-        default="",
-        help=('Either \'hadoop1\' or \'hadoop2\', use this to manually set the'
-            'version of hadoop. If unset, script will resolve version by'
-            'querying binary in $HADOOP_HOME directory.'),
-    )
-    self.flags.AddString(
-        name='libjars',
-        default="",
-        help=('Comma separated list of third party jars to append/prepend to'
-            'the java classpath. These take precedence over the jars from'
-            'KIJI_CLASSPATH env var. Can be a directory path that holds jars.'),
-    )
-
-  def Run(self, args=''):
-    self.check_env()
-    hadoop_ver = self.hadoop_ver(self.env, self.flags.hadoop_ver)
-    cp = self.create_classpath(self.env, hadoop_ver)
-    log_list = list(map(lambda path: os.path.abspath(path), cp))
-    print(':'.join(log_list))
-
-class Jar(Command):
-  USAGE = """
-    |
-    |Runs an arbitrary Scala or Java program, utilizing express classpath.
-    |
-    |Usage:
-    |  %(this)s
-    |    --libjars=path/to/jar1,path/to/jar2
-    |    --user_jar=org.MyBigDataApp.jar
-    |    --class_name=org.MyBigDataApp.MyJob
-    |    --hadoop_ver=hadoop1|hadoop2
-    |    --mode=local|hdfs
-    |    arguments...
-  """
-
-  def RegisterFlags(self):
-    self.flags.AddString(
-        name='libjars',
-        default="",
-        help=('Comma separated list of third party jars to append/prepend to'
-            'the java classpath. These take precedence over the jars from'
-            'KIJI_CLASSPATH env var. Can be a directory path that holds jars.'),
-    )
-    self.flags.AddString(
-        name='user_jar',
-        default="",
-        help=('Jar that the user supplies to express command that contains the'
-            'job they hope to run.'),
-    )
-    self.flags.AddString(
-        name='class_name',
-        default="",
-        help=('Java class name to run with the express classpath.')
-    )
-    self.flags.AddString(
-        name='hadoop_ver',
-        default="",
-        help=('Either \'hadoop1\' or \'hadoop2\', use this to manually set the'
-            'version of hadoop. If unset, script will resolve version by'
-            'querying binary in $HADOOP_HOME directory.'),
-    )
-    self.flags.AddString(
-        name='mode',
-        default='local',
-        help=('Hadoop mode to run in. Must be hdfs or local..'),
-    )
-
-  def java_cmd(
-      self,
-      express_cp,
-      java_opts,
-      class_name,
-      user_args,
-  ):
-    """ Create a list to pass to python.subprocess to launch jar.
-
-    Args:
-      express_cp: Classpath of kiji project jars, hadoop, and hbase.
-      java_opts: Java options to configure the jvm.
-      class_name: The class user wants to run.
-      args: A list of unparsed arguments to get sent to jar.
-    """
-    assert(type(express_cp) == str)
-    assert(type(java_opts) == str)
-    assert(type(class_name) == str)
-    assert(type(user_args) == list)
-    # make sure nothing is an empty string, necessary check for java_opts
-    cmd = ['java', '-cp']
-    #don't add any empty strings to the command list
-    f = lambda x: cmd.append(x) if len(x) > 0 else cmd
-    # the following property only needed in kiji-schema v1.1
-    prop = '-Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED'
-    for x in [express_cp, java_opts, prop, class_name]:
-      f(x)
-    if len(user_args) == 1:
-      cmd.append(user_args[0])
-    elif len(user_args) > 1:
-      cmd.extend(user_args)
-    return cmd
-
-
-  def Run(self, args=''):
-    self.check_env()
-    logging.debug('Running the jar command.')
-    if (self.flags.user_jar == ''):
-      raise Exception('Please specify a  user_jar flag.')
-    if (self.flags.class_name == ''):
-      raise Exception('Please specify a  class_name flag.')
-    cp = [self.flags.user_jar]
-    hadoop_ver = self.hadoop_ver(self.env, self.flags.hadoop_ver)
-    express_cp = self.create_classpath(self.env, hadoop_ver)
-    cp.extend(express_cp)
-    cmd = self.java_cmd(
-      express_cp=express_cp,
-      user_jar=user_jar,
-      class_name=self.flags.class_name,
-      user_args=list(args),
-    )
-    logging.info('Trying to execute command:\n%s' % ('\n'.join(cmd)))
-    subprocess.call(cmd)
-
-class Job(Command):
-  USAGE = """
-    |
-    |Runs a compiled KijiExpress job.
-    |
-    |Usage:
-    |  %(this)s
-    |    --libjars=path/to/jar1,path/to/jar2
-    |    --user_jar=org.MyBigDataApp.jar
-    |    --job_name=org.MyBigDataApp.MyJob
-    |    --mode=local|hdfs
-    |    --hadoop_ver=hadoop1|hadoop2
-    |    --conf=<configuration file>
-    |    --fs=<local|namenode:port>
-    |    --jt=<local|jobtracker:port>
-    |    --archives=<comma separated list of archives>
-    |    --Dargs=property1=value,property1=value2,...
-    |    arguments...
-  """
-
-  def RegisterFlags(self):
-    self.flags.AddString(
-        name='libjars',
-        default="",
-        help=('Comma separated list of third party jars to append/prepend to'
-            'the java classpath. These take precedence over the jars from'
-            'KIJI_CLASSPATH env var. Can be a directory path that holds jars.'),
-    )
-    self.flags.AddString(
-        name='job_name',
-        default="",
-        help=('Java class name for the KijiExpress Job to be run.')
-    )
-    self.flags.AddString(
-        name='user_jar',
-        default="",
-        help=('Jar that the user supplies to express command that contains the'
-            'job they hope to run.'),
-    )
-    self.flags.AddString(
-        name='mode',
-        default='local',
-        help=('Hadoop mode to run in. Must be hdfs or local..'),
-    )
-    self.flags.AddString(
-        name='hadoop_ver',
-        default="",
-        help=('Either \'hadoop1\' or \'hadoop2\', use this to manually set the'
-            'version of hadoop. If unset, script will resolve version by'
-            'querying binary in $HADOOP_HOME directory.'),
-    )
-    self.flags.AddString(
-        name='conf',
-        default='',
-        help=('Hadoop generic option, specifies an application configuration '
-              'file.'),
-    )
-    self.flags.AddString(
-        name='fs',
-        default='',
-        help=('Hadoop generic option, specifies a namenode.'),
-    )
-    self.flags.AddString(
-        name='jt',
-        default='',
-        help=('Hadoop generic option, specifies a job tracker.'),
-    )
-    self.flags.AddString(
-        name='archives',
-        default='',
-        help=('Hadoop generic option, comma separated archives to be '
-              'unarchived on the compute machines.'),
-    )
-    self.flags.AddString(
-        name='Dargs',
-        default='',
-        help=('Hadoop generic options. Command separated list of properties. '
-            'They get passed to hadoop as -Dproperty1=val1 -Dproperty2=val2.'),
-    )
-    self.flags.AddString(
-        name='hadoop_generic_options',
-        default='',
-        help=('A string passed to hadoop for hadoop\'s generic options. Added '
-            'as is to java command launching job. Unspecified  behavior if '
-            'express script flags also set hadoop generic options.'),
-    )
-
-  def java_options(self, env):
-
-    """ Sets the java options by concatenating EXPRESS_JAVA_OPTS, JAVA_OPTS,
-        JAVA_LIBRARY_PATH.
-
-    Args:
-      env: A dictionary mapping environment variables name to values.
-    Returns:
-      A list of args to get added to java command in order to modify the jvm.
-    """
-    java_opts = list()
-    java_opts = self.add_string(
-        java_opts, env.get('EXPRESS_JAVA_OPTS', ''), ' ')
-    java_opts = self.add_string(java_opts, env.get('JAVA_OPTS', ''), ' ')
-
-    # This is a workaround for OS X Lion, where a bug in JRE 1.6 creates a lot
-    # of 'SCDynamicStore' errors.
-    if env.get('uname') == 'Darwin':
-      java_opts.append('-Djava.security.krb5.realm=')
-      java_opts.append('-Djava.security.krb5.kdc=')
-
-    def hadoop_native_libs(env):
-      """Check for native libaries provided with hadoop distribution.
-
-      Returns:
-        A string that is the path to the native libaries.
-      """
-      java_library_path = ''
-      if env.get('JAVA_LIBRARY_PATH') != None:
-        java_library_path = env['JAVA_LIBRARY_PATH'].split(',')
-      native_dir_path = os.path.join(env.get('HADOOP_HOME'), 'lib/native')
-      if (os.path.isdir(native_dir_path)):
-        hadoop_cp = self.classpath_from_executable(
-            env, 'HADOOP_HOME', 'hadoop')
-        # Hadoop wants a certain platform version, then we hope to use it
-        cmd = [
-            'java',
-            '-cp',
-            ':'.join(hadoop_cp),
-            '-Xmx32m',
-            'org.apache.hadoop.util.PlatformName'
-        ]
-        output = subprocess.check_output(cmd)
-        java_platform = output.decode()
-        native_dirs = os.path.join(native_dir_path,
-            java_platform.replace(" ", "_"))
-        if (os.path.isdir(native_dirs)):
-          java_library_path = native_dirs
+    def watch(item):
+        """Stateful filter that remembers items previously watched."""
+        item_key = key(item)
+        if item_key in watched:
+            return False
         else:
-          java_library_path = ('%s:%s' %
-              (env.get('JAVA_LIBRARY_PATH'), native_dir_path))
-      return java_library_path
+            watched.add(item_key)
+            return True
 
-    lib_path = env.get('JAVA_LIBRARY_PATH', '')
-    native_lib_path = hadoop_native_libs(env)
-    if native_lib_path != '':
-      lib_path = lib_path + ':' + native_lib_path
-    if lib_path != '':
-      java_opts.append('-Djava.library.path=%s' % (lib_path))
+    return filter(watch, iterable)
 
-    # warn the user if there are conflicting options in environment variables
-    opts = set()
-    for opt in java_opts:
-      key = opt.split('=')[0]
-      if key in opts:
-        logging.warning('The java option %s has been set multiple times. Check '
-            'your EXPRESS_JAVA_OPTS and JAVA_OPTS environment variables.')
-      else:
-        opts.add(key)
-    logging.debug('The java options passed to the jvm are: %s'
-        % ('\n'.join(java_opts)))
-    return java_opts
 
-  def get_run_mode(self):
-    """ Examine mode flag and return a command line argument for hadoop. Raises
-      an exception in the event of trouble while parsing flag.
+def tab_indent(text):
+    """Left-indents a string of text."""
+    return "\t" + text
 
-    Returns:
-      Either 'hdfs' or 'local'.
-    """
-    mode = ''
-    if self.flags.mode == 'hdfs':
-      mode = '--hdfs'
-    elif self.flags.mode == 'local':
-      mode= '--local'
-    else:
-      raise Exception('Improperly set mode flag for express shell command.')
-    logging.debug('Express will run a job in %s mode.' % (mode))
-    return mode
 
-  def hadoop_args(self, user_jar, hadoop_ver):
-    """ Creates the arguments passed to the hadoop generic options parser.
+def _exists_or_log(entry):
+    exist = os.path.exists(entry)
+    if not exist:
+        logging.warning("Classpath entry does not exist: %r", entry)
+    return exist
+
+
+def normalize_classpath(classpath):
+    """Normalizes the given classpath entries.
+
+    Performs the following normalizations:
+     - Classpath wildcards are expanded.
+     - Symlinks are expanded.
+     - Paths are made absolute.
+     - Duplicate paths are eliminated.
+     - Non-existent paths are removed.
 
     Args:
-      user_jar: User specified jar containing class to run.
-      hadoop_ver: Version of hadoop distribution, e.g. 'hadoop2'.
+      classpath: Iterable of classpath entries.
     Returns:
-      A list to pass to the java -cp command.
+      Iterable of normalized classpath entries.
     """
-    args = []
-    tmp_jar_str = self.tmpjar_classpath(self.env, hadoop_ver)
-    args.append('-Dtmpjars=file://%s,%s' % (user_jar,tmp_jar_str))
-    args.append('-Dmapreduce.task.classpath.user.precedence=true')
-    if self.flags.conf != '':
-      args.extend(['-conf', self.flags.conf])
-    if self.flags.fs != '':
-      args.extend(['-fs', self.flags.fs])
-    if self.flags.jt != '':
-      args.extend(['-jt', self.flags.jt])
-    if self.flags.archives != '':
-      self.add_to_list(args, self.flags.archives.split(','))
-    if self.flags.Dargs != '':
-      for arg in self.flags.Dargs.split(','):
-        args.append(['-D%s' % (arg)])
-    logging.debug('The hadoop generic options for the job are: %s' %
-        ('\n'.join(args)))
-    return args
+    classpath = flat_map(expand_classpath_entry, classpath)
+    classpath = filter(_exists_or_log, classpath)
+    classpath = map(os.path.realpath, classpath)
+    classpath = unique(classpath)
+    #classpath = unique(classpath, key=os.path.basename)
 
-  def java_cmd(
-      self,
-      classpath,
-      java_opts,
-      express_tool,
-      hadoop_args,
-      class_name,
-      run_mode,
-      user_args,
-    ):
-    """ Create a list to pass to python.subprocess to launch job.
+    # Filter out JAR files whose MD5 is known already:
+    def md5_or_path(path):
+        if os.path.isfile(path):
+            return md5_sum(path)
+        else:
+            return 'path:%s' % path
+
+    classpath = unique(classpath, key=md5_or_path)
+
+    return classpath
+
+
+# --------------------------------------------------------------------------------------------------
+
+
+class HomedTool(object):
+    """Wraps an installation configured through a X_HOME environment variable.
+
+    This assumes the installation provides a tool under "${X_HOME}/bin/<tool>".
+    """
+
+    def __init__(self, env=os.environ):
+        self._env = env
+        assert (self.home_env_key in self._env), \
+            ("Environment variable undefined: %r" % self.home_env_key)
+        self._home_dir = os.path.abspath(self._env[self.home_env_key])
+        assert os.path.isdir(self.home_dir), ("Home directory not found: %r" % self.home_dir)
+
+    @property
+    def home_dir(self):
+        return self._home_dir
+
+    @property
+    def tool_path(self):
+        tool_path = os.path.join(self.home_dir, "bin", self.tool)
+        assert os.path.isfile(tool_path), ("Command-line tool not found: %r" % tool_path)
+        return tool_path
+
+    def _acquire_classpath(self):
+        stdout = subprocess.check_output([self.tool_path, "classpath"], universal_newlines=True)
+        stdout = stdout.strip()
+        classpath = stdout.split(":")
+        classpath = filter(None, classpath)
+        classpath = tuple(classpath)
+        logging.debug("%r reported the following classpath:\n%s",
+                      self.tool_path, "\n".join(map(tab_indent, classpath)))
+        return classpath
+
+    @property
+    def classpath(self):
+        """Reports the runtime classpath for this homed tool installation.
+
+        Returns:
+          A tuple of classpath entries for this installation.
+        """
+        if not hasattr(self, "_classpath"):
+            self._classpath = tuple(normalize_classpath(self._acquire_classpath()))
+        return self._classpath
+
+
+class HadoopTool(HomedTool):
+    _RE_HADOOP_VERSION = re.compile(r"^Hadoop (.*)$")
+
+    @property
+    def home_env_key(self):
+        return "HADOOP_HOME"
+
+    @property
+    def tool(self):
+        return "hadoop"
+
+    def _acquire_version(self):
+        stdout = subprocess.check_output([self.tool_path, "version"], universal_newlines=True)
+        stdout = stdout.strip()
+        lines = stdout.splitlines()
+        top_line = lines[0]
+        match = self._RE_HADOOP_VERSION.match(top_line)
+        assert (match is not None), ("Invalid output from command 'hadoop version': %r" % stdout)
+        return match.group(1)
+
+    @property
+    def version(self):
+        """Returns: the version ID of this Hadoop installation (eg. '2.0.0-mr1-cdh4.3.0')."""
+        if not hasattr(self, "_version"):
+            self._version = self._acquire_version()
+        return self._version
+
+    @property
+    def major_version(self):
+        """Returns: the major version of this Hadoop installation (eg. 1 or 2)."""
+        return self.version.split(".")[0]  # Pick major version
+
+
+class HBaseTool(HomedTool):
+    @property
+    def home_env_key(self):
+        return "HBASE_HOME"
+
+    @property
+    def tool(self):
+        return "hbase"
+
+
+class KijiTool(HomedTool):
+    @property
+    def home_env_key(self):
+        return "KIJI_HOME"
+
+    @property
+    def tool(self):
+        return "kiji"
+
+
+# --------------------------------------------------------------------------------------------------
+
+
+def list_libdir_jars(home_env_key=None, home=None, lib=None):
+    """Lists the JAR files in the specified lib/ directory.
+
+    Exactly one of home_env_key, home or lib must be specified.
 
     Args:
-      classpath: Classpath of kiji project jars, hadoop, and hbase.
-      java_opts: Java options to configure the jvm.
-      express_tool: Express tool used to launch job.
-      hadoop_args: Arguments for the hadoop generic parser.
-      class_name: The class the user wants to run.
-      run_mode: What hadoop mode to run, e.g. '--hdfs' or '--local'.
-      user_args: A list of unparsed arguments to get sent to jar.
+      home_env_key: Optional environment variable defining the home directory.
+      home: Optional home directory path.
+      lib: Optional lib directory path.
+
+    Yields:
+      The classpath entries from the specified lib directory.
     """
-    assert(type(classpath) == str)
-    assert(type(class_name) == str)
-    assert(type(hadoop_args) == list and len(hadoop_args) > 1)
-    assert(type(run_mode) == str)
-    assert(type(user_args) == list)
-    cmd = ['java', '-cp']
-    # make sure nothing is an empty string, necessary check for java_opts
-    f = lambda x: cmd.append(x) if len(x) > 0 else cmd
-    f(classpath)
-    f(java_opts)
-    # the following property only needed in kiji-schema v1.1
-    f('-Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED')
-    f(express_tool)
-    cmd.extend(hadoop_args)
-    f(class_name)
-    f(run_mode)
-    if (len(user_args) == 1):
-      cmd.append(user_args[0])
-    elif (len(user_args) > 1):
-      cmd.extend(user_args)
-    return cmd
+    assert (len(list(filter(lambda x: x is not None, [home_env_key, home, lib]))) == 1), \
+        "Exactly one of 'home_env_key', 'home', 'lib' must be set."
 
-  def Run(self, args):
-    """ Run Method. Launches an express job after building a classpath.
+    if lib is None:
+        if home is None:
+            home = os.environ.get(home_env_key)
+            assert (home is not None), ("Environment variable undefined: %r" % home_env_key)
+        lib = os.path.join(home, "lib")
 
-    Args:
-      args: A python list representing the kiji-flags to pass to the Express Job
-          launcher tool.
-    Returns:
-      Nothing.
-    """
-    self.check_env()
-    if (self.flags.user_jar == ""):
-      raise Exception('Please specify a  user_jar flag.')
-    if (self.flags.job_name == ""):
-      raise Exception('Please specify a  job_name flag.')
-    # any more args must be user specified args for the express job
-    user_args = list(args)
-    logging.debug('After parsing flags the express script will pass the'
-        'following args to the express job: %s' % (user_args))
-    user_jar = os.path.abspath(self.flags.user_jar)
-    hadoop_ver = self.hadoop_ver(self.env, self.flags.hadoop_ver)
-    express_cp = self.create_classpath(self.env, hadoop_ver)
-    log_list = list(map(lambda path: os.path.abspath(path), express_cp))
-    logging.debug('The generated classpath is: %s' % ('\n'.join(log_list)))
-    cp = user_jar + ':' + ":".join(express_cp)
-    java_opts = ' '.join(self.java_options(self.env))
-    hadoop_args = self.hadoop_args(user_jar, hadoop_ver)
-    run_mode = self.get_run_mode()
-    cmd = self.java_cmd(
-        classpath=cp,
-        java_opts=java_opts,
-        express_tool=KIJI_EXPRESS_TOOL,
-        hadoop_args=hadoop_args,
-        class_name=self.flags.job_name,
-        run_mode=run_mode,
-        user_args=user_args,
-    )
-    logging.info('Trying to execute command:\n%s' % ('\n'.join(cmd)))
-    subprocess.call(cmd)
+    # Classpath entries named '*' match the glob "*.jar":
+    return glob.glob(os.path.join(lib, "*.jar"))
 
-class Shell(Command):
-  USAGE = """
-    |
-    |Starts an interactive shell for running KijiExpress code.
-    |
-    |Usage:
-    |  %(this)s
-    |  --libjars=path/to/jar1,path/to/jar2
-    |  --mode=local|hdfs
-    |  --hadoop_ver=hadoop1|hadoop2
+
+# TODO: Filter out duplicated slf4j jars.
+
+# FIXME: how does one get 'hadoop2-hbase96' ?
+# dist_name = 'hadoop%s' % hadoop.major_version
+
+# --------------------------------------------------------------------------------------------------
+
+
+class ExpressTool(object):
+    def __init__(self, env=os.environ):
+        self._env = env
+        assert (self.home_env_key in self._env), \
+            ("Environment variable undefined: %r" % self.home_env_key)
+        self._home_dir = os.path.abspath(self._env[self.home_env_key])
+        assert os.path.isdir(self.home_dir), ("Home directory not found: %r" % self.home_dir)
+
+        self._hadoop = HadoopTool(env=self._env)
+        self._hbase = HBaseTool(env=self._env)
+        self._kiji = KijiTool(env=self._env)
+
+    @property
+    def home_env_key(self):
+        return "EXPRESS_HOME"
+
+    @property
+    def home_dir(self):
+        return self._home_dir
+
+    @property
+    def hadoop(self):
+        return self._hadoop
+
+    @property
+    def hbase(self):
+        return self._hbase
+
+    @property
+    def kiji(self):
+        return self._kiji
+
+    def _list_classpath_entries(self):
+        # TODO: include --libjars
+
+        if KIJI_CLASSPATH in self._env:
+            user_classpath = self._env[KIJI_CLASPATH].split(":")
+            yield from user_classpath
+
+        yield os.path.join(self.home_dir, "conf")
+        yield from list_libdir_jars(home=self.home_dir)
+        yield from self.kiji.classpath
+        yield from list_libdir_jars(home_env_key="SCHEMA_SHELL_HOME")
+        yield from list_libdir_jars(home_env_key="MODELING_HOME")
+
+    def get_classpath(self, lib_jars=()):
+        """Reports the Express classpath.
+
+        Args:
+          lib_jars: Optional collection of user-specified JARs to include.
+        Returns:
+          An iterable of classpath entries.
+        """
+        express_classpath = self._list_classpath_entries()
+        classpath = itertools.chain(lib_jars, express_classpath)
+        return normalize_classpath(classpath)
+
+    def list_paths_for_dist_cache(self, lib_jars):
+        """Lists the JAR files to send to the distributed cache.
+
+        Args:
+          lib_jars: Collection of JAR files to prepare for an Express job.
+        Returns:
+          Iterable of paths to send to the distributed cache.
+        """
+        express_classpath = ":".join(self.get_classpath())
+        cmd = ["java", "-classpath", express_classpath, TMP_JARS_TOOL, ":".join(lib_jars)]
+        logging.debug("Running command:\n%s\n", " \\\n\t".join(map(repr, cmd)))
+        output = subprocess.check_output(cmd, universal_newlines=True).strip()
+        jars = output.split(",")
+        jars = sorted(jars)
+        logging.debug("JARs sent to the distributed cache:\n%s", "\n".join(map(tab_indent, jars)))
+        return jars
+
+
+# --------------------------------------------------------------------------------------------------
+
+
+_LOGGING_INITIALIZED = False
+
+
+def parse_log_level(level):
+  """Parses a logging level command-line flag.
+
+  Args:
+    level: Logging level command-line flag (string).
+  Returns:
+    Logging level (integer).
   """
+  log_level = getattr(logging, level.upper(), None)
+  if type(log_level) == int:
+    return log_level
 
-  def RegisterFlags(self):
-    self.flags.AddString(
-        name='libjars',
-        default="",
-        help=('Comma separated list of third party jars to append/prepend to'
-            'the java classpath. These take precedence over the jars from'
-            'KIJI_CLASSPATH env var. Can be a directory path that holds jars.'),
-    )
-    self.flags.AddString(
-        name='mode',
-        default='local',
-        help=('Hadoop mode to run in. Must be hdfs or local.'),
-    )
-    self.flags.AddString(
-        name='hadoop_ver',
-        default="",
-        help=('Either \'hadoop1\' or \'hadoop2\', use this to manually set the'
-            'version of hadoop. If unset, script will resolve version by'
-            'querying binary in $HADOOP_HOME directory.'),
-    )
-
-  def run_mode_specific_script(self):
-    """ The express shell needs a scala script specific to the mode it runs in.
-
-    Returns:
-      A path to the run mode specific scala script.
-    """
-    script_path = ''
-    if self.flags.mode == 'hdfs':
-      hdfs_path = os.path.join(os.path.realpath(__file__), 'hdfs-mode.scala')
-      script_path = hdfs_path
-    elif self.flags.mode == 'local':
-      local_path = os.path.join(os.path.realpath(__file__), 'local-mode.scala')
-      script_path = local_path
-    else:
-      raise Exception('Improperly set mode flag for express shell command.')
-    logging.info('Using the script %s as the mode specific script for express '
-        'shell.' % (script_path))
-    return script_path
-
-  def Run(self, args):
-    self.check_env()
-    # export classpath for schema-shell to use
-    hadoop_ver = self.hadoop_ver(self.env, self.flags.hadoop_ver)
-    express_cp = self.create_classpath(self.env, hadoop_ver)
-    tmp_jar_str = self.tmpjar_classpath(self.env, hadoop_ver)
-    # EXPRESS_MODE env var must be a path to the mode specific scala script
-    env = self.env
-    self.env.update({
-      'EXPRESS_CP' : ":".join(express_cp),
-      'TMPJARS' : tmp_jar_str,
-      'EXPRESS_MODE' : self.run_mode_specific_script()
-    })
-    # express shell binary needs to be in the same directory as this script
-    shell_path = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), 'express-shell')
-    cmd = [shell_path]
-    cmd.extend(list(args))
-    logging.info('Launching the express shell using the command: %s' % (cmd))
-    proc = subprocess.Popen(cmd, env=self.env)
-    try:
-      proc.wait()
-    except:
-      proc.kill()
+  try:
+    return int(level)
+  except ValueError:
+    raise Error("Invalid logging-level: %r" % level)
 
 
-class Schema_Shell(Command):
+def setup_logging(log_level):
+  """Initializes the logging system.
 
-  USAGE = """
-    |
-    |Starts KijiSchema Shell loaded with KijiExpress extensions.
-    |
-    |Usage:
-    |  %(this)s --hadoop_ver=hadoop1|hadoop2
+  Args:
+    log_level: Logging level.
   """
+  global _LOGGING_INITIALIZED
+  if _LOGGING_INITIALIZED:
+    logging.debug("setup_logging: logging system already initialized")
+    return
 
-  def RegisterFlags(self):
-    self.flags.AddString(
-        name='libjars',
-        default="",
-        help=('Comma separated list of third party jars to append/prepend to'
-            'the java classpath. These take precedence over the jars from'
-            'KIJI_CLASSPATH env var. Can be a directory path that holds jars.'),
+  log_formatter = logging.Formatter(
+      fmt="%(asctime)s %(levelname)s %(filename)s:%(lineno)s : %(message)s",
+  )
+
+  # Override the log date formatter to include the time zone:
+  def format_time(record, datefmt=None):
+    time_tuple = time.localtime(record.created)
+    tz_name = time.tzname[time_tuple.tm_isdst]
+    return "%(date_time)s-%(millis)03d-%(tz_name)s" % dict(
+        date_time=time.strftime("%Y%m%d-%H%M%S", time_tuple),
+        millis=record.msecs,
+        tz_name=tz_name,
     )
-    self.flags.AddString(
-        name='hadoop_ver',
-        default="",
-        help=('Either \'hadoop1\' or \'hadoop2\', use this to manually set the'
-            'version of hadoop. If unset, script will resolve version by'
-            'querying binary in $HADOOP_HOME directory.'),
-    )
+  log_formatter.formatTime = format_time
 
-  def schema_java_options(self, hadoop_ver):
-    """ Set jvm options for launching the schema-shell.
+  logging.root.handlers.clear()
+  logging.root.setLevel(log_level)
 
-    Returns:
-      A list to be used with subprocess module.
-    """
-    args = []
-    java_opts = self.env.get('JAVA_OPTS')
-    if java_opts != None:
-      self.add_to_list(args, java_opts.split(','))
-    tmp_jar_str = self.tmpjar_classpath(self.env, hadoop_ver)
-    args.append('-Dexpress.tmpjars=%s' % (tmp_jar_str))
-    args.append(
-        '-Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED')
-    return args
+  console_handler = logging.StreamHandler()
+  console_handler.setFormatter(log_formatter)
+  console_handler.setLevel(log_level)
+  logging.root.addHandler(console_handler)
 
-  def Run(self, args=''):
-    self.check_env()
-    cp = []
-    schema_shell_script = os.path.join(
-        self.env.get('SCHEMA_SHELL_HOME'), 'bin/kiji-schema-shell')
-    kiji_cp_str = self.env.get('KIJI_CLASSPATH')
-    if kiji_cp_str != None:
-      self.add_to_list(cp, kiji_cp_str.split(','))
-    hadoop_ver = self.hadoop_ver(self.env, self.flags.hadoop_ver)
-    express_cp = self.create_classpath(self.env, hadoop_ver)
-    cp.extend(express_cp)
-    java_opts = self.schema_java_options(hadoop_ver)
-    self.env.update({
-        'KIJI_CLASSPATH' : ':'.join(cp),
-        'JAVA_OPTS' : ' '.join(java_opts),
-    })
-    cmd = [schema_shell_script]
-    logging.info('Using %s to launch schema-shell.' % (cmd))
-    proc = subprocess.Popen(cmd, env=self.env)
-    try:
-      proc.wait()
-    except:
-      proc.kill()
+  _LOGGING_INITIALIZED = True
 
 
-# ------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------
 
 
-# Usage string for script, used by the help command.
-USAGE = """\
-Usage:
-  %(this)s [--do]=command [--flags ...] arguments...
-
-Commands:
-  help            - Displays this help message.
-  shell           - Launches interactive KijiExpress shell.
-  schema-shell    - Starts KijiSchema Shell loaded with KijiExpress extensions.
-  job             - Java exec a compiled KijiExpress job.
-  jar             - Runs arbitrary Scala or Java program with express classpath.
-  classpath       - Prints the classpath used to run KijiExpress.
-
+# Description of the environment variables used.
+ENV_VAR_HELP = """
 Environment Variables:
-  EXPRESS_JAVA_OPTS  - Extra arguments to pass to the KijiExpress's JVM.
-  KIJI_CLASSPATH     - Colon-separated jars for classpath and distributed cache.
-  JAVA_LIBRARY_PATH  - Colon-separated paths to additional native libs.
-  JAVA_OPTS          - Java args to append to java command and sent to JVM.
+  EXPRESS_JAVA_OPTS: Extra arguments to pass to the KijiExpress's JVM.
+  JAVA_LIBRARY_PATH: Colon-separated paths to additional native libs.
+  JAVA_OPTS: Java args to append to java command and sent to JVM.
+  KIJI_CLASSPATH: Colon-separated jars for classpath and distributed cache.
 """
 
 
-class Help(Command):
-  USAGE = """
-    |
-    |Displays this help message.
-    |
-    |Usage:
-    |  %(this)s
-  """
+def make_arg_parser():
+    text_formatter = argparse.RawTextHelpFormatter
 
-  def Run(self, args):
-    this = base.GetProgramName()
-    print(this)
-    if (len(args) == 1) and (args[0] in COMMANDS):
-      command = args[0]
-      print('Usage for %s' % (command))
-      COMMANDS[command](['--help'])
+    parser = argparse.ArgumentParser(
+        description="KijiExpress command-line interface.",
+        epilog=ENV_VAR_HELP,
+        formatter_class=text_formatter,
+    )
+    parser.add_argument("--log-level", default="info", help="Logging level.")
+
+    subparsers = parser.add_subparsers(title="command", dest="command", help="Command to perform.")
+    classpath_parser = subparsers.add_parser(
+        "classpath",
+        help="Prints the KijiExpress classpath on the standard output.",
+        formatter_class=text_formatter,
+    )
+    jar_parser = subparsers.add_parser(
+        "jar",
+        help="Runs an arbitrary Java program with KijiExpress libraries on the classpath.",
+        formatter_class=text_formatter,
+    )
+    job_parser = subparsers.add_parser(
+        "job",
+        help="Submits a KijiExpress job.",
+        formatter_class=text_formatter,
+    )
+    shell_parser = subparsers.add_parser(
+        "shell",
+        help="Starts the KijiExpress console shell.",
+        formatter_class=text_formatter,
+    )
+    schema_shell_parser = subparsers.add_parser(
+        "schema-shell",
+        help="Starts the KijiSchema DDL shell with KijiExpress extensions loaded.",
+        formatter_class=text_formatter,
+    )
+
+    # Flags specific to a subset of the commands:
+    for subparser in (classpath_parser, jar_parser, job_parser, shell_parser):
+        subparser.add_argument(
+            "--jars",
+            nargs="*",
+            help="List of JAR files to place on the classpath and the distributed cache.",
+        )
+    for subparser in (job_parser, shell_parser):
+        subparser.add_argument(
+            "--mode",
+            default="local",
+            choices = ["local", "hdfs"],
+            help=("Express mode: local or hdfs."),
+        )
+
+    for subparser in (jar_parser, job_parser):
+        subparser.add_argument(
+            "--java-opts",
+            nargs="*",
+            help=("Optional list of options for the JVM "
+                  "(eg. --java-opts -Xmx2G -Xms1G -Dprop=val ...)."),
+        )
+
+    # Flags specific to the 'jar' command:
+    jar_parser.add_argument(
+        "--class",
+        help="Class name of the Express job to run.",
+    )
+
+    # Flags specific to the 'job' command:
+    job_parser.add_argument(
+        "--class",
+        help="Class name of the Express job to run.",
+    )
+    job_parser.add_argument(
+        "--hadoop-opts",
+        nargs="*",
+        default=list(),
+        help=("Optional list of options for the Hadoop tool "
+              "(eg. --hadoop-opts -conf <conf> -Dfs.defaultFS=...)."),
+    )
+    job_parser.add_argument(
+        "--disable-user-jars-take-precedence",
+        type=bool,
+        help=("Whether user JARs take precedence or not in M/R task classpaths."),
+    )
+
+    return parser
+
+# --------------------------------------------------------------------------------------------------
+
+
+class ExpressCLI(object):
+    """CLI interface for KijiExpress."""
+
+    def __init__(self, flags, args, env=os.environ):
+        self._flags = flags
+        self._args = args
+        self._env = env
+        self._express = ExpressTool(env=self._env)
+
+    @property
+    def flags(self):
+        """Returns: Namespace object with the parsed flags."""
+        return self._flags
+
+    @property
+    def args(self):
+        """Returns: the list of unknown command-line arguments that were not parsed."""
+        return self._args
+
+    @property
+    def env(self):
+        """Returns: the shell environment used throughout this tool."""
+        return self._env
+
+    @property
+    def express(self):
+        """Returns: the Express wrapper user by this tool."""
+        return self._express
+
+    def pop_args_head(self):
+        """Pops the first unparsed command-line argument.
+
+        Returns:
+          The first command-line argument.
+        """
+        head, self._args = self._args[0], self._args[1:]
+        return head
+
+    def classpath(self):
+        """Performs the 'classpath' command."""
+        assert (len(self.args) == 0), ("Unexpected command-line arguments: %r" % self.args)
+        lib_jars = []
+        if self.flags.jars is not None:
+            lib_jars.extend(self.flags.jars.split(","))
+        print(":".join(self.express.get_classpath(lib_jars=lib_jars)))
+        return os.EX_OK
+
+    def jar(self):
+        """Performs the 'jar' command."""
+        class_name = getattr(self.flags, "class")
+        if (class_name is None) and (len(self.args) > 0):
+            class_name = self.pop_args_head()
+        assert (class_name is not None), ("No class name specified with [--class=]<class>.")
+
+        lib_jars = []
+        if self.flags.jars is not None:
+            lib_jars.extend(self.flags.jars)
+        classpath = list(self.express.get_classpath(lib_jars=lib_jars))
+
+        java_opts = []
+        if self.flags.java_opts is not None:
+            java_opts = [self.flags.java_opts]
+
+        user_args = list(self.args)
+        logging.info("Running java class %r with parameters: %r", class_name, user_args)
+
+        cmd = [
+            "java",
+            # This property is only needed in kiji-schema v1.1 :
+            "-Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED",
+        ] + java_opts + [
+            "-classpath", ":".join(classpath),
+            class_name,
+        ] + user_args
+
+        logging.debug("Running command:\n%s\n", " \\\n\t".join(map(repr, cmd)))
+        return subprocess.call(cmd)
+
+    @staticmethod
+    def hadoop_native_libs(env):
+        """Check for native libraries provided with hadoop distribution.
+
+        Returns:
+          A string that is the path to the native libraries.
+        """
+        java_library_path = list(filter(None, env.get("JAVA_LIBRARY_PATH", "").split(",")))
+
+        hadoop = HadoopTool(env=env)
+        hadoop_native_dir_path = os.path.join(env["HADOOP_HOME"], "lib", "native")
+        if os.path.isdir(hadoop_native_dir_path):
+            java_library_path.append(hadoop_native_dir_path)
+
+            # Hadoop wants a certain platform version, then we hope to use it
+            cmd = [
+                "java",
+                "-cp",
+                ":".join(hadoop.classpath),
+                "-Xmx32m",
+                "org.apache.hadoop.util.PlatformName"
+            ]
+            output = subprocess.check_output(cmd, universal_newlines=True)
+            java_platform = output.strip()
+            logging.info("Using Hadoop platform: %r", java_platform)
+            native_dirs = os.path.join(hadoop_native_dir_path, java_platform.replace(" ", "_"))
+            if os.path.isdir(native_dirs):
+                java_library_path.append(native_dirs)
+
+        return java_library_path
+
+    def job(self):
+        """Performs the 'job' command."""
+        class_name = getattr(self.flags, "class")
+        if (class_name is None) and (len(self.args) > 0):
+            class_name = self.pop_args_head()
+        assert (class_name is not None), \
+            "Express job class unset, please use [--class=]<class>."
+
+        # any more args must be user specified args for the express job
+        job_args = list(self.args)
+        logging.info("Running Express job %r with parameters: %r", class_name, job_args)
+
+        lib_jars = []
+        if self.flags.jars is not None:
+            lib_jars.extend(self.flags.jars)
+
+        classpath = self.express.get_classpath(lib_jars=lib_jars)
+
+        # ----------------------------------------
+        # Java options:
+        java_opts = list()
+
+        # FIXME: Splitting on space is very brittle
+        java_opts.extend(filter(None, self.env.get("EXPRESS_JAVA_OPTS", "").split(" ")))
+        java_opts.extend(filter(None, self.env.get("JAVA_OPTS", "").split(" ")))
+
+        # Workaround for OS X: a bug in JRE 1.6 creates "SCDynamicStore" errors.
+        if self.env.get("uname") == "Darwin":  # FIXME!!!
+            java_opts.append("-Djava.security.krb5.realm=")
+            java_opts.append("-Djava.security.krb5.kdc=")
+
+        lib_path = self.env.get("JAVA_LIBRARY_PATH", "").split(":")
+        native_lib_path = self.hadoop_native_libs(self.env)
+        if len(native_lib_path) > 0:
+            lib_path.append(native_lib_path)
+        lib_path = list(filter(None, map(str.strip, lib_path)))
+        if len(lib_path) > 0:
+            java_opts.append("-Djava.library.path=%s" % ":".join(lib_path))
+
+        logging.debug("Using JVM options: %r", java_opts)
+
+        # ----------------------------------------
+        # Hadoop generic options:
+        hadoop_opts = list()
+        if self.flags.disable_user_jars_take_precedence:
+            hadoop_opts.append("-Dmapreduce.task.classpath.user.precedence=false")
+        else:
+            hadoop_opts.append("-Dmapreduce.task.classpath.user.precedence=true")
+        hadoop_opts.extend(list(self.flags.hadoop_opts))
+        dist_cache_jars = self.express.list_paths_for_dist_cache(lib_jars=lib_jars)
+        hadoop_opts.append("-Dtmpjars=%s" % ",".join(dist_cache_jars))
+        logging.debug("Hadoop generic options:\n%s", " \n".join(map(tab_indent, hadoop_opts)))
+
+        # ----------------------------------------
+
+        assert (self.flags.mode in ("local", "hdfs")), \
+            ("Invalid Express mode: %r" % self.flags.mode)
+        run_mode = ("--%s" % self.flags.mode)
+
+        cmd = [
+            "java",
+            # Property needed for kiji-schema v1.1:
+            "-Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED",
+            "-classpath", ":".join(classpath),
+        ] + list(filter(None, map(str.strip, java_opts))) + [
+            EXPRESS_TOOL
+        ] + hadoop_opts + [
+            class_name,
+            run_mode,
+        ] + job_args
+
+        logging.debug("Running command:\n%s", " \\\n\t".join(map(repr, cmd)))
+        proc = subprocess.call(cmd)
+
+    _MODE_SCRIPT = {
+        "hdfs": "hdfs-mode.scala",
+        "local": "local-mode.scala",
+    }
+
+    def shell(self):
+        """Performs the 'shell' command."""
+        lib_jars = []
+        if self.flags.jars is not None:
+            lib_jars.extend(self.flags.jars.split(","))
+
+        env = dict(self.env)
+
+        express_cp = self.express.get_classpath(lib_jars=lib_jars)
+        env["EXPRESS_CP"] = ":".join(express_cp)
+
+        dist_cache_paths = self.express.list_paths_for_dist_cache(lib_jars=lib_jars)
+        env["TMPJARS"] = ",".join(dist_cache_paths)
+
+        # EXPRESS_MODE environment variable must be a path to the mode specific scala script:
+        script_name = self._MODE_SCRIPT.get(self.flags.mode)
+        assert (script_name is not None), ("Invalid Express mode: %r." % self.flags.mode)
+        script_path = os.path.join(self.express.home_dir, "bin", script_name)
+        assert os.path.isfile(script_path), ("Script not found: %r" % script_path)
+        env["EXPRESS_MODE"] = script_path
+
+        # express shell binary needs to be in the same directory as this script
+        shell_path = os.path.join(self.express.home_dir, "bin", "express-shell")
+        assert os.path.isfile(shell_path), ("Shell not found: %r" % shell_path)
+        cmd = [shell_path] + list(self.args)
+        logging.debug(
+            "Launching the express shell using the command:\n%s",
+            " \\\n\t".join(map(repr, cmd)))
+        proc = subprocess.Popen(cmd, env=env)
+        try:
+            proc.wait()
+        except subprocess.SubprocessError:
+            proc.kill()
+
+    def schema_shell(self):
+        """Performs the 'schema-shell' command."""
+        schema_shell_home = self.env.get(SCHEMA_SHELL_HOME)
+        assert (schema_shell_home is not None), \
+            ("Environment variable undefined: %r" % SCHEMA_SHELL_HOME)
+        assert os.path.isdir(schema_shell_home), \
+            ("Invalid home directory for KijiSchema shell: %r" % schema_shell_home)
+        schema_shell_script = os.path.join(schema_shell_home, "bin", "kiji-schema-shell")
+        assert os.path.isfile(schema_shell_script), \
+            ("KijiSchema shell not found: %r" % schema_shell_script)
+
+        env = dict(self.env)
+
+        classpath = env.get(KIJI_CLASSPATH, "").split(":") + list(self.express.get_classpath())
+        env[KIJI_CLASSPATH] = ":".join(classpath)
+
+        java_opts = env.get("JAVA_OPTS", "")
+        # FIXME: I cannot find any trace of the Java system property "express.tmpjars"!
+        # java_opts += (" -Dexpress.tmpjars=%s" % ???)
+
+        # Relevant for KijiSchema 1.1 only and will be removed in Express 3.0:
+        java_opts += " -Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED"
+        env["JAVA_OPTS"] = java_opts
+
+        cmd = [schema_shell_script]
+        logging.debug("Launching kiji-schema shell with:\n%s\with KIJI_CLASSPATH:\n%s",
+                      " \\\n\t".join(map(repr, cmd)), "\n".join(map(tab_indent, classpath)))
+        logging.debug("Computed KIJI_CLASSPATH:")
+        proc = subprocess.Popen(cmd, env=env)
+        try:
+            proc.wait()
+        except subprocess.SubProcessError:
+            proc.kill()
+
+
+# --------------------------------------------------------------------------------------------------
+
+
+def main(parser, flags, args):
+    """Main entry of this Python program.
+
+    Dispatches to the appropriate command.
+
+    Args:
+      parser: Parser used to process the command-line arguments.
+      flags: Namespace object with the parsed flags.
+      args: Unknwon command-line arguments that were not parsed by parser.
+    Returns:
+      Shell exit code.
+    """
+    cli = ExpressCLI(flags=flags, args=args, env=os.environ)
+    if flags.command is None:
+        parser.print_help()
+        return os.EX_USAGE
+    elif flags.command == "classpath":
+        return cli.classpath()
+    elif flags.command == "jar":
+        return cli.jar()
+    elif flags.command == "job":
+        return cli.job()
+    elif flags.command == "shell":
+        return cli.shell()
+    elif flags.command == "schema-shell":
+        return cli.schema_shell()
     else:
-      print(USAGE % {'this': this})
+        print("Invalid command: %r" % flags.command)
+        parser.print_help()
+        return os.EX_USAGE
 
 
-# ------------------------------------------------------------------------------
-COMMANDS = dict(
-    map(lambda cls: (base.UnCamelCase(cls.__name__, separator='-'), cls),
-        (Command).__subclasses__()))
+def init(args):
+    """Initializes this Python program and runs the main function.
 
-FLAGS.AddString(
-    name='do',
-    default=None,
-    help=('Action to perform:\n%s.'
-          % ',\n'.join(map(lambda name: ' - ' + name, sorted(COMMANDS)))),
-)
+    Args:
+      args: Command-line argument specified to this Python program;
+          args[0] is the path of this program (/path/to/express.py);
+          args[1] is the first command-line argument, if any, etc.
+    """
+    parser = make_arg_parser()
+    (flags, unparsed_args) = parser.parse_known_args(args[1:])
 
-def Main(args):
-  """Program entry point.
+    try:
+        log_level = parse_log_level(flags.log_level)
+        setup_logging(log_level=log_level)
+    except Error as err:
+        print(err)
+        return os.EX_USAGE
 
-  Args:
-    args: unparsed command-line arguments.
-  """
-  action_name = FLAGS.do
-  if (action_name is None) and (len(args) >= 1) and (args[0] in COMMANDS):
-    action_name = args[0]
-    args = args[1:]
-  elif (len(args) == 0):
-    action_name = 'help'
-  action_class = COMMANDS.get(action_name)
-  assert(action_class is not None), ('Command name received: {}. Could not '
-      'find command name. Use help to find valid commands.'.format(args[0]))
-  logging.debug('Actions class found is: %s' % (action_class))
-  if (action_class != None):
-    action = action_class()
-    return action(list(args))
+    # Run program:
+    sys.exit(main(parser, flags, unparsed_args))
 
 
-# ------------------------------------------------------------------------------
-
-
-if __name__ == '__main__':
-  base.Run(Main)
+if __name__ == "__main__":
+    init(sys.argv)

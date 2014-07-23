@@ -3,6 +3,7 @@
 
 Version 2.1.0
   * POM-40. Require JDK 7 to compile Kiji projects.
+  * EXP-451. Revamps express.py to cut external dependencies on python-base.
 
 Version 2.0.2
   * EXP-432. Protocol Buffer is now a provided scope dependency for better compatibility.
