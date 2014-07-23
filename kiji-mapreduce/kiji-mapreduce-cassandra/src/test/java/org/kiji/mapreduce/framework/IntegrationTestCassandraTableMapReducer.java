@@ -38,7 +38,6 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.junit.Assert;
@@ -83,29 +82,16 @@ public class IntegrationTestCassandraTableMapReducer {
   @Rule
   public TestName mTestName = new TestName();
 
-  private static final String BASE_TEST_URI_PROPERTY = "kiji.test.cluster.uri";
 
   private static KijiURI mUri;
   private static KijiURI mTableUri;
 
   @BeforeClass
   public static void populateTable() throws Exception {
-    final Configuration conf = HBaseConfiguration.create();
-
-    if (System.getProperty(BASE_TEST_URI_PROPERTY) != null) {
-      mUri = KijiURI.newBuilder(System.getProperty(BASE_TEST_URI_PROPERTY)).build();
-    } else {
-      // Create a Kiji instance.
-      mUri = KijiURI.newBuilder(String.format(
-          "kiji-cassandra://%s:%s/127.0.0.10:9042/test",
-          conf.get(HConstants.ZOOKEEPER_QUORUM),
-          conf.getInt(HConstants.ZOOKEEPER_CLIENT_PORT, HConstants.DEFAULT_ZOOKEPER_CLIENT_PORT)
-      )).build();
-    }
-
+    mUri = CassandraKijiMapReduceIntegrationTestUtil.getGloballyUniqueCassandraKijiUri();
     LOG.info("Installing to URI " + mUri);
     try {
-      CassandraKijiInstaller.get().install(mUri, conf);
+      CassandraKijiInstaller.get().install(mUri, HBaseConfiguration.create());
       LOG.info("Created Kiji instance at " + mUri);
     } catch (IOException ioe) {
       LOG.warn("Could not create Kiji instance.");
