@@ -351,7 +351,7 @@ class ExpressTool(object):
         # TODO: include --libjars
 
         if KIJI_CLASSPATH in self._env:
-            user_classpath = self._env[KIJI_CLASPATH].split(":")
+            user_classpath = self._env[KIJI_CLASSPATH].split(":")
             yield from user_classpath
 
         yield os.path.join(self.home_dir, "conf")
@@ -696,7 +696,7 @@ class ExpressCLI(object):
         lib_path = self.env.get("JAVA_LIBRARY_PATH", "").split(":")
         native_lib_path = self.hadoop_native_libs(self.env)
         if len(native_lib_path) > 0:
-            lib_path.append(native_lib_path)
+            lib_path.extend(native_lib_path)
         lib_path = list(filter(None, map(str.strip, lib_path)))
         if len(lib_path) > 0:
             java_opts.append("-Djava.library.path=%s" % ":".join(lib_path))
