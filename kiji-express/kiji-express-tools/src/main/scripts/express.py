@@ -735,8 +735,8 @@ class ExpressCLI(object):
             run_mode,
         ] + job_args
 
-        logging.debug("Running command:\n%s", " \\\n\t".join(map(repr, cmd)))
-        proc = subprocess.call(cmd)
+        logging.debug("Running command:\n%s\n", " \\\n\t".join(map(repr, cmd)))
+        return subprocess.call(cmd)
 
     _MODE_SCRIPT = {
         "hdfs": "hdfs-mode.scala",
@@ -773,7 +773,7 @@ class ExpressCLI(object):
             " \\\n\t".join(map(repr, cmd)))
         proc = subprocess.Popen(cmd, env=env)
         try:
-            proc.wait()
+            return proc.wait()
         except subprocess.SubprocessError:
             proc.kill()
 
@@ -807,7 +807,7 @@ class ExpressCLI(object):
         logging.debug("Computed KIJI_CLASSPATH:")
         proc = subprocess.Popen(cmd, env=env)
         try:
-            proc.wait()
+            return proc.wait()
         except subprocess.SubProcessError:
             proc.kill()
 
