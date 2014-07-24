@@ -45,6 +45,7 @@ import org.kiji.schema.util.InstanceBuilder;
 import org.kiji.scoring.FreshKijiTableReader;
 import org.kiji.scoring.FreshenerContext;
 import org.kiji.scoring.impl.InternalFreshenerContext;
+import org.kiji.scoring.impl.NullCounterManager;
 
 /**
  * Test the behavior of the stock NewerThan KijiFreshnessPolicy.
@@ -102,7 +103,8 @@ public final class TestNewerThan extends KijiClientTest {
     parameters.put(NewerThan.NEWER_THAN_KEY, String.valueOf(1));
     final FreshenerContext context1 = InternalFreshenerContext.create(
         KijiColumnName.create("info", "name"),
-        parameters);
+        parameters,
+        NullCounterManager.get());
     final NewerThan policy = new NewerThan();
     policy.setup(context1);
 
@@ -111,7 +113,8 @@ public final class TestNewerThan extends KijiClientTest {
     parameters.put(NewerThan.NEWER_THAN_KEY, String.valueOf(10));
     final FreshenerContext context10 = InternalFreshenerContext.create(
         KijiColumnName.create("info", "name"),
-        parameters);
+        parameters,
+        NullCounterManager.get());
 
     policy.setup(context10);
     assertFalse(policy.isFresh(rowData, context10));

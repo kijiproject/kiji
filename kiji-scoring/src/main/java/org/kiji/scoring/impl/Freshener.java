@@ -29,6 +29,7 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.util.ReferenceCountable;
+import org.kiji.scoring.CounterManager;
 import org.kiji.scoring.KijiFreshnessPolicy;
 import org.kiji.scoring.ScoreFunction;
 
@@ -49,6 +50,7 @@ final class Freshener implements ReferenceCountable<Freshener> {
   private final KijiColumnName mAttachedColumn;
   private final AtomicInteger mRetainCounter = new AtomicInteger(1);
   private final Map<String, String> mParameters;
+  private final CounterManager mCounterManager;
 
   /**
    * Initialize a new Freshener.
@@ -60,19 +62,22 @@ final class Freshener implements ReferenceCountable<Freshener> {
    * @param parameters configuration parameters retrieved from the Freshener record which are
    *     accessible to the freshness policy and score function via
    *     {@link org.kiji.scoring.FreshenerContext#getParameters()} method.
+   * @param counterManager CounterManager with which to create FreshenerContexts.
    */
   public Freshener(
       final KijiFreshnessPolicy policy,
       final ScoreFunction<?> scoreFunction,
       final KeyValueStoreReaderFactory factory,
       final KijiColumnName attachedColumn,
-      final Map<String, String> parameters
+      final Map<String, String> parameters,
+      final CounterManager counterManager
   ) {
     mPolicy = policy;
     mScoreFunction = scoreFunction;
     mFactory = factory;
     mAttachedColumn = attachedColumn;
     mParameters = parameters;
+    mCounterManager = counterManager;
   }
 
   /**
@@ -149,7 +154,7 @@ final class Freshener implements ReferenceCountable<Freshener> {
    */
   private void close() throws IOException {
     final InternalFreshenerContext cleanupContext =
-        InternalFreshenerContext.create(mAttachedColumn, mParameters, mFactory);
+        InternalFreshenerContext.create(mAttachedColumn, mParameters, mCounterManager, mFactory);
     mScoreFunction.cleanup(cleanupContext);
     mPolicy.cleanup(cleanupContext);
     mFactory.close();

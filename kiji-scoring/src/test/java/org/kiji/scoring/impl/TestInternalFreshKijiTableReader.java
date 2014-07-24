@@ -60,10 +60,12 @@ import org.kiji.schema.layout.ColumnReaderSpec;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
+import org.kiji.scoring.CounterManager;
 import org.kiji.scoring.FreshKijiTableReader;
 import org.kiji.scoring.FreshKijiTableReader.Builder.StatisticGatheringMode;
 import org.kiji.scoring.FreshKijiTableReader.FreshRequestOptions;
 import org.kiji.scoring.FreshenerContext;
+import org.kiji.scoring.FreshenerSetupContext;
 import org.kiji.scoring.KijiFreshnessManager;
 import org.kiji.scoring.KijiFreshnessPolicy;
 import org.kiji.scoring.ScoreFunction;
@@ -160,6 +162,28 @@ public class TestInternalFreshKijiTableReader {
     }
   }
 
+  public static final class TestCountersScoreFunction extends ScoreFunction<String> {
+    public enum SFPhases {
+      SETUP, CLEANUP, GET_DATA_REQUEST, SCORE
+    }
+    public void setup(final FreshenerSetupContext context) {
+      context.getCounterManager().incrementCounter(SFPhases.SETUP, 1);
+    }
+    public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {
+      context.getCounterManager().incrementCounter(SFPhases.GET_DATA_REQUEST, 1);
+      return FAMILY_QUAL0_R;
+    }
+    public TimestampedValue<String> score(
+        final KijiRowData dataToScore, final FreshenerContext context
+    ) throws IOException {
+      context.getCounterManager().incrementCounter(SFPhases.SCORE, 1);
+      return TimestampedValue.create("new-val");
+    }
+    public void cleanup(final FreshenerSetupContext context) {
+      context.getCounterManager().incrementCounter(SFPhases.CLEANUP, 1);
+    }
+  }
+
   public static final class TestNeverFreshen extends KijiFreshnessPolicy {
 
     @Override
@@ -218,6 +242,32 @@ public class TestInternalFreshKijiTableReader {
         throw new RuntimeException(ie);
       }
       return STALE;
+    }
+  }
+
+  public static final class TestCountersPolicy extends KijiFreshnessPolicy {
+    public enum FPPhases {
+      SETUP, SHOULD_USE_CLIENT_DATA_REQUEST, GET_DATA_REQUEST, IS_FRESH, CLEANUP
+    }
+    public void setup(final FreshenerSetupContext context) {
+      context.getCounterManager().incrementCounter(FPPhases.SETUP, 1);
+    }
+    public boolean shouldUseClientDataRequest(final FreshenerContext context) {
+      context.getCounterManager().incrementCounter(FPPhases.SHOULD_USE_CLIENT_DATA_REQUEST, 1);
+      return false;
+    }
+    public KijiDataRequest getDataRequest(final FreshenerContext context) {
+      context.getCounterManager().incrementCounter(FPPhases.GET_DATA_REQUEST, 1);
+      return KijiDataRequest.empty();
+    }
+    public boolean isFresh(
+        final KijiRowData rowData, final FreshenerContext context
+    ) {
+      context.getCounterManager().incrementCounter(FPPhases.IS_FRESH, 1);
+      return false;
+    }
+    public void cleanup(final FreshenerSetupContext context) {
+      context.getCounterManager().incrementCounter(FPPhases.CLEANUP, 1);
     }
   }
 
@@ -1646,6 +1696,47 @@ public class TestInternalFreshKijiTableReader {
       assertEquals(expected, actual);
     } finally {
       freshReader.close();
+    }
+  }
+
+  @Test
+  public void testCounters() throws IOException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    try {
+      manager.registerFreshener(
+          TABLE_NAME,
+          FAMILY_QUAL0,
+          new TestCountersPolicy(),
+          new TestCountersScoreFunction(),
+          EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
+          false,
+          false);
+    } finally {
+      manager.close();
+    }
+
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
+        .withTable(mTable)
+        .withTimeout(500)
+        .build();
+    try {
+      final String refreshed =
+          freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString();
+      assertEquals("new-val", refreshed);
+    } finally {
+      freshReader.close();
+    }
+
+    // Test the counters after closing the reader so that cleanup methods run
+    final CounterManager cm = freshReader.getCounterManager();
+    for (Enum<?> e : TestCountersPolicy.FPPhases.values()) {
+      assertEquals(1, cm.getCounterValue(e).longValue());
+    }
+    for (Enum<?> e : TestCountersScoreFunction.SFPhases.values()) {
+      assertEquals(1, cm.getCounterValue(e).longValue());
     }
   }
 }

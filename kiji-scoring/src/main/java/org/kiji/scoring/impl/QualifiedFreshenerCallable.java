@@ -125,6 +125,7 @@ final class QualifiedFreshenerCallable implements Callable<Boolean> {
               mAttachedColumn,
               freshener.getParameters(),
               mRequestContext.getParameterOverrides(),
+              mRequestContext.getCounterManager(),
               freshener.getKVStoreReaderFactory());
       final KijiRowData dataToCheck = ScoringUtils.getFromFuture(
           getDataToCheck(freshener, freshenerContext));

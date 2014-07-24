@@ -58,4 +58,14 @@ public interface FreshenerSetupContext extends FreshenerGetStoresContext {
    * @throws java.io.IOException if there is an error opening the underlying storage resource.
    */
   <K, V> KeyValueStoreReader<K, V> getStore(String storeName) throws IOException;
+
+  /**
+   * Get the configured CounterManager for this Context.
+   *
+   * Allows incrementing, retrieving, and listing counters. Some of these operations are not
+   * available in all contexts.
+   *
+   * @return the configured CounterManager for this Context.
+   */
+  CounterManager getCounterManager();
 }

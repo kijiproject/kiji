@@ -31,6 +31,7 @@ import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
+import org.kiji.scoring.CounterManager;
 import org.kiji.scoring.FreshenerContext;
 
 /**
@@ -75,17 +76,20 @@ public final class InternalFreshenerContext implements FreshenerContext {
    * @param attachedColumn the column to which the Freshener served by this context is attached.
    * @param parameters configuration parameters from the Freshener record which was used to create
    *     the Freshener served by this context.
+   * @param counterManager CounterManager with which to manage counters.
    * @return a new InternalFreshenerContext.
    */
   public static InternalFreshenerContext create(
       final KijiColumnName attachedColumn,
-      final Map<String, String> parameters
+      final Map<String, String> parameters,
+      final CounterManager counterManager
   ) {
     return new InternalFreshenerContext(
         null,
         attachedColumn,
         parameters,
-        EMPTY_PARAMS);
+        EMPTY_PARAMS,
+        counterManager);
   }
 
   /**
@@ -95,6 +99,7 @@ public final class InternalFreshenerContext implements FreshenerContext {
    * @param attachedColumn the column to which the Freshener served by this context is attached.
    * @param parameters configuration parameters from the Freshener record which was used to create
    *     the Freshener served by this context.
+   * @param counterManager CounterManager with which to manage counters.
    * @param factory a KeyValueStoreReaderFactory which provides KeyValueStoreReaders for this
    *     context.
    * @return a new InternalFreshenerContext.
@@ -102,10 +107,15 @@ public final class InternalFreshenerContext implements FreshenerContext {
   public static InternalFreshenerContext create(
       final KijiColumnName attachedColumn,
       final Map<String, String> parameters,
+      final CounterManager counterManager,
       final KeyValueStoreReaderFactory factory
   ) {
-    final InternalFreshenerContext ifc =
-        new InternalFreshenerContext(null, attachedColumn, parameters, EMPTY_PARAMS);
+    final InternalFreshenerContext ifc = new InternalFreshenerContext(
+        null,
+        attachedColumn,
+        parameters,
+        EMPTY_PARAMS,
+        counterManager);
     ifc.setKeyValueStoreReaderFactory(factory);
     return ifc;
   }
@@ -121,6 +131,7 @@ public final class InternalFreshenerContext implements FreshenerContext {
    *     which the Freshener served by this context was built.
    * @param parameterOverrides configuration parameters passed to a FreshKijiTableReader at request
    *     time. These overrides take precedence over 'parameters'.
+   * @param counterManager CounterManager with which to manage counters.
    * @param factory a KeyValueStoreReaderFactory which provides KeyValueStoreReaders for this
    *     context.
    * @return a new InternalFreshenerContext.
@@ -130,10 +141,15 @@ public final class InternalFreshenerContext implements FreshenerContext {
       final KijiColumnName attachedColumn,
       final Map<String, String> parameters,
       final Map<String, String> parameterOverrides,
+      final CounterManager counterManager,
       final KeyValueStoreReaderFactory factory
   ) {
-    final InternalFreshenerContext ifc =
-        new InternalFreshenerContext(clientRequest, attachedColumn, parameters, parameterOverrides);
+    final InternalFreshenerContext ifc = new InternalFreshenerContext(
+        clientRequest,
+        attachedColumn,
+        parameters,
+        parameterOverrides,
+        counterManager);
     ifc.setKeyValueStoreReaderFactory(factory);
     return ifc;
   }
@@ -145,6 +161,7 @@ public final class InternalFreshenerContext implements FreshenerContext {
   private final KijiDataRequest mClientRequest;
   private final KijiColumnName mAttachedColumn;
   private final Map<String, String> mParameters;
+  private final CounterManager mCounterManager;
   private KeyValueStoreReaderFactory mReaderFactory = null;
 
   /**
@@ -157,16 +174,19 @@ public final class InternalFreshenerContext implements FreshenerContext {
    *     which the Freshener served by this context was built.
    * @param parameterOverrides configuration parameters passed to a FreshKijiTableReader at request
    *     time. These overrides take precedence over 'parameters'.
+   * @param counterManager CounterManager with which to manage counters.
    */
   private InternalFreshenerContext(
       final KijiDataRequest clientRequest,
       final KijiColumnName attachedColumn,
       final Map<String, String> parameters,
-      final Map<String, String> parameterOverrides
+      final Map<String, String> parameterOverrides,
+      final CounterManager counterManager
   ) {
     mClientRequest = clientRequest;
     mAttachedColumn = attachedColumn;
     mParameters = unionParameters(parameters, parameterOverrides);
+    mCounterManager = counterManager;
   }
 
   /**
@@ -209,6 +229,12 @@ public final class InternalFreshenerContext implements FreshenerContext {
     Preconditions.checkState(null != mReaderFactory,
         "Cannot open KeyValueStores during calls to getRequiredStores()");
     return mReaderFactory.openStore(storeName);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public CounterManager getCounterManager() {
+    return mCounterManager;
   }
 
   /** {@inheritDoc} */

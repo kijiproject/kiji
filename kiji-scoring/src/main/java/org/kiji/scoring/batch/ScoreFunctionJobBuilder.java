@@ -52,6 +52,7 @@ import org.kiji.scoring.FreshenerContext;
 import org.kiji.scoring.ScoreFunction;
 import org.kiji.scoring.batch.impl.ScoreFunctionMapper;
 import org.kiji.scoring.impl.InternalFreshenerContext;
+import org.kiji.scoring.impl.NullCounterManager;
 
 /**
  * Builder for KijiMapReduceJobs which run ScoreFunction implementations across all rows of a table.
@@ -297,6 +298,7 @@ public final class ScoreFunctionJobBuilder
         mAttachedColumn,
         mParameters,
         Maps.<String, String>newHashMap(),
+        NullCounterManager.get(),
         KeyValueStoreReaderFactory.create(getRequiredStores()));
     mScoreFunctionDataRequest = mScoreFunction.getDataRequest(context);
 
@@ -323,7 +325,10 @@ public final class ScoreFunctionJobBuilder
   /** {@inheritDoc} */
   @Override
   protected Map<String, KeyValueStore<?, ?>> getRequiredStores() {
-    final FreshenerContext context = InternalFreshenerContext.create(mAttachedColumn, mParameters);
+    final FreshenerContext context = InternalFreshenerContext.create(
+        mAttachedColumn,
+        mParameters,
+        NullCounterManager.get());
     final Map<String, KeyValueStore<?, ?>> combinedStores = Maps.newHashMap();
     combinedStores.putAll(mScoreFunction.getRequiredStores(context));
     if (null != mKeyValueStoreOverrides) {

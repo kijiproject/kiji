@@ -40,6 +40,7 @@ import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableReaderPool;
+import org.kiji.scoring.CounterManager;
 import org.kiji.scoring.FreshKijiTableReader.Builder.StatisticGatheringMode;
 import org.kiji.scoring.avro.KijiFreshenerRecord;
 import org.kiji.scoring.impl.MultiBufferedWriter.SingleBuffer;
@@ -99,6 +100,8 @@ final class FresheningRequestContext {
   private final BlockingQueue<FreshenerSingleRunStatistics> mFreshenerSingleRunStatistics;
   /** Executor to get Futures within this request. */
   private final ExecutorService mExecutorService;
+  /** CounterManager with which to store counters. */
+  private final CounterManager mCounterManager;
   /**
    * Whether any Freshener has written into a buffer for this request. This value may only move
    * from false to true.
@@ -133,6 +136,7 @@ final class FresheningRequestContext {
    *     statistics gathering thread. This queue is thread safe and ordering of statistics in the
    *     queue does not matter.
    * @param executorService ExecutorService to use for creating Futures within this request.
+   * @param counterManager CounterManager with which to store counters.
    */
   // CSOFF: ParameterNumber
   public FresheningRequestContext(
@@ -149,7 +153,8 @@ final class FresheningRequestContext {
       final boolean allowPartial,
       final StatisticGatheringMode statisticGatheringMode,
       final BlockingQueue<FreshenerSingleRunStatistics> statisticsQueue,
-      final ExecutorService executorService
+      final ExecutorService executorService,
+      final CounterManager counterManager
   ) {
     // CSON: ParameterNumber
     mId = id;
@@ -165,6 +170,7 @@ final class FresheningRequestContext {
     mStatisticGatheringMode = statisticGatheringMode;
     mFreshenerSingleRunStatistics = statisticsQueue;
     mExecutorService = executorService;
+    mCounterManager = counterManager;
     mFreshenersRemaining = getInitialFresheners(freshenerRecords);
     if (mAllowPartial) {
       // Each Freshener will have its own buffer when partial freshening is enabled, so the
@@ -290,6 +296,15 @@ final class FresheningRequestContext {
    */
   public ExecutorService getExecutorService() {
     return mExecutorService;
+  }
+
+  /**
+   * Get the CounterManager with which to store counters.
+   *
+   * @return the CounterManager with which to store counters.
+   */
+  public CounterManager getCounterManager() {
+    return mCounterManager;
   }
 
   /**

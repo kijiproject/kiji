@@ -158,6 +158,7 @@ final class MapFamilyFreshenerCallable implements Callable<Boolean> {
           qualifier,
           freshener.getParameters(),
           mRequestContext.getParameterOverrides(),
+          requestContext.getCounterManager(),
           freshener.getKVStoreReaderFactory()));
     }
   }
@@ -248,6 +249,7 @@ final class MapFamilyFreshenerCallable implements Callable<Boolean> {
             mFamily,
             freshener.getParameters(),
             mRequestContext.getParameterOverrides(),
+            mRequestContext.getCounterManager(),
             freshener.getKVStoreReaderFactory())));
     final Map<KijiColumnName, FreshenerContext> staleQualifiers = Maps.newHashMap();
     for (Map.Entry<KijiColumnName, FreshenerContext> qualifierContext

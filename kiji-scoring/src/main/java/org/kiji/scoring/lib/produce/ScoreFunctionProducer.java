@@ -36,9 +36,12 @@ import org.kiji.mapreduce.produce.ProducerContext;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
+import org.kiji.scoring.CounterManager;
 import org.kiji.scoring.FreshenerContext;
 import org.kiji.scoring.ScoreFunction;
 import org.kiji.scoring.impl.InternalFreshenerContext;
+import org.kiji.scoring.impl.NullCounterManager;
+import org.kiji.scoring.lib.produce.impl.KijiContextCounterManager;
 
 /**
  * KijiProducer implementation which runs a ScoreFunction implementation by name.
@@ -83,19 +86,22 @@ public final class ScoreFunctionProducer extends KijiProducer {
 
     private final KijiContext mGetStoresDelegate;
     private final InternalFreshenerContext mOtherDelegate;
+    private final CounterManager mCounterManager;
 
     /**
      * Initialize a new ScoreFunctionProducerFreshenerContext with the given delegates.
-     *
-     * @param getStoresDelegate a KijiContext from which to get KeyValueStores.
+     *  @param getStoresDelegate a KijiContext from which to get KeyValueStores.
      * @param otherDelegate an InternalFreshenerContext with which to provide all other methods.
+     * @param counterManager CounterManager with which to store counters.
      */
     private ScoreFunctionProducerFreshenerContext(
         final KijiContext getStoresDelegate,
-        final InternalFreshenerContext otherDelegate
+        final InternalFreshenerContext otherDelegate,
+        final CounterManager counterManager
     ) {
       mGetStoresDelegate = getStoresDelegate;
       mOtherDelegate = otherDelegate;
+      mCounterManager = counterManager;
     }
 
     /** {@inheritDoc} */
@@ -108,6 +114,12 @@ public final class ScoreFunctionProducer extends KijiProducer {
     @Override
     public <K, V> KeyValueStoreReader<K, V> getStore(final String storeName) throws IOException {
       return mGetStoresDelegate.getStore(storeName);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public CounterManager getCounterManager() {
+      return mCounterManager;
     }
 
     /** {@inheritDoc} */
@@ -161,7 +173,12 @@ public final class ScoreFunctionProducer extends KijiProducer {
         getConf().get(SCORE_FUNCTION_PRODUCER_CONF_KEY), ScoreFunctionConf.class);
     mScoreFunction = scoreFunctionForName(mScoreFunctionConf.scoreFunctionClass);
     mInternalFreshenerContextDelegate = InternalFreshenerContext.create(
-        KijiColumnName.create(mScoreFunctionConf.attachedColumn), mScoreFunctionConf.parameters);
+        KijiColumnName.create(mScoreFunctionConf.attachedColumn),
+        mScoreFunctionConf.parameters,
+        // This CounterManager is null because we do not yet have access to a KijiContext to create
+        // a real manager. Methods which provide a KijiContext will create another FreshenerContext
+        // that delegates to this for some operations and includes a real manager.
+        NullCounterManager.get());
   }
 
   /** {@inheritDoc} */
@@ -175,8 +192,10 @@ public final class ScoreFunctionProducer extends KijiProducer {
   public void setup(
       final KijiContext context
   ) throws IOException {
-    mScoreFunction.setup(
-        new ScoreFunctionProducerFreshenerContext(context, mInternalFreshenerContextDelegate));
+    mScoreFunction.setup(new ScoreFunctionProducerFreshenerContext(
+        context,
+        mInternalFreshenerContextDelegate,
+        KijiContextCounterManager.create(context)));
   }
 
   /**
@@ -216,7 +235,10 @@ public final class ScoreFunctionProducer extends KijiProducer {
   ) throws IOException {
     ScoreFunction.TimestampedValue<?> scoringResult = mScoreFunction.score(
         input,
-        new ScoreFunctionProducerFreshenerContext(context, mInternalFreshenerContextDelegate));
+        new ScoreFunctionProducerFreshenerContext(
+            context,
+            mInternalFreshenerContextDelegate,
+            KijiContextCounterManager.create(context)));
     context.put(scoringResult.getTimestamp(), scoringResult.getValue());
   }
 
@@ -225,7 +247,9 @@ public final class ScoreFunctionProducer extends KijiProducer {
   public void cleanup(
       final KijiContext context
   ) throws IOException {
-    mScoreFunction.cleanup(
-        new ScoreFunctionProducerFreshenerContext(context, mInternalFreshenerContextDelegate));
+    mScoreFunction.cleanup(new ScoreFunctionProducerFreshenerContext(
+        context,
+        mInternalFreshenerContextDelegate,
+        KijiContextCounterManager.create(context)));
   }
 }

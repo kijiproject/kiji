@@ -44,6 +44,7 @@ import org.kiji.schema.util.InstanceBuilder;
 import org.kiji.scoring.FreshKijiTableReader;
 import org.kiji.scoring.FreshenerContext;
 import org.kiji.scoring.impl.InternalFreshenerContext;
+import org.kiji.scoring.impl.NullCounterManager;
 
 /**
  * Test the behavior of the stock ShelfLife KijiFreshnessPolicy.
@@ -101,7 +102,8 @@ public class TestShelfLife {
     parameters.put(ShelfLife.SHELF_LIFE_KEY, String.valueOf(Long.MAX_VALUE));
     final FreshenerContext contextMax = InternalFreshenerContext.create(
         KijiColumnName.create("info", "name"),
-        parameters);
+        parameters,
+        NullCounterManager.get());
     final ShelfLife policy = new ShelfLife();
     policy.setup(contextMax);
 
@@ -110,7 +112,8 @@ public class TestShelfLife {
     parameters.put(ShelfLife.SHELF_LIFE_KEY, String.valueOf(Long.MIN_VALUE));
     final FreshenerContext contextMin = InternalFreshenerContext.create(
         KijiColumnName.create("info", "name"),
-        parameters);
+        parameters,
+        NullCounterManager.get());
 
     policy.setup(contextMin);
     assertFalse(policy.isFresh(rowData, contextMin));

@@ -54,6 +54,7 @@ import org.kiji.schema.util.ProtocolVersion;
 import org.kiji.scoring.avro.KijiFreshenerRecord;
 import org.kiji.scoring.avro.ParameterDescription;
 import org.kiji.scoring.impl.InternalFreshenerContext;
+import org.kiji.scoring.impl.NullCounterManager;
 import org.kiji.scoring.impl.ScoringUtils;
 
 /**
@@ -646,7 +647,7 @@ public final class KijiFreshnessManager implements Closeable {
     // CSON: ParameterNumber
     if (setupClasses) {
       final InternalFreshenerContext context =
-          InternalFreshenerContext.create(columnName, parameters);
+          InternalFreshenerContext.create(columnName, parameters, NullCounterManager.get());
       final KeyValueStoreReaderFactory factory =
           ScoringUtils.createKVStoreReaderFactory(context, scoreFunction, policy);
       context.setKeyValueStoreReaderFactory(factory);
@@ -884,8 +885,10 @@ public final class KijiFreshnessManager implements Closeable {
         descriptions.putAll(Parameters.getDescriptions(policy));
 
         if (setupClasses) {
-          final InternalFreshenerContext context =
-              InternalFreshenerContext.create(recordEntry.getKey(), record.getParameters());
+          final InternalFreshenerContext context = InternalFreshenerContext.create(
+              recordEntry.getKey(),
+              record.getParameters(),
+              NullCounterManager.get());
           final Map<String, KeyValueStore<?, ?>> kvMap = Maps.newHashMap();
           kvMap.putAll(scoreFunction.getRequiredStores(context));
           kvMap.putAll(policy.getRequiredStores(context));

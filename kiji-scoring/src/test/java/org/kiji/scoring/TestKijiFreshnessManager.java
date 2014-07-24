@@ -49,6 +49,7 @@ import org.kiji.scoring.KijiFreshnessManager.ValidationFailure;
 import org.kiji.scoring.avro.KijiFreshenerRecord;
 import org.kiji.scoring.avro.ParameterDescription;
 import org.kiji.scoring.impl.InternalFreshenerContext;
+import org.kiji.scoring.impl.NullCounterManager;
 import org.kiji.scoring.lib.NeverFreshen;
 import org.kiji.scoring.lib.ShelfLife;
 
@@ -115,7 +116,10 @@ public class TestKijiFreshnessManager {
     assertEquals(SCORE_FUNCTION.getClass().getName(), record.getScoreFunctionClass());
     assertEquals(POLICY.getClass().getName(), record.getFreshnessPolicyClass());
     final ShelfLife policyToLoad = new ShelfLife();
-    policyToLoad.setup(InternalFreshenerContext.create(INFO_NAME, POLICY.serializeToParameters()));
+    policyToLoad.setup(InternalFreshenerContext.create(
+        INFO_NAME,
+        POLICY.serializeToParameters(),
+        NullCounterManager.get()));
     assertEquals(POLICY.getShelfLifeInMillis(), policyToLoad.getShelfLifeInMillis());
   }
 

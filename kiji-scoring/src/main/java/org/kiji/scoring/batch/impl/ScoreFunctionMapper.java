@@ -102,6 +102,7 @@ public final class ScoreFunctionMapper extends KijiTableMapper<HFileKeyValue, Nu
         mAttachedColumn,
         mParameters,
         Maps.<String, String>newHashMap(),
+        MapperContextCounterManager.create(context),
         factory);
     mTableContext = KijiTableContextFactory.create(context);
     mScoreFunction.setup(mFreshenerContext);

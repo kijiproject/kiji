@@ -50,6 +50,7 @@ import org.kiji.schema.KijiTableReaderBuilder.OnDecoderCacheMiss;
 import org.kiji.schema.layout.ColumnReaderSpec;
 import org.kiji.scoring.impl.FreshenerThreadPool;
 import org.kiji.scoring.impl.InternalFreshKijiTableReader;
+import org.kiji.scoring.impl.MapCounterManager;
 import org.kiji.scoring.statistics.FreshKijiTableReaderStatistics;
 
 /**
@@ -192,6 +193,15 @@ public interface FreshKijiTableReader extends KijiTableReader {
     }
 
     /**
+     * By default, use a MapCounterManager.
+     *
+     * @return a new MapCounterManager.
+     */
+    private static CounterManager defaultCounterManager() {
+      return MapCounterManager.create();
+    }
+
+    /**
      * Get a new instance of Builder.
      *
      * @return a new instance of Builder.
@@ -225,6 +235,8 @@ public interface FreshKijiTableReader extends KijiTableReader {
     private Long mStatisticsLoggingInterval = null;
     /** ExecutorService to use for running threads internal to the fresh reader. */
     private ExecutorService mExecutorService = null;
+    /** CounterManager with which to store counters. */
+    private CounterManager mCounterManager = null;
     /**
      * ColumnReaderSpec overrides which will be used to set default read behavior for reads
      * performed by this reader. These overrides will also affect reads performed internally by the
@@ -476,6 +488,34 @@ public interface FreshKijiTableReader extends KijiTableReader {
     }
 
     /**
+     * Configure the FreshKijiTableReader to use the given CounterManager to store counters.
+     *
+     * This field is optional. If unset the default CounterManager uses a synchronized HashMap to
+     * store counter values.
+     *
+     * @param counterManager CounterManager with which to store counters.
+     * @return this Builder configured to use the given CounterManager.
+     */
+    public Builder withCounterManager(
+        final CounterManager counterManager
+    ) {
+      Preconditions.checkState(null == mCounterManager,
+          "Counter manager is already set to: %s", mCounterManager);
+      Preconditions.checkNotNull(counterManager, "CounterManager may not be null.");
+      mCounterManager = counterManager;
+      return this;
+    }
+
+    /**
+     * Get the configured CounterManager or null if none has been set.
+     *
+     * @return the configured CounterManager or null if none has been set.
+     */
+    public CounterManager getCounterManager() {
+      return mCounterManager;
+    }
+
+    /**
      * Configure the reader to override the default read behavior of the given columns with the
      * behavior specified in the associated ColumnReaderSpecs. These overrides will change the
      * default read behavior for requests made to the reader itself and for requests made by
@@ -596,6 +636,9 @@ public interface FreshKijiTableReader extends KijiTableReader {
       if (null == mExecutorService) {
         mExecutorService = DEFAULT_EXECUTOR_SERVICE;
       }
+      if (null == mCounterManager) {
+        mCounterManager = defaultCounterManager();
+      }
       if (null == mColumnReaderSpecOverrides) {
         mColumnReaderSpecOverrides = DEFAULT_READER_SPEC_OVERRIDES;
       }
@@ -615,6 +658,7 @@ public interface FreshKijiTableReader extends KijiTableReader {
           mStatisticGatheringMode,
           mStatisticsLoggingInterval,
           mExecutorService,
+          mCounterManager,
           mColumnReaderSpecOverrides,
           mColumnReaderSpecAlternatives,
           mOnDecoderCacheMiss);
@@ -971,4 +1015,11 @@ public interface FreshKijiTableReader extends KijiTableReader {
    * @return all statistics gathered by this reader about its Fresheners.
    */
   FreshKijiTableReaderStatistics getStatistics();
+
+  /**
+   * Get the CounterManager used by this FreshKijiTableReader to store counters.
+   *
+   * @return the CounterManager used by this FreshKijiTableReader to store counters.
+   */
+  CounterManager getCounterManager();
 }

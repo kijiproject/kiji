@@ -24,6 +24,7 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 
+import org.apache.hadoop.mapreduce.Counters;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,6 +43,7 @@ import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
 import org.kiji.scoring.impl.TestInternalFreshKijiTableReader;
+import org.kiji.scoring.impl.TestInternalFreshKijiTableReader.TestCountersScoreFunction.SFPhases;
 
 public class TestScoreFunctionJobBuilder extends KijiClientTest {
 
@@ -112,5 +114,36 @@ public class TestScoreFunctionJobBuilder extends KijiClientTest {
       assertEquals(String.format("Output table must be the same as the input"
           + "table. Got input: %s output: %s", inURI, outURI), jce.getMessage());
     }
+  }
+
+  @Test
+  public void testCounters() throws IOException, InterruptedException, ClassNotFoundException {
+    final EntityId fooId = mTable.getEntityId("foo");
+    final EntityId barId = mTable.getEntityId("bar");
+    final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
+
+    final KijiMapReduceJob sfJob = ScoreFunctionJobBuilder.create()
+        .withConf(getConf())
+        .withInputTable(mTable.getURI())
+        .withAttachedColumn(KijiColumnName.create("family:qual0"))
+        .withScoreFunctionClass(TestInternalFreshKijiTableReader.TestCountersScoreFunction.class)
+        .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(mTable.getURI()))
+        .build();
+
+    assertTrue(sfJob.run());
+
+    assertEquals("new-val",
+        mReader.get(fooId, request).getMostRecentValue("family", "qual0").toString());
+    assertEquals("new-val",
+        mReader.get(barId, request).getMostRecentValue("family", "qual0").toString());
+
+    final Counters counters = sfJob.getHadoopJob().getCounters();
+    // getDataRequest is called client side before the job starts, so it shouldn't be counted.
+    assertEquals(0, counters.findCounter(SFPhases.GET_DATA_REQUEST).getValue());
+    // setup and cleanup should be called once each.
+    assertEquals(1, counters.findCounter(SFPhases.SETUP).getValue());
+    assertEquals(1, counters.findCounter(SFPhases.CLEANUP).getValue());
+    // score should be called once per row.
+    assertEquals(2, counters.findCounter(SFPhases.SCORE).getValue());
   }
 }
