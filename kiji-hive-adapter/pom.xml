@@ -37,7 +37,7 @@
 
   <properties>
     <hive.version>0.10.0-cdh4.3.0</hive.version>
-    <kiji-schema.version>1.5.0</kiji-schema.version>
+    <kiji-schema.version>1.6.0-SNAPSHOT</kiji-schema.version>
     <fake-hbase.version>0.2.0-SNAPSHOT</fake-hbase.version>
   </properties>
 
