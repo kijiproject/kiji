@@ -34,6 +34,7 @@ import org.kiji.scoring.params.ValueParser;
  * For example: "key1=value1|key2=value2|key3=value3".
  * If a key is associated with multiple values, the last one is used.
  */
+@SuppressWarnings("rawtypes")
 public class StringMapParser implements ValueParser<Map> {
 
   public static final String PAIR_SEPARATOR = "\\|";

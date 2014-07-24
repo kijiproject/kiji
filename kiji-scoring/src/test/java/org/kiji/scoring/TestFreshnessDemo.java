@@ -70,7 +70,7 @@ public class TestFreshnessDemo extends KijiClientTest {
     // Create a ShelfLife freshness policy with a 1 day shelf life duration.
     final KijiFreshnessPolicy policy = new ShelfLife(86400000);
 
-    final KijiColumnName column = new KijiColumnName("info", "visits");
+    final KijiColumnName column = KijiColumnName.create("info", "visits");
 
     KijiTable table = null;
     KijiFreshnessManager manager = null;

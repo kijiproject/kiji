@@ -32,6 +32,7 @@ import org.kiji.scoring.params.ValueParser;
  * ignored.
  * For example: "value1|value2|value2".
  */
+@SuppressWarnings("rawtypes")
 public class StringSetParser implements ValueParser<Set> {
 
   public static final String SEPARATOR = "\\|";

@@ -268,7 +268,7 @@ public final class KijiFreshnessManager implements Closeable {
   private static KijiColumnName fromMetaTableKey(
       final String metaTableKey
   ) {
-    return new KijiColumnName(metaTableKey.substring(METATABLE_KEY_PREFIX.length()));
+    return KijiColumnName.create(metaTableKey.substring(METATABLE_KEY_PREFIX.length()));
   }
 
   /**
@@ -476,7 +476,7 @@ public final class KijiFreshnessManager implements Closeable {
 
     final Set<String> keySet = mKiji.getMetaTable().keySet(tableName);
     if (columnName.isFullyQualified()) {
-      final KijiColumnName family = new KijiColumnName(columnName.getFamily(), null);
+      final KijiColumnName family = KijiColumnName.create(columnName.getFamily(), null);
       if (keySet.contains(toMetaTableKey(columnName))) {
         failures.put(ValidationFailure.FRESHENER_ALREADY_ATTACHED, new IllegalArgumentException(
             String.format("A Freshener is already attached to column: %s", columnName)));

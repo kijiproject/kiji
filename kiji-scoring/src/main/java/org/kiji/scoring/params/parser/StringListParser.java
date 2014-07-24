@@ -30,6 +30,7 @@ import org.kiji.scoring.params.ValueParser;
  * Parser for a list of strings, separated by "|".
  * For example: "value1|value2|value3".
  */
+@SuppressWarnings("rawtypes")
 public class StringListParser implements ValueParser<List> {
 
   public static final String SEPARATOR = "\\|";

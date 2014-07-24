@@ -80,10 +80,10 @@ public class TestInternalFreshKijiTableReader {
   private static final Logger LOG = LoggerFactory.getLogger(TestInternalFreshKijiTableReader.class);
 
   private static final String TABLE_NAME = "row_data_test_table";
-  private static final KijiColumnName FAMILY_QUAL0 = new KijiColumnName("family", "qual0");
-  private static final KijiColumnName FAMILY_QUAL1 = new KijiColumnName("family", "qual1");
-  private static final KijiColumnName FAMILY_QUAL2 = new KijiColumnName("family", "qual2");
-  private static final KijiColumnName MAP_QUALIFIER = new KijiColumnName("map", "qualifier");
+  private static final KijiColumnName FAMILY_QUAL0 = KijiColumnName.create("family", "qual0");
+  private static final KijiColumnName FAMILY_QUAL1 = KijiColumnName.create("family", "qual1");
+  private static final KijiColumnName FAMILY_QUAL2 = KijiColumnName.create("family", "qual2");
+  private static final KijiColumnName MAP_QUALIFIER = KijiColumnName.create("map", "qualifier");
   private static final KijiDataRequest FAMILY_QUAL0_R = KijiDataRequest.create("family", "qual0");
   private static final KijiDataRequest FAMILY_QUAL1_R = KijiDataRequest.create("family", "qual1");
   private static final KijiDataRequest FAMILY_QUAL2_R = KijiDataRequest.create("family", "qual2");
@@ -94,9 +94,9 @@ public class TestInternalFreshKijiTableReader {
       Collections.emptyMap();
   private static final AlwaysFreshen ALWAYS = new AlwaysFreshen();
   private static final NeverFreshen NEVER = new NeverFreshen();
-  private static final ScoreFunction TEST_SCORE_FN = new TestScoreFunction();
-  private static final ScoreFunction TEST_SCORE_FN2 = new TestScoreFunctionTwo();
-  private static final ScoreFunction TEST_TIMEOUT_SCORE_FN = new TestTimeoutScoreFunction();
+  private static final ScoreFunction<String> TEST_SCORE_FN = new TestScoreFunction();
+  private static final ScoreFunction<String> TEST_SCORE_FN2 = new TestScoreFunctionTwo();
+  private static final ScoreFunction<String> TEST_TIMEOUT_SCORE_FN = new TestTimeoutScoreFunction();
 
   public static final class TestTimestampScoreFunction extends ScoreFunction<String> {
     public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {
@@ -1121,7 +1121,7 @@ public class TestInternalFreshKijiTableReader {
     final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .withTimeout(500)
-        .withColumnsToFreshen(Lists.newArrayList(new KijiColumnName("family")))
+        .withColumnsToFreshen(Lists.newArrayList(KijiColumnName.create("family")))
         .build();
 
     try {
@@ -1479,7 +1479,7 @@ public class TestInternalFreshKijiTableReader {
     final EntityId eid = mTable.getEntityId("foo");
     final KijiDataRequest simpleRequest = KijiDataRequest.create("family", "qual0");
     final KijiDataRequest overrideRequest = KijiDataRequest.builder().addColumns(
-        ColumnsDef.create().add(new KijiColumnName("family", "qual0"), ColumnReaderSpec.bytes())
+        ColumnsDef.create().add(KijiColumnName.create("family", "qual0"), ColumnReaderSpec.bytes())
     ).build();
     final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
     try {

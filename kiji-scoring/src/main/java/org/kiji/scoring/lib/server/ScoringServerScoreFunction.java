@@ -240,7 +240,8 @@ public final class ScoringServerScoreFunction extends ScoreFunction<Object> {
 
     try {
       final ScoringServerResponse response = GSON.fromJson(scoreJSON, ScoringServerResponse.class);
-      final KijiColumnName responseColumn = new KijiColumnName(response.family, response.qualifier);
+      final KijiColumnName responseColumn =
+          KijiColumnName.create(response.family, response.qualifier);
       if (context.getAttachedColumn().equals(responseColumn)) {
         return TimestampedValue.create(response.timestamp,
             FromJson.fromJsonString(response.value, new Schema.Parser().parse(response.schema)));

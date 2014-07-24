@@ -90,7 +90,7 @@ public final class ScoreFunctionMapper extends KijiTableMapper<HFileKeyValue, Nu
       throw new IOException("ScoreFunction class could not be found in configuration.");
     }
     mScoreFunction = ReflectionUtils.newInstance(scoreFunctionClass, conf);
-    mAttachedColumn = new KijiColumnName(
+    mAttachedColumn = KijiColumnName.create(
         conf.get(ScoreFunctionJobBuilder.SCORE_FUNCTION_ATTACHED_COLUMN_CONF_KEY));
     mParameters = GSON.fromJson(
         conf.get(ScoreFunctionJobBuilder.SCORE_FUNCTION_PARAMETERS_CONF_KEY),

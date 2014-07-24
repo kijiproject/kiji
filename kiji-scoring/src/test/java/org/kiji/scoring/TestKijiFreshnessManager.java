@@ -57,7 +57,7 @@ public class TestKijiFreshnessManager {
   private Kiji mKiji;
   private KijiFreshnessManager mFreshManager;
 
-  private static final class TestScoreFunction extends ScoreFunction {
+  private static final class TestScoreFunction extends ScoreFunction<String> {
     public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {
       return KijiDataRequest.create("info", "name");
     }
@@ -98,10 +98,10 @@ public class TestKijiFreshnessManager {
   }
 
   private static final ShelfLife POLICY = new ShelfLife(100);
-  private static final ScoreFunction SCORE_FUNCTION = new TestScoreFunction();
-  private static final KijiColumnName INFO_NAME = new KijiColumnName("info", "name");
-  private static final KijiColumnName INFO_EMAIL = new KijiColumnName("info", "email");
-  private static final KijiColumnName INFO_INVALID = new KijiColumnName("info", "invalid");
+  private static final ScoreFunction<String> SCORE_FUNCTION = new TestScoreFunction();
+  private static final KijiColumnName INFO_NAME = KijiColumnName.create("info", "name");
+  private static final KijiColumnName INFO_EMAIL = KijiColumnName.create("info", "email");
+  private static final KijiColumnName INFO_INVALID = KijiColumnName.create("info", "invalid");
   private static final Map<String, String> EMPTY_PARAMS = Collections.emptyMap();
   private static final Map<String, ParameterDescription> EMPTY_DESCRIPTIONS = Collections
       .emptyMap();
@@ -183,7 +183,7 @@ public class TestKijiFreshnessManager {
     }
 
     try {
-      mFreshManager.registerFreshener("user", new KijiColumnName("info"), POLICY, SCORE_FUNCTION,
+      mFreshManager.registerFreshener("user", KijiColumnName.create("info"), POLICY, SCORE_FUNCTION,
           EMPTY_PARAMS, EMPTY_DESCRIPTIONS, false, false);
       fail("registerFreshener should have thrown FreshenerValidationException because the column "
           + "is not fully qualified.");

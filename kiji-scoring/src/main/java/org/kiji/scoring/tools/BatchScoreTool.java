@@ -104,7 +104,7 @@ public final class BatchScoreTool extends KijiJobTool<ScoreFunctionJobBuilder> {
             (Class<? extends ScoreFunction<?>>) Class.forName(mScoreFunctionClassFlag))
         .withOutput(mOutput)
         .withNumThreadsPerMapper(mNumThreadsPerMapper)
-        .withAttachedColumn(new KijiColumnName(mAttachedColumnFlag));
+        .withAttachedColumn(KijiColumnName.create(mAttachedColumnFlag));
     if (null != mParametersFlag) {
       builder.withParameters(GSON.fromJson(mParametersFlag, Map.class));
     }

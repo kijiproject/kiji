@@ -63,7 +63,7 @@ public class TestKVStores extends KijiClientTest {
    * A producer which registers an unconfigured key value store, to be replaced with a key value
    * store from the freshness policy.
    */
-  private static final class UnconfiguredScoreFunction extends ScoreFunction {
+  private static final class UnconfiguredScoreFunction extends ScoreFunction<String> {
     @Override
     public KijiDataRequest getDataRequest(FreshenerContext context) {
       return KijiDataRequest.builder().build();
@@ -191,7 +191,7 @@ public class TestKVStores extends KijiClientTest {
     }
   }
 
-  private static final class SimpleKVScoreFunction extends ScoreFunction {
+  private static final class SimpleKVScoreFunction extends ScoreFunction<String> {
 
     private static final String PARAMETER_KEY =
         "org.kiji.scoring.TestKVStores$SimpleKVScoreFunction.input_path";
@@ -265,7 +265,7 @@ public class TestKVStores extends KijiClientTest {
     try {
       manager.registerFreshener(
           "user",
-          new KijiColumnName("info", "name"),
+          KijiColumnName.create("info", "name"),
           AlwaysFreshen.class.getName(),
           SimpleKVScoreFunction.class.getName(),
           params,
@@ -306,7 +306,7 @@ public class TestKVStores extends KijiClientTest {
     try {
       manager.registerFreshener(
           "user",
-          new KijiColumnName("info", "name"),
+          KijiColumnName.create("info", "name"),
           policy,
           new UnconfiguredScoreFunction(),
           Collections.<String, String>emptyMap(),
@@ -345,7 +345,7 @@ public class TestKVStores extends KijiClientTest {
     try {
       manager.registerFreshener(
           "user",
-          new KijiColumnName("info", "name"),
+          KijiColumnName.create("info", "name"),
           policy,
           new UnconfiguredScoreFunction(),
           Collections.<String, String>emptyMap(),

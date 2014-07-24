@@ -52,8 +52,8 @@ public class ParamSpec {
   /**
    * Map from class type to a name suitable for display.
    */
-  private static final Map<Class, String> CLASS_TO_NAME_MAP =
-      ImmutableMap.<Class, String>builder()
+  private static final Map<Class<?>, String> CLASS_TO_NAME_MAP =
+      ImmutableMap.<Class<?>, String>builder()
       .put(String.class, "String")
       .put(Short.class, "Short")
       .put(List.class, "List<String>")
@@ -239,6 +239,7 @@ public class ParamSpec {
   static {
     final Map<Class<?>, ValueParser<?>> parserMap = Maps.newHashMap();
     final Map<Class<?>, ValueParser<?>> baseParserMap = Maps.newHashMap();
+    @SuppressWarnings("rawtypes")
     final Lookup<ValueParser> lookup = Lookups.get(ValueParser.class);
     buildParserMap(lookup, parserMap, baseParserMap);
     PARSERS = ImmutableMap.copyOf(parserMap);
@@ -253,6 +254,7 @@ public class ParamSpec {
    * @param baseParserMap Map of parsers for subclass types to fill in.
    * @throws RuntimeException if there are conflicts on the value types to register parsers for.
    */
+  @SuppressWarnings("rawtypes")
   public static void buildParserMap(
       Iterable<ValueParser> parsers,
       Map<Class<?>, ValueParser<?>> parserMap,

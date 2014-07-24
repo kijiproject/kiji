@@ -161,7 +161,7 @@ public final class ScoreFunctionProducer extends KijiProducer {
         getConf().get(SCORE_FUNCTION_PRODUCER_CONF_KEY), ScoreFunctionConf.class);
     mScoreFunction = scoreFunctionForName(mScoreFunctionConf.scoreFunctionClass);
     mInternalFreshenerContextDelegate = InternalFreshenerContext.create(
-        new KijiColumnName(mScoreFunctionConf.attachedColumn), mScoreFunctionConf.parameters);
+        KijiColumnName.create(mScoreFunctionConf.attachedColumn), mScoreFunctionConf.parameters);
   }
 
   /** {@inheritDoc} */

@@ -57,7 +57,7 @@ import org.kiji.scoring.lib.ShelfLife;
 public class TestFreshTool extends KijiClientTest {
   private static final Logger LOG = LoggerFactory.getLogger(TestFreshTool.class);
 
-  private static final class TestScoreFunction extends ScoreFunction {
+  private static final class TestScoreFunction extends ScoreFunction<Object> {
     public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {
       return null;
     }
@@ -103,8 +103,8 @@ public class TestFreshTool extends KijiClientTest {
 
   //------------------------------------------------------------------------------------------------
 
-  private static final KijiColumnName INFO_NAME = new KijiColumnName("info", "name");
-  private static final KijiColumnName INFO_VISITS = new KijiColumnName("info", "visits");
+  private static final KijiColumnName INFO_NAME = KijiColumnName.create("info", "name");
+  private static final KijiColumnName INFO_VISITS = KijiColumnName.create("info", "visits");
   private static final String SHELF_LIFE_STRING = "org.kiji.scoring.lib.ShelfLife";
   private static final String SCORE_FN_STRING =
       "org.kiji.scoring.tools.TestFreshTool$TestScoreFunction";
@@ -120,7 +120,7 @@ public class TestFreshTool extends KijiClientTest {
       String.format("{\"%s\":\"10\"}", ShelfLife.SHELF_LIFE_KEY);
   private static final String EMPTY_PARAMS_STRING = "{}";
   private static final KijiFreshnessPolicy NEVER = new NeverFreshen();
-  private static final ScoreFunction SCORE_FN = new TestScoreFunction();
+  private static final ScoreFunction<Object> SCORE_FN = new TestScoreFunction();
 
   private KijiURI getUserURI() throws IOException {
     return KijiURI.newBuilder(getKiji().getURI()).withTableName("user").build();

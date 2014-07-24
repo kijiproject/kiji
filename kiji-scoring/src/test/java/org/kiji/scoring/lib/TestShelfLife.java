@@ -100,7 +100,7 @@ public class TestShelfLife {
     final Map<String, String> parameters = Maps.newHashMap();
     parameters.put(ShelfLife.SHELF_LIFE_KEY, String.valueOf(Long.MAX_VALUE));
     final FreshenerContext contextMax = InternalFreshenerContext.create(
-        new KijiColumnName("info", "name"),
+        KijiColumnName.create("info", "name"),
         parameters);
     final ShelfLife policy = new ShelfLife();
     policy.setup(contextMax);
@@ -109,7 +109,7 @@ public class TestShelfLife {
 
     parameters.put(ShelfLife.SHELF_LIFE_KEY, String.valueOf(Long.MIN_VALUE));
     final FreshenerContext contextMin = InternalFreshenerContext.create(
-        new KijiColumnName("info", "name"),
+        KijiColumnName.create("info", "name"),
         parameters);
 
     policy.setup(contextMin);

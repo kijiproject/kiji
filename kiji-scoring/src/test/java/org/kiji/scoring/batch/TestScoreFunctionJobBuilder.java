@@ -81,7 +81,7 @@ public class TestScoreFunctionJobBuilder extends KijiClientTest {
     final KijiMapReduceJob sfJob = ScoreFunctionJobBuilder.create()
         .withConf(getConf())
         .withInputTable(mTable.getURI())
-        .withAttachedColumn(new KijiColumnName("family:qual0"))
+        .withAttachedColumn(KijiColumnName.create("family:qual0"))
         .withScoreFunctionClass(TestInternalFreshKijiTableReader.TestScoreFunction.class)
         .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
@@ -103,7 +103,7 @@ public class TestScoreFunctionJobBuilder extends KijiClientTest {
       final KijiMapReduceJob sfJob = ScoreFunctionJobBuilder.create()
           .withConf(getConf())
           .withInputTable(inURI)
-          .withAttachedColumn(new KijiColumnName("family:qual0"))
+          .withAttachedColumn(KijiColumnName.create("family:qual0"))
           .withScoreFunctionClass(TestInternalFreshKijiTableReader.TestScoreFunction.class)
           .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(outURI))
           .build();

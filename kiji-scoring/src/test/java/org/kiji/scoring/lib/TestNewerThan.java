@@ -101,7 +101,7 @@ public final class TestNewerThan extends KijiClientTest {
     final Map<String, String> parameters = Maps.newHashMap();
     parameters.put(NewerThan.NEWER_THAN_KEY, String.valueOf(1));
     final FreshenerContext context1 = InternalFreshenerContext.create(
-        new KijiColumnName("info", "name"),
+        KijiColumnName.create("info", "name"),
         parameters);
     final NewerThan policy = new NewerThan();
     policy.setup(context1);
@@ -110,7 +110,7 @@ public final class TestNewerThan extends KijiClientTest {
 
     parameters.put(NewerThan.NEWER_THAN_KEY, String.valueOf(10));
     final FreshenerContext context10 = InternalFreshenerContext.create(
-        new KijiColumnName("info", "name"),
+        KijiColumnName.create("info", "name"),
         parameters);
 
     policy.setup(context10);

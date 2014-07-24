@@ -133,7 +133,7 @@ public class TestMapFamilyFreshening extends KijiClientTest {
     try {
       manager.registerFreshener(
           TABLE_NAME,
-          new KijiColumnName(MAP),
+          KijiColumnName.create(MAP),
           policy,
           new TestMapFamilyScoreFunction(),
           EMPTY_PARAMS,
@@ -142,7 +142,7 @@ public class TestMapFamilyFreshening extends KijiClientTest {
           false);
       manager.registerFreshener(
           TABLE_NAME,
-          new KijiColumnName(INFO, NAME),
+          KijiColumnName.create(INFO, NAME),
           policy,
           new TestNameScoreFunction(),
           EMPTY_PARAMS,

@@ -399,7 +399,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
             collectedRecords.put(column, record);
           } else {
             // check the family.
-            final KijiColumnName family = new KijiColumnName(column.getFamily(), null);
+            final KijiColumnName family = KijiColumnName.create(column.getFamily(), null);
             final KijiFreshenerRecord familyRecord = allRecords.get(family);
             if (null != familyRecord) {
               collectedRecords.put(family, familyRecord);
@@ -524,7 +524,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         if (null != freshener) {
           collectedFresheners.put(column, freshener);
         } else {
-          final KijiColumnName family = new KijiColumnName(column.getFamily(), null);
+          final KijiColumnName family = KijiColumnName.create(column.getFamily(), null);
           final Freshener familyFreshener = fresheners.get(family);
           if (null != familyFreshener) {
             collectedFresheners.put(family, familyFreshener);
@@ -553,7 +553,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   ) {
     final List<KijiColumnName> collectedColumns = Lists.newArrayList();
     for (Column column : request.getColumns()) {
-      collectedColumns.add(new KijiColumnName(column.getName()));
+      collectedColumns.add(KijiColumnName.create(column.getName()));
     }
     return ImmutableList.copyOf(collectedColumns);
   }
@@ -1031,7 +1031,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   ) throws IOException {
     requireState(LifecycleState.OPEN);
 
-    final KijiColumnName columnName = new KijiColumnName(family, qualifier);
+    final KijiColumnName columnName = KijiColumnName.create(family, qualifier);
     final KijiDataRequest dataRequest = KijiDataRequest.create(family, qualifier);
 
     final String id = String.format("%s#%s", mReaderUID, mUniqueIdGenerator.getNextUniqueId());

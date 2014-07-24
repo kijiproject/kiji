@@ -32,6 +32,7 @@ import org.kiji.scoring.params.ParamSpec;
 /**
  * Parser for enum values from context params.
  */
+@SuppressWarnings("rawtypes")
 public final class EnumParser extends SimpleValueParser<Enum> {
   /** {@inheritDoc} */
   @Override
@@ -47,6 +48,7 @@ public final class EnumParser extends SimpleValueParser<Enum> {
 
   /** {@inheritDoc} */
   @Override
+  @SuppressWarnings("unchecked")
   public Enum parse(ParamSpec param, String value) {
     final Class<? extends Enum> enumClass = param.getType().asSubclass(Enum.class);
     try {

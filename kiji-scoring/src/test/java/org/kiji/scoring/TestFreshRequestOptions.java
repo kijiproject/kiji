@@ -34,7 +34,7 @@ public class TestFreshRequestOptions {
 
   @Test
   public void testBuilder() {
-    final KijiColumnName infoName = new KijiColumnName("info", "name");
+    final KijiColumnName infoName = KijiColumnName.create("info", "name");
     final FreshRequestOptions.Builder builder = newBuilder()
         .withParameters(ImmutableMap.of("a", "b"))
         .withTimeout(10)
