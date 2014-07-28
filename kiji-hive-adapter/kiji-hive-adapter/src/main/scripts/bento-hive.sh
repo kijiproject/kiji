@@ -125,7 +125,7 @@ if [ -z "${HBASE_HOME}" -o ! -d "${HBASE_HOME}" ]; then
 fi
 
 # Ensure that we have the HBase security jar to add to the environment
-HBASE_LIB=$(find ${HBASE_HOME} -name "hbase-*-security.jar")
+HBASE_LIB=$(find -L ${HBASE_HOME} -name "hbase-*-security.jar")
 if [ ! -e "${HBASE_LIB}" ]; then
     echo "Could not detect HBase security jar: ${HBASE_LIB}"
     exit 1
