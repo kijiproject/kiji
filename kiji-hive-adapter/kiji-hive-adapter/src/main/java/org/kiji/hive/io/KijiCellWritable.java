@@ -33,7 +33,6 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
-import org.apache.avro.util.Utf8;
 import org.apache.hadoop.hive.serde2.io.DoubleWritable;
 import org.apache.hadoop.hive.serde2.objectinspector.StructField;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
@@ -166,16 +165,7 @@ public class KijiCellWritable implements Writable {
         break;
       case ENUM:
       case STRING:
-        String stringData;
-        if (data instanceof Utf8) {
-          stringData = ((Utf8) data).toString();
-        } else if (data instanceof Enum) {
-          // Enumerations are converted into Strings for Hive since it doesn't have the notion
-          // of enumerations.
-          stringData = data.toString();
-        } else {
-          stringData = (String) data;
-        }
+        String stringData = data.toString();
         WritableUtils.writeString(out, stringData);
         break;
       case FLOAT:

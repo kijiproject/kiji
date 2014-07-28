@@ -31,12 +31,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericEnumSymbol;
 import org.apache.avro.generic.GenericRecord;
 import org.junit.Test;
 
 import org.kiji.hive.io.KijiCellWritable;
 import org.kiji.schema.DecodedCell;
 import org.kiji.schema.KijiCell;
+import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.avro.TestRecord;
 
 public class TestKijiCellWritable {
@@ -332,5 +334,26 @@ public class TestKijiCellWritable {
     assertEquals(TIMESTAMP_VALUE, (Long) cell1Decoded.getTimestamp());
     assertEquals(enumSchema, cell1Decoded.getSchema());
     assertEquals("VAL2", cell1Decoded.getData());
+  }
+
+  @Test
+  public void testGenericEnumCell() throws IOException {
+    final Schema.Parser parser = new Schema.Parser();
+    final Schema enumSchema = parser.parse("{ \"type\": \"enum\", \"name\": \"Suit\", \"symbols\" :"
+        + "[\"SPADES\", \"HEARTS\", \"DIAMONDS\", \"CLUBS\"] }");
+
+    GenericData data = GenericData.get();
+    GenericEnumSymbol symbol = (GenericEnumSymbol)data.createEnum("DIAMONDS", enumSchema);
+    final KijiCell<GenericEnumSymbol> cell1 =
+        KijiCell.create(KijiColumnName.create("family:qualifier"), TIMESTAMP_VALUE,
+            new DecodedCell<GenericEnumSymbol>(enumSchema, symbol));
+
+    KijiCellWritable cell1Writable = new KijiCellWritable(cell1);
+    byte[] cell1Bytes = ByteWritable.serialize(cell1Writable);
+    KijiCellWritable cell1Decoded = ByteWritable.asWritable(cell1Bytes, KijiCellWritable.class);
+
+    assertEquals(TIMESTAMP_VALUE, (Long) cell1Decoded.getTimestamp());
+    assertEquals(enumSchema, cell1Decoded.getSchema());
+    assertEquals("DIAMONDS", cell1Decoded.getData());
   }
 }
