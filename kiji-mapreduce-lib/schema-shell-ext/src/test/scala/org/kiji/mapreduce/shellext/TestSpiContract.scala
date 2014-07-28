@@ -25,10 +25,8 @@ import org.kiji.schema.shell.spi.ParserPluginTestKit
 
 /** Tests that parser plugins adhere to the SPI contract. */
 class TestSpiContract extends SpecificationWithJUnit {
-  "Parser plugin modules" should {
-    "Bulk importer parser plugin should past the PPTK" in {
-      // Test that we implement the contract specified by ParserPluginTestKit.
-      new ParserPluginTestKit(classOf[BulkImportParserPluginFactory]).testAll
-    }
-  }
+
+  // Test that we implement the contract specified by ParserPluginTestKit:
+  // Bulk importer parser plugin should past the PPTK
+  new ParserPluginTestKit(classOf[BulkImportParserPluginFactory]).testAll
 }
