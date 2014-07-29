@@ -27,6 +27,6 @@
   </property>
   <property>
     <name>hbase.rootdir</name>
-    <value>hdfs://$BENTO_ADDRESS:8020/hbase</value>
+    <value>hdfs://$BENTO_HOST:8020/hbase</value>
   </property>
 </configuration>

@@ -21,7 +21,7 @@
 
   <property>
     <name>fs.defaultFS</name>
-    <value>hdfs://$BENTO_ADDRESS:8020</value>
+    <value>hdfs://$BENTO_HOST:8020</value>
   </property>
 
   <!-- OOZIE proxy user setting -->
