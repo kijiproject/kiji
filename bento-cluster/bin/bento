@@ -192,7 +192,7 @@ case ${command} in
     ;;
 
   create)
-    docker run ${daemon} ${remove} --name ${container_name} kijiproject/bento $@
+    docker run ${daemon} ${remove} --hostname ${container_name} --name ${container_name} kijiproject/bento $@
     printf "Bento container '" 1>&2
     printf ${container_name}
     printf "' created and started." 1>&2
