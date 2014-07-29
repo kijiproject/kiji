@@ -108,6 +108,70 @@
         <artifactId>maven-assembly-plugin</artifactId>
       </plugin>
 
+      <!--Needed for Hadoop / MapReduce-->
+      <plugin>
+        <groupId>org.kiji.maven.plugins</groupId>
+        <artifactId>hbase-maven-plugin</artifactId>
+      </plugin>
+
+      <!--Reserve ports for Cassandra integration tests.-->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>1.9</version>
+        <executions>
+          <execution>
+            <id>reserve-network-port</id>
+            <goals>
+              <goal>reserve-network-port</goal>
+            </goals>
+            <!--Note that this has to happen during the process-resources phase, not
+            process-test-resources, because we have to do this before filtering the test
+            resources.-->
+            <phase>process-resources</phase>
+            <configuration>
+              <portNames>
+                <portName>cassandra.nativePort</portName>
+                <portName>cassandra.rpcPort</portName>
+                <portName>cassandra.storagePort</portName>
+                <portName>cassandra.sslStoragePort</portName>
+              </portNames>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.kiji.maven.plugins</groupId>
+        <artifactId>cassandra-maven-plugin</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>start</goal>
+              <goal>stop</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <numnodes>2</numnodes>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <additionalClasspathElements>
+            <additionalClasspathElement>
+              ${project.build.directory}/${project.artifactId}-${project.version}.jar
+            </additionalClasspathElement>
+            <additionalClasspathElement>
+              ${project.build.directory}/${project.artifactId}-${project.version}-tests.jar
+            </additionalClasspathElement>
+          </additionalClasspathElements>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
@@ -210,129 +274,38 @@
       <scope>runtime</scope>
     </dependency>
 
+    <!-- Default Hadoop/HBase versions in kiji-root-pom provide these dependencies. -->
+    <!-- Marked as 'optional' to prevent propagation to transitive projects. -->
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-core</artifactId>
+      <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-client</artifactId>
+      <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-minicluster</artifactId>
+      <scope>test</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase</artifactId>
+      <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
   </dependencies>
-
-  <profiles>
-    <profile>
-      <!--
-         Active by default: cdh4 build. Override with -Dplatform=hadoop1 to use
-         an Apache Hadoop 1.x-based platform.
-      -->
-
-      <id>cdh4</id>
-      <activation>
-        <property>
-          <name>!platform</name>
-        </property>
-      </activation>
-
-      <build>
-        <plugins>
-          <!-- Activate integration tests for Hadoop 2 / CDH 4 -->
-
-          <plugin>
-            <groupId>org.kiji.maven.plugins</groupId>
-            <artifactId>hbase-maven-plugin</artifactId>
-          </plugin>
-
-          <!--Reserve ports for Cassandra integration tests.-->
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>build-helper-maven-plugin</artifactId>
-            <version>1.9</version>
-            <executions>
-              <execution>
-                <id>reserve-network-port</id>
-                <goals>
-                  <goal>reserve-network-port</goal>
-                </goals>
-                <!--Note that this has to happen during the process-resources phase, not
-                process-test-resources, because we have to do this before filtering the test
-                resources.-->
-                <phase>process-resources</phase>
-                <configuration>
-                  <portNames>
-                    <portName>cassandra.nativePort</portName>
-                    <portName>cassandra.rpcPort</portName>
-                    <portName>cassandra.storagePort</portName>
-                    <portName>cassandra.sslStoragePort</portName>
-                  </portNames>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-
-          <plugin>
-            <groupId>org.kiji.maven.plugins</groupId>
-            <artifactId>cassandra-maven-plugin</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>start</goal>
-                  <goal>stop</goal>
-                </goals>
-              </execution>
-            </executions>
-            <configuration>
-              <numnodes>2</numnodes>
-            </configuration>
-          </plugin>
-
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-failsafe-plugin</artifactId>
-            <configuration>
-              <additionalClasspathElements>
-                <additionalClasspathElement>
-                  ${project.build.directory}/${project.artifactId}-${project.version}.jar
-                </additionalClasspathElement>
-                <additionalClasspathElement>
-                  ${project.build.directory}/${project.artifactId}-${project.version}-tests.jar
-                </additionalClasspathElement>
-              </additionalClasspathElements>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-
-      <dependencies>
-        <!-- Default Hadoop/HBase versions in kiji-root-pom provide these dependencies. -->
-        <!-- Marked as 'optional' to prevent propagation to transitive projects. -->
-        <dependency>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-core</artifactId>
-          <scope>compile</scope>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-client</artifactId>
-          <scope>compile</scope>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-minicluster</artifactId>
-          <scope>test</scope>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.hbase</groupId>
-          <artifactId>hbase</artifactId>
-          <type>test-jar</type>
-          <scope>test</scope>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.hbase</groupId>
-          <artifactId>hbase</artifactId>
-          <scope>compile</scope>
-          <optional>true</optional>
-        </dependency>
-      </dependencies>
-    </profile>
-
-  </profiles>
-
 </project>
