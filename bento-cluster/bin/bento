@@ -179,6 +179,8 @@ function set_client_conf() {
       $BENTO_CLUSTER_HOME/client-conf/hadoop/core-site.xml
     sed "s/\$BENTO_HOST/$HOST/" $BENTO_CLUSTER_HOME/client-conf-template/mapred-site.xml > \
       $BENTO_CLUSTER_HOME/client-conf/hadoop/mapred-site.xml
+    sed "s/\$BENTO_HOST/$HOST/" $BENTO_CLUSTER_HOME/client-conf-template/yarn-site.xml > \
+      $BENTO_CLUSTER_HOME/client-conf/hadoop/yarn-site.xml
     sed "s/\$BENTO_HOST/$HOST/" $BENTO_CLUSTER_HOME/client-conf-template/hbase-site.xml > \
       $BENTO_CLUSTER_HOME/client-conf/hbase/hbase-site.xml
   else
@@ -203,7 +205,7 @@ case ${command} in
     HOST=$(docker inspect --format="{{.Config.Hostname}}" ${container_name})
     if [[ "$edit_hosts" == true ]]; then
       printf "Adding container address and host to /etc/hosts:\n" 1>&2
-      $BENTO_CLUSTER_HOME/bin/prepend-hosts $ADDRESS $HOST
+      $BENTO_CLUSTER_HOME/bin/update-hosts $ADDRESS $HOST
     else
       printf "Not adding container address and host to /etc/hosts:\n" 1>&2
       echo "${ADDRESS} ${HOST}"
@@ -226,7 +228,7 @@ case ${command} in
         HOST=$(docker inspect --format="{{.Config.Hostname}}" ${container_name})
         if [[ "$edit_hosts" == true ]]; then
           printf "Adding container address and host to /etc/hosts:\n" 1>&2
-          $BENTO_CLUSTER_HOME/bin/prepend-hosts $ADDRESS $HOST
+          $BENTO_CLUSTER_HOME/bin/update-hosts $ADDRESS $HOST
         else
           printf "Not adding container address and host to /etc/hosts:\n" 1>&2
           echo "${ADDRESS} ${HOST}"

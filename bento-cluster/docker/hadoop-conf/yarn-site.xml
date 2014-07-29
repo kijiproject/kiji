@@ -18,6 +18,12 @@
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 
 <configuration>
+
+  <property>
+    <name>yarn.resourcemanager.hostname</name>
+    <value>$BENTO_HOST</value>
+  </property>
+
   <property>
     <name>yarn.nodemanager.aux-services</name>
     <value>mapreduce_shuffle</value>
