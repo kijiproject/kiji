@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# (c) Copyright 2012 WibiData, Inc.
+# (c) Copyright 2014 WibiData, Inc.
 #
 # See the NOTICE file distributed with this work for additional
 # information regarding copyright ownership.
@@ -201,7 +201,7 @@ case ${command} in
     HOST=$(docker inspect --format="{{.Config.Hostname}}" ${container_name})
     if [[ "$edit_hosts" == true ]]; then
       printf "Adding container address and host to /etc/hosts:\n" 1>&2
-      echo "${ADDRESS} ${HOST}" | sudo tee -a /etc/hosts
+      $BENTO_CLUSTER_HOME/bin/prepend-hosts $ADDRESS $HOST
     else
       printf "Not adding container address and host to /etc/hosts:\n" 1>&2
       echo "${ADDRESS} ${HOST}"
