@@ -56,8 +56,10 @@ FLAGS.AddString(
 
 FLAGS.AddString(
   'kiji_bento_version',
+  default=None,
   help=('Version of KijiBento to download and test against. '
-        + 'For example "1.0.0-rc4" or "1.0.0-rc5-SNAPSHOT".'),
+        'For example "1.0.0-rc4" or "1.0.0-rc5-SNAPSHOT". '
+        'If not specified, uses the most recent version in the nightly repo.'),
 )
 
 FLAGS.AddBoolean(
@@ -396,10 +398,6 @@ def Main(args):
 
   logging.info('Working directory: %r', work_dir)
 
-  if not FLAGS.kiji_bento_version:
-    print('Specify the version of KijiBento to test '
-          + 'with --kiji_bento_version=...')
-    return os.EX_USAGE
   logging.info('Testing tutorial of KijiBento %s', FLAGS.kiji_bento_version)
 
   # Runs the tutorial:

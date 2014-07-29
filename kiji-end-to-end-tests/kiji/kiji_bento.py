@@ -82,12 +82,13 @@ class KijiBento(object):
   Wraps a KijiBento installation.
   """
 
-  def __init__(self, path, version):
+  def __init__(self, path, version=None):
     """Initializes the KijiBento object.
 
     Args:
       path: Path of the KijiBento install directory.
       version: Bento version, eg. '1.0.1' or '1.0.2-SNAPSHOT'.
+               Latest version if not specified or None.
     """
     self._path = path
     self._version = version
@@ -121,6 +122,39 @@ class KijiBento(object):
     if not self.installed:
       self._Fetch(version=self.version)
 
+  def GetMostRecentVersion(self):
+    """Reports the most recent version of KijiBento from the SNAPSHOT repo."""
+    snapshot_repo = maven_repo.RemoteRepository(maven_repo.KIJI_SNAPSHOT_REPO)
+    bento_versions = list(snapshot_repo.ListVersions(group='org.kiji.kiji-bento',
+                                                     artifact='kiji-bento'))
+
+    def order_versions(version_string):
+      """Splits the version string into a tuple of numbers that can be compared with their
+      natural ordering to get ordering that matches version semantics.
+
+      rc versions, since we no longer use them, are replaced with 0."""
+      split_str = re.split("[.-]", version_string)
+      if (split_str[-1] == "SNAPSHOT"):
+        split_str[-1] = "1"
+        if (re.search("rc.*", split_str[-2])):
+          split_str[-2] = 0
+      else:
+        logging.error("Encountered unexpected non-snapshot version %s in repo %s.",
+                      version_string,
+                      snapshot_repo)
+        split_str.append("0")
+      return list(map(int, split_str))
+
+    latest_version = sorted(
+        bento_versions,
+        reverse=True,
+        key=order_versions
+    )[0]
+    logging.info("Using latest version %r from possible versions %r.",
+                 latest_version,
+                 bento_versions)
+    return latest_version
+
   def _Fetch(self, version):
     """Fetches and installs the specified version of BentoCluster."""
     assert not self.installed
@@ -130,6 +164,8 @@ class KijiBento(object):
             maven_repo.KIJI_SNAPSHOT_REPO,
         ],
     )
+    if version is None:
+        version = self.GetMostRecentVersion()
     local_path = repo.Get(
         group='org.kiji.kiji-bento',
         artifact='kiji-bento',
