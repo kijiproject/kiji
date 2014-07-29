@@ -90,18 +90,18 @@ function print_tool_usage() {
   echo
   echo "COMMANDS"
   echo
-  echo "  help    - Displays this help message. Use --verbose for more information."
-  echo "  create  - Create and start a new Bento container."
-  echo "  start   - Start a Bento container."
-  echo "  stop    - Stop a Bento container."
-  echo "  status  - Display the status of a Bento container."
-  echo "  list    - List all Bento containers."
-  echo "  rm      - Deletes a Bento container and all data."
-  echo "  ip      - Get the ip address of a Bento container."
-  echo "  address - Get the ip address of a Bento container."
-  echo "  host    - Get the host name of a Bento container."
-  echo "  build   - Build a new Bento image from the Dockerfile in ${BENTO_CLUSTER_HOME}/docker."
-  echo "  logs    - Tail the Bento process logs."
+  echo "  help     - Displays this help message. Use --verbose for more information."
+  echo "  create   - Create and start a new Bento container."
+  echo "  start    - Start a Bento container."
+  echo "  stop     - Stop a Bento container."
+  echo "  status   - Display the status of a Bento container."
+  echo "  list     - List all Bento containers."
+  echo "  rm       - Deletes a Bento container and all data."
+  echo "  ip       - Get the ip address of a Bento container."
+  echo "  address  - Get the ip address of a Bento container."
+  echo "  hostname - Get the host name of a Bento container."
+  echo "  build    - Build a new Bento image from the Dockerfile in ${BENTO_CLUSTER_HOME}/docker."
+  echo "  logs     - Tail the Bento process logs."
   echo
   echo "FLAGS (following the command)"
   echo "  all"
@@ -266,7 +266,7 @@ case ${command} in
     echo $(docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
     ;;
 
-  host)
+  hostname)
     echo $(docker inspect --format="{{.Config.Hostname}}" ${container_name})
     ;;
 
