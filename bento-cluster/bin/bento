@@ -86,29 +86,38 @@ function print_tool_usage() {
   echo
   echo "USAGE"
   echo
-  echo "  bento (start|stop|status)"
+  echo "  bento (create|start|stop|status|list|rm)"
   echo
   echo "COMMANDS"
   echo
-  echo "  help   - Displays this help message. Use --verbose for more information."
-  echo "  start  - Start a Bento container."
-  echo "  stop   - Stop a Bento container."
-  echo "  status - Display the status of a Bento container."
-  echo "  rm     - Deletes a Bento container and all data."
-  echo "  ip     - Get the ip address of a Bento container."
-  echo "  host   - Get the host name of a Bento container."
-  echo "  build  - Build a new Bento image from the Dockerfile in ${BENTO_CLUSTER_HOME}/docker."
-  echo "  logs   - Tail the Bento process (supervisord) logs."
+  echo "  help    - Displays this help message. Use --verbose for more information."
+  echo "  create  - Create and start a new Bento container."
+  echo "  start   - Start a Bento container."
+  echo "  stop    - Stop a Bento container."
+  echo "  status  - Display the status of a Bento container."
+  echo "  list    - List all Bento containers."
+  echo "  rm      - Deletes a Bento container and all data."
+  echo "  ip      - Get the ip address of a Bento container."
+  echo "  address - Get the ip address of a Bento container."
+  echo "  host    - Get the host name of a Bento container."
+  echo "  build   - Build a new Bento image from the Dockerfile in ${BENTO_CLUSTER_HOME}/docker."
+  echo "  logs    - Tail the Bento process logs."
   echo
   echo "FLAGS (following the command)"
   echo "  all"
   echo "    -n     Specify a container name. Defaults to 'bento'."
-  echo "  start"
+  echo "  create"
   echo "    -f     Create container in foreground (will attach stdin/tty)."
-  echo "    -r     Remove the container on stop. Must be used with '-f'."
+  echo "    -r     Remove the container on stop. Will start container in foreground."
   echo "    -h     Do not add hostname to /etc/hosts."
-  echo "    -c     Do not overwrite Hadoop & HBase client configuration with started Bento container."
+  echo "    -c     Do not overwrite Hadoop & HBase client configuration."
+  echo "  start"
+  echo "    -c     Do not overwrite Hadoop & HBase client configuration."
+  echo "  list"
+  echo "    -a     List all running and stopped Bento containers."
 }
+
+
 
 # ------------------------------------------------------------------------------
 # Script main begins here:
@@ -124,14 +133,16 @@ shift  # pop off the command
 container_name=bento
 daemon='-d'
 edit_hosts=true
-remove=''
+remove=""
 client_config=true
+all=''
 
-while getopts ":f :h :n: :r" opt; do
+while getopts ":f :h :n: :r :a" opt; do
   case $opt in
     f)
       daemon='-it'
       edit_hosts=false
+      client_config=false
       ;;
     h)
       edit_hosts=false
@@ -140,10 +151,16 @@ while getopts ":f :h :n: :r" opt; do
       container_name="${OPTARG}"
       ;;
     r)
-      remove="--rm=true"
+      remove='--rm=true'
+      daemon='-it'
+      edit_hosts=false
+      client_config=false
       ;;
     c)
       client_config=false
+      ;;
+    a)
+      all='-a'
       ;;
     \?)
       echo "Unknown option: -${OPTARG}" >&2
@@ -152,79 +169,118 @@ while getopts ":f :h :n: :r" opt; do
 done
 shift $((OPTIND-1))
 
+function set_client_conf() {
+  ADDRESS=$(docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
+  if [[ "$client_config" == true ]]; then
+    echo "Adding address to Bento container '${container_name}' to local Hadoop & HBase client configurations." 1>&2
+    mkdir -p $BENTO_CLUSTER_HOME/client-conf/hadoop
+    mkdir -p $BENTO_CLUSTER_HOME/client-conf/hbase
+    sed "s/\$BENTO_ADDRESS/$ADDRESS/" $BENTO_CLUSTER_HOME/client-conf-template/core-site.xml > \
+      $BENTO_CLUSTER_HOME/client-conf/hadoop/core-site.xml
+    sed "s/\$BENTO_ADDRESS/$ADDRESS/" $BENTO_CLUSTER_HOME/client-conf-template/hbase-site.xml > \
+      $BENTO_CLUSTER_HOME/client-conf/hbase/hbase-site.xml
+  else
+    echo "Not adding address to Bento container '${container_name}' to local Hadoop & HBase client configurations." 1>&2
+  fi
+}
+
 case ${command} in
+
   help)
     print_tool_usage
     exit 0
     ;;
+
+  create)
+    docker run ${daemon} ${remove} --name ${container_name} kijiproject/bento $@
+    printf "Bento container '" 1>&2
+    printf ${container_name}
+    printf "' created and started." 1>&2
+    printf "\n"
+    ADDRESS=$(docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
+    HOST=$(docker inspect --format="{{.Config.Hostname}}" ${container_name})
+    if [[ "$edit_hosts" == true ]]; then
+      printf "Adding container address and host to /etc/hosts:\n" 1>&2
+      echo "${ADDRESS} ${HOST}" | sudo tee -a /etc/hosts
+    else
+      printf "Not adding container address and host to /etc/hosts:\n" 1>&2
+      echo "${ADDRESS} ${HOST}"
+    fi
+    set_client_conf
+    ;;
+
   start)
     if status=$(docker inspect --format="{{.State.Running}}" ${container_name} 2> /dev/null); then
       if [[ $status == 'true' ]]; then
-        echo "Bento container '${container_name}' is already started."
+        echo "Bento container '${container_name}' is already started." 1>&2
         exit 1;
       else
         docker start ${container_name} > /dev/null
-        echo "Bento container '${container_name}' started."
+        printf "Bento container '" 1>&2;
+        printf ${container_name}
+        printf "' started." 1>&2;
+        printf "\n"
       fi
+      set_client_conf
     else
-      docker run ${daemon} ${remove} --name ${container_name} kijiproject/bento > /dev/null
-      echo "Bento container '${container_name}' created and started."
-      ADDRESS=$(docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
-      HOST=$(docker inspect --format="{{.Config.Hostname}}" ${container_name})
-      if [[ "$edit_hosts" == true ]]; then
-        echo "Adding container address and host to /etc/hosts:"
-        echo "${ADDRESS} ${HOST}" | sudo tee -a /etc/hosts
-      else
-        echo "Not adding container address and host to /etc/hosts:"
-        echo "${ADDRESS} ${HOST}"
-      fi
-    fi
-    ADDRESS=$(docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
-    if [[ "$client_config" == true ]]; then
-      echo "Adding address to Bento container '${container_name}' to local Hadoop & HBase client configurations."
-      sed "s/\$BENTO_ADDRESS/$ADDRESS/" $BENTO_CLUSTER_HOME/client-conf-template/core-site.xml > \
-        $BENTO_CLUSTER_HOME/client-conf/hadoop/core-site.xml
-      sed "s/\$BENTO_ADDRESS/$ADDRESS/" $BENTO_CLUSTER_HOME/client-conf-template/hbase-site.xml > \
-        $BENTO_CLUSTER_HOME/client-conf/hbase/hbase-site.xml
-    else
-      echo "Not adding address to Bento container '${container_name}' to local Hadoop & HBase client configurations."
+      echo "Bento container '${container_name}' does not exist." 1>&2
+      exit 1;
     fi
     ;;
+
   stop)
     docker stop ${container_name} > /dev/null
     echo "Bento container '${container_name}' stopped."
     ;;
+
   rm)
     docker rm ${container_name} > /dev/null
     echo "Bento container '${container_name}' removed."
     ;;
+
   status)
     if status=$(docker inspect --format="{{.State.Running}}" ${container_name} 2> /dev/null); then
+      printf "Bento container " 1>&2
       if [[ $status == 'true' ]]; then
-        echo "Bento container '${container_name}' is running."
+        printf "started"
       else
-        echo "Bento container '${container_name}' is stopped."
+        printf "stopped"
       fi
+      printf "." 1>&2
+      printf "\n"
     else
       echo "Bento container '${container_name}' does not exist."
+      exit 1;
     fi
     ;;
+
+  list)
+    docker ps $all | awk 'NR==1 || /kijiproject\/bento/'
+    ;;
+
   ip)
     echo $(docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
     ;;
+
+  address)
+    echo $(docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
+    ;;
+
   host)
     echo $(docker inspect --format="{{.Config.Hostname}}" ${container_name})
     ;;
+
   build)
     docker build -t "kijiproject/bento" ${BENTO_CLUSTER_HOME}/docker
     ;;
+
   logs)
     docker logs -f ${container_name}
     ;;
+
   *)
     echo "Unknown command: ${command}"
-    echo "Try:"
-    echo "  bento help"
+    print_tool_usage
     exit 1
     ;;
 esac
