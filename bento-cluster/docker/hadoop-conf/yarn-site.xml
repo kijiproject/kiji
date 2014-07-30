@@ -20,28 +20,13 @@
 <configuration>
 
   <property>
-    <name>yarn.resourcemanager.resourcetracker.address</name>
-    <value>$BENTO_HOST:8025</value>
+    <name>yarn.resourcemanager.hostname</name>
+    <value>$BENTO_HOST</value>
   </property>
 
   <property>
-    <name>yarn.resourcemanager.scheduler.address</name>
-    <value>$BENTO_HOST:8030</value>
-  </property>
-
-  <property>
-    <name>yarn.resourcemanager.address</name>
-    <value>$BENTO_HOST:8050</value>
-  </property>
-
-  <property>
-    <name>yarn.resourcemanager.admin.address</name>
-    <value>$BENTO_HOST:8041</value>
-  </property>
-
-  <property>
-    <name>yarn.resourcemanager.address</name>
-    <value>$BENTO_HOST:8050</value>
+     <name>yarn.application.classpath</name>
+     <value>/etc/hadoop/conf,/usr/lib/hadoop/*,/usr/lib/hadoop/lib/*,/usr/lib/hadoop-hdfs/*,/usr/lib/hadoop-hdfs/lib/*,/usr/lib/hadoop-yarn/*,/usr/lib/hadoop-yarn/lib/*,/usr/lib/hadoop-mapreduce/*,/usr/lib/hadoop-mapreduce/lib/*,/usr/lib/hadoop-yarn/*,/usr/lib/hadoop-yarn/lib/*</value>
   </property>
 
   <property>
@@ -55,31 +40,24 @@
   </property>
 
   <property>
+    <name>yarn.nodemanager.local-dirs</name>
+    <value>file:///var/lib/hadoop-yarn</value>
+  </property>
+
+  <property>
+    <name>yarn.nodemanager.log-dirs</name>
+    <value>file:///var/log/hadoop-yarn</value>
+  </property>
+
+  <property>
     <name>yarn.log-aggregation-enable</name>
     <value>true</value>
   </property>
 
   <property>
-    <name>yarn.dispatcher.exit-on-error</name>
-    <value>true</value>
-  </property>
-
-  <property>
-    <description>List of directories to store localized files in.</description>
-    <name>yarn.nodemanager.local-dirs</name>
-    <value>/var/lib/hadoop-yarn/cache/${user.name}/nm-local-dir</value>
-  </property>
-
-  <property>
-    <description>Where to store container logs.</description>
-    <name>yarn.nodemanager.log-dirs</name>
-    <value>/var/log/hadoop-yarn/containers</value>
-  </property>
-
-  <property>
-    <description>Where to aggregate logs to.</description>
+    <description>Where to aggregate logs</description>
     <name>yarn.nodemanager.remote-app-log-dir</name>
-    <value>/var/log/hadoop-yarn/apps</value>
+    <value>hdfs://$BENTO_HOST:8020/var/log/hadoop-yarn/apps</value>
   </property>
 
   <property>
@@ -92,9 +70,4 @@
     <value>600</value>
   </property>
 
-  <property>
-    <description>Classpath for typical applications.</description>
-     <name>yarn.application.classpath</name>
-     <value>/etc/hadoop/conf,/usr/lib/hadoop/*,/usr/lib/hadoop/lib/*,/usr/lib/hadoop-hdfs/*,/usr/lib/hadoop-hdfs/lib/*,/usr/lib/hadoop-yarn/*,/usr/lib/hadoop-yarn/lib/*,/usr/lib/hadoop-mapreduce/*,/usr/lib/hadoop-mapreduce/lib/*,/usr/lib/hadoop-yarn/*,/usr/lib/hadoop-yarn/lib/*</value>
-  </property>
 </configuration>

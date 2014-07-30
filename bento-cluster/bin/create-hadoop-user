@@ -6,7 +6,5 @@ set -o pipefail  # Pipeline status failure if any command fails
 
 user=$(whoami)
 
-HADOOP_USER_NAME=hdfs hadoop fs -mkdir -p /tmp
-HADOOP_USER_NAME=hdfs hadoop fs -chmod -R 777 /tmp
 HADOOP_USER_NAME=hdfs hadoop fs -mkdir -p /user/$user
 HADOOP_USER_NAME=hdfs hadoop fs -chown -R $user /user/$user

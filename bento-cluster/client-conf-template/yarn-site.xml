@@ -2,11 +2,10 @@
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <configuration>
   <property>
-    <name>yarn.resourcemanager.address</name>
-    <value>$BENTO_HOST:8050</value>
+    <name>yarn.resourcemanager.hostname</name>
+    <value>$BENTO_HOST</value>
   </property>
   <property>
-    <description>Classpath for typical applications.</description>
      <name>yarn.application.classpath</name>
      <value>/etc/hadoop/conf,/usr/lib/hadoop/*,/usr/lib/hadoop/lib/*,/usr/lib/hadoop-hdfs/*,/usr/lib/hadoop-hdfs/lib/*,/usr/lib/hadoop-yarn/*,/usr/lib/hadoop-yarn/lib/*,/usr/lib/hadoop-mapreduce/*,/usr/lib/hadoop-mapreduce/lib/*,/usr/lib/hadoop-yarn/*,/usr/lib/hadoop-yarn/lib/*</value>
   </property>

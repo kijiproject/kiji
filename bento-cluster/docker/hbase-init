@@ -1,6 +1,0 @@
-#!/bin/bash
-
-set -e
-
-/usr/bin/hadoop fs -mkdir -p /hbase
-/usr/bin/hadoop fs -chown hbase /hbase

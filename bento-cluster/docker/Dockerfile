@@ -57,14 +57,22 @@ RUN /usr/bin/hdfs namenode -format
 # Initialize ZooKeeper
 USER zookeeper
 RUN /usr/bin/zookeeper-server-initialize
+RUN mkdir -p /var/log/zookeeper
 
 # Initialize HBase
-ADD hbase-init /hbase-init
-
-# Initialize mapreduce
-ADD mapreduce-init /mapreduce-init
+USER hbase
+RUN mkdir -p /var/log/hbase
 
 USER root
+
+# Initialize YARN
+# Create the yarn.nodemanager.local-dirs directory
+RUN mkdir -p /var/log/hadoop-yarn
+RUN chown -R yarn:yarn /var/log/hadoop-yarn
+RUN chmod -R 755 /var/log/hadoop-yarn
+
+# Initialize HDFS directories for services
+ADD hdfs-init /hdfs-init
 
 ADD start /start
 

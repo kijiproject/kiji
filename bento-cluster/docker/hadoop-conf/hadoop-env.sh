@@ -23,6 +23,10 @@
 #export HADOOP_HEAPSIZE=
 #export HADOOP_NAMENODE_INIT_HEAPSIZE=""
 
+export HADOOP_LOG_DIR=/var/log/hadoop-hdfs
+export HADOOP_MAPRED_LOG_DIR=/var/log/hadoop-mapreduce
+export YARN_LOG_DIR=/var/log/hadoop-yarn
+
 # Extra Java runtime options.  Empty by default.
 #export HADOOP_OPTS="$HADOOP_CLIENT_OPTS"
 #export HADOOP_CLIENT_OPTS="-Xmx128m $HADOOP_CLIENT_OPTS"

@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -o nounset   # Fail when referencing undefined variables
+set -o errexit   # Script exits on the first error
+set -o pipefail  # Pipeline status failure if any command fails
+
+# Should be run as the 'hdfs' user
+
+# These steps are mostly taken from the CDH Installation Guide:
+# http://www.cloudera.com/content/cloudera-content/cloudera-docs/CDH5/5.0/CDH5-Installation-Guide/cdh5ig_yarn_cluster_deploy.html
+
+# Create the /tmp directory
+hadoop fs -mkdir /tmp
+hadoop fs -chmod -R 1777 /tmp
+
+# Step 8
+hadoop fs -mkdir -p /user/history
+hadoop fs -chmod -R 1777 /user/history
+hadoop fs -chown mapred:hadoop /user/history
+
+# Step 9
+hadoop fs -mkdir -p /var/log/hadoop-yarn
+hadoop fs -chown yarn:mapred /var/log/hadoop-yarn
+#!/bin/bash
+
+
+# Initialize HBase directory
+
+/usr/bin/hadoop fs -mkdir -p /hbase
+/usr/bin/hadoop fs -chown hbase /hbase
