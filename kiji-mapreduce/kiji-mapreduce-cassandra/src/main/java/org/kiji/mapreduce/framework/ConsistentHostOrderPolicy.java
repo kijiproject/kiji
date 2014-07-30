@@ -145,4 +145,9 @@ class ConsistentHostOrderPolicy implements LoadBalancingPolicy {
   public void onRemove(Host host) {
     onDown(host);
   }
+
+  @Override
+  public void onSuspected(Host host) {
+    // Do nothing for this policy - okay to wait and see if the host is really down.
+  }
 }
