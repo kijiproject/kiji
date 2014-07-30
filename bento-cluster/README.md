@@ -23,3 +23,26 @@ Requires [Docker](https://docker.com/). Docker [requires](http://docker.readthed
 ```bash
     sudo route add $(bento ip)/16 $(boot2docker ip 2> /dev/null)
 ```
+
+If you are using OS X and planning on running any MapReduce jobs, you will likely want to allocate
+`boot2docker` more than its default 2 GB of RAM.  You can find directions for doing so on the github
+[page](https://github.com/boot2docker/boot2docker-cli) for the `boot2docker` CLI.  In short, do the
+following:
+
+- Create a `boot2docker` profile with the default settings:
+```bash
+    boot2docker config > ~/.boot2docker/profile
+````
+- Update the line in `~/.boot2docker/profile` to increase the amount of memory from 2048 to perhaps
+8192.
+- Sanity check your new settings by running `boot2docker config` again.
+- Destroy your old `boot2docker` VM and start again:
+```bash
+    boot2docker destroy
+    boot2docker init
+    boot2docker up
+```
+- Validate your new settings:
+```bash
+    boot2docker info
+```
