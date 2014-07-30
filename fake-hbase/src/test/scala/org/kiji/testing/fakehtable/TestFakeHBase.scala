@@ -77,12 +77,4 @@ class TestFakeHBase {
     val location = htable.getRegionLocation("row key")
     Assert.assertEquals(locations.keySet.iterator.next, location.getRegionInfo)
   }
-
-  @Test
-  def testAdminFactory(): Unit = {
-    val hbase = new FakeHBase()
-    val conf = HBaseConfiguration.create()
-    val admin = hbase.AdminFactory.create(conf)
-    admin.close()
-  }
 }

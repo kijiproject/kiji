@@ -85,7 +85,7 @@ class FakeHBase
           table = new FakeHTable(name = tableName, conf = conf, desc = desc)
           tableMap.put(tableNameBytes, table)
         }
-        return UntypedProxy.create(classOf[HTable], table)
+        return Proxy.create(classOf[HTable], new PythonProxy(table))
       }
     }
 
@@ -242,7 +242,7 @@ class FakeHBase
   object AdminFactory extends HBaseAdminFactory {
     /** Creates a new HBaseAdmin for this HBase instance. */
     override def create(conf: Configuration): HBaseAdmin = {
-      return UntypedProxy.create(classOf[HBaseAdmin], Admin)
+      return Proxy.create(classOf[HBaseAdmin], new PythonProxy(Admin))
     }
   }
 

@@ -1,5 +1,5 @@
 /**
- * (c) Copyright 2014 WibiData, Inc.
+ * (c) Copyright 2012 WibiData, Inc.
  *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
@@ -27,44 +27,24 @@ import net.sf.cglib.proxy.MethodProxy;
 /**
  * Forwards method calls to an arbitrary handler.
  *
- * Allows to provide an implementation of HBaseAdmin that appears as an instance of the concrete
- * class HBaseAdmin.
+ * This is part of the ugly mess that allows to provide a fake HBaseAdmin implementation that
+ * appears as an instance of the concrete class HBaseAdmin. Because interfaces are for bunnies...
  *
  * This class apparently needs to be a Java class, and cannot be Scala, otherwise the forwarded
  * method invocation fails with an illegal parameter error.
  *
  * @param <T> class of the handler.
  */
-public class UntypedProxy<T> implements MethodInterceptor {
+public class PythonProxy<T> implements MethodInterceptor {
   /** Target handler for intercepted/proxied method calls. */
   private final T mTarget;
-
-  /**
-   * Partially implements an interface or a class T.
-   *
-   * The T object created by this function forwards method invocations to an arbitrary handler
-   * through reflection.
-   *
-   * @param qlass Class or interface to expose publicly.
-   * @param handler Underlying implementation (potentially partial).
-   *     The handler does not need to implement or subclass T.
-   *     Ideally, the handler implements all the public methods or T, but is not required to.
-   *     Methods of T not implemented by handler may not be invoked, or will raise
-   *     NoSuchMethodException.
-   * @return A wrapper that exposes the public interface T, but implements it freely through
-   *     the handler object.
-   * @throws InstantiationException on error.
-   */
-  public static final <T, U> T create(Class<T> qlass, U handler) throws InstantiationException {
-    return ClassProxy.create(qlass, new UntypedProxy<U>(handler));
-  }
 
   /**
    * Initialises the proxy.
    *
    * @param target Target handler for intercepted/proxied method calls.
    */
-  public UntypedProxy(T target) {
+  public PythonProxy(T target) {
     mTarget = target;
   }
 

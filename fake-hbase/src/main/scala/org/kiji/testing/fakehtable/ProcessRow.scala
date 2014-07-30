@@ -28,8 +28,6 @@ import java.util.NavigableSet
 
 import org.apache.hadoop.hbase.HColumnDescriptor
 import org.apache.hadoop.hbase.HConstants
-import org.apache.hadoop.hbase.Cell
-import org.apache.hadoop.hbase.CellUtil
 import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.client.Result
 import org.apache.hadoop.hbase.filter.Filter
@@ -85,7 +83,7 @@ object ProcessRow {
       filter: Filter = PassThroughFilter
   ): Result = {
 
-    val cells: JList[Cell] = new JArrayList[Cell]
+    val kvs: JList[KeyValue] = new JArrayList[KeyValue]()
 
     /** Current time, in milliseconds, to enforce TTL. */
     val nowMS = System.currentTimeMillis
@@ -94,14 +92,14 @@ object ProcessRow {
      * Iteration start key.
      * Might be updated by filters (see SEEK_NEXT_USING_HINT)
      */
-    var start: Cell = EmptyKeyValue
+    var start: KeyValue = EmptyKeyValue
 
     /** Ordered set of families to iterate through. */
     val families: NavigableSet[Bytes] =
         if (!familyMap.isEmpty) familyMap.navigableKeySet else row.navigableKeySet
 
     /** Iterator over families. */
-    var family: Bytes = families.ceiling(CellUtil.cloneFamily(start))
+    var family: Bytes = families.ceiling(start.getFamily)
 
     FamilyLoop {
       if (family == null) FamilyLoop.break
@@ -141,7 +139,7 @@ object ProcessRow {
       }
 
       /** Iterator over the qualifiers. */
-      var qualifier: Bytes = qualifiers.ceiling(CellUtil.cloneQualifier(start))
+      var qualifier: Bytes = qualifiers.ceiling(start.getQualifier)
       QualifierLoop {
         if (qualifier == null) QualifierLoop.break
 
@@ -166,13 +164,13 @@ object ProcessRow {
         TimestampLoop {
           if (timestamp == null) TimestampLoop.break
 
-          val value: Bytes = versionMap.get(timestamp)
-          val kv: KeyValue = new KeyValue(rowKey, family, qualifier, timestamp, value)
+          val value = versionMap.get(timestamp)
+          val kv = new KeyValue(rowKey, family, qualifier, timestamp, value)
 
           // Apply filter:
           filter.filterKeyValue(kv) match {
             case Filter.ReturnCode.INCLUDE => {
-              cells.add(filter.transformCell(kv))
+              kvs.add(filter.transform(kv))
 
               // Max-version per qualifier happens after filtering:
               // Note that this doesn't take into account the transformed KeyValue.
@@ -186,7 +184,7 @@ object ProcessRow {
               }
             }
             case Filter.ReturnCode.INCLUDE_AND_NEXT_COL => {
-              cells.add(filter.transformCell(kv))
+              kvs.add(filter.transform(kv))
               // No need to check the max-version per qualifier,
               // since this jumps to the next column directly.
               TimestampLoop.break
@@ -198,7 +196,7 @@ object ProcessRow {
               QualifierLoop.break
             }
             case Filter.ReturnCode.SEEK_NEXT_USING_HINT => {
-              Option(filter.getNextCellHint(kv)) match {
+              Option(filter.getNextKeyHint(kv)) match {
                 case None => // No hint
                 case Some(hint) => {
                   require(KeyValueComparator.compare(kv, hint) < 0,
@@ -241,9 +239,9 @@ object ProcessRow {
     }  // FamilyLoop
 
     if (filter.hasFilterRow()) {
-      filter.filterRowCells(cells)
+      filter.filterRow(kvs)
     }
-    return Result.create(cells)
+    return new Result(kvs.toArray(new Array[KeyValue](kvs.size)))
   }
 
 }

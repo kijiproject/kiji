@@ -20,7 +20,6 @@
 package org.kiji.testing.fakehtable
 
 import java.io.PrintStream
-import java.lang.{Boolean => JBoolean}
 import java.lang.{Long => JLong}
 import java.util.{ArrayList => JArrayList}
 import java.util.Arrays
@@ -42,9 +41,6 @@ import scala.util.control.Breaks.breakable
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
-import org.apache.hadoop.hbase.Cell
-import org.apache.hadoop.hbase.CellUtil
-import org.apache.hadoop.hbase.client.Row
 import org.apache.hadoop.hbase.HColumnDescriptor
 import org.apache.hadoop.hbase.HConstants
 import org.apache.hadoop.hbase.HRegionInfo
@@ -52,10 +48,8 @@ import org.apache.hadoop.hbase.HRegionLocation
 import org.apache.hadoop.hbase.HTableDescriptor
 import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.ServerName
-import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.Append
 import org.apache.hadoop.hbase.client.Delete
-import org.apache.hadoop.hbase.client.Durability
 import org.apache.hadoop.hbase.client.Get
 import org.apache.hadoop.hbase.client.HConnection
 import org.apache.hadoop.hbase.client.HTableInterface
@@ -63,15 +57,18 @@ import org.apache.hadoop.hbase.client.Increment
 import org.apache.hadoop.hbase.client.Put
 import org.apache.hadoop.hbase.client.Result
 import org.apache.hadoop.hbase.client.ResultScanner
+import org.apache.hadoop.hbase.client.Row
+import org.apache.hadoop.hbase.client.RowLock
 import org.apache.hadoop.hbase.client.RowMutations
 import org.apache.hadoop.hbase.client.Scan
 import org.apache.hadoop.hbase.client.coprocessor.Batch
 import org.apache.hadoop.hbase.filter.Filter
-import org.apache.hadoop.hbase.protobuf.ProtobufUtil
-import org.apache.hadoop.hbase.ipc.CoprocessorRpcChannel
+import org.apache.hadoop.hbase.ipc.CoprocessorProtocol
 import org.apache.hadoop.hbase.util.Bytes
-import org.kiji.testing.fakehtable.JNavigableMapWithAsScalaIterator.javaNavigableMapAsScalaIterator
+import org.apache.hadoop.io.WritableUtils
 import org.slf4j.LoggerFactory
+
+import org.kiji.testing.fakehtable.JNavigableMapWithAsScalaIterator.javaNavigableMapAsScalaIterator
 
 /**
  * Fake in-memory HTable.
@@ -101,7 +98,6 @@ class FakeHTable(
 
   /** A fake connection. */
   private val connection: FakeHConnection = new FakeHConnection()
-  private val hconnection: HConnection = UntypedProxy.create(classOf[HConnection], connection)
 
   /** Region splits and locations. Protected by `this`. */
   private var regions: Seq[HRegionLocation] = Seq()
@@ -503,15 +499,13 @@ class FakeHTable(
           .getOrElseUpdate(rowKey, new JTreeMap[Bytes, FamilyQualifiers](BytesComparator))
       val familyMap = new JTreeMap[Bytes, NavigableSet[Bytes]](BytesComparator)
 
-      for ((family: Array[Byte], qualifierMap: JList[Cell]) <- increment.getFamilyCellMap.asScala) {
+      for ((family, qualifierMap) <- increment.getFamilyMap.asScala) {
         val qualifierSet = familyMap.asScala
             .getOrElseUpdate(family, new JTreeSet[Bytes](BytesComparator))
         val rowQualifierMap = row.asScala
             .getOrElseUpdate(family, new JTreeMap[Bytes, ColumnSeries](BytesComparator))
 
-        for (cell: Cell <- qualifierMap.asScala) {
-          val qualifier = CellUtil.cloneQualifier(cell)
-          val amount = Bytes.toLong(CellUtil.cloneValue(cell))
+        for ((qualifier, amount) <- qualifierMap.asScala) {
           qualifierSet.add(qualifier)
           val rowTimeSeries = rowQualifierMap.asScala
               .getOrElseUpdate(qualifier, new JTreeMap[JLong, Bytes](TimestampComparator))
@@ -615,6 +609,40 @@ class FakeHTable(
     }
   }
 
+  override def lockRow(row: Bytes): RowLock = {
+    sys.error("Not implemented")
+  }
+
+  override def unlockRow(lock: RowLock): Unit = {
+    sys.error("Not implemented")
+  }
+
+  override def coprocessorProxy[T <: CoprocessorProtocol](
+      protocol: Class[T],
+      row: Bytes
+  ): T = {
+    sys.error("Coprocessor not implemented")
+  }
+
+  override def coprocessorExec[T <: CoprocessorProtocol, R](
+      protocol: Class[T],
+      startKey: Bytes,
+      endKey: Bytes,
+      callable: Batch.Call[T, R]
+  ): JMap[Bytes, R] = {
+    sys.error("Coprocessor not implemented")
+  }
+
+  override def coprocessorExec[T <: CoprocessorProtocol, R](
+      protocol: Class[T],
+      startKey: Bytes,
+      endKey: Bytes,
+      callable: Batch.Call[T, R],
+      callback: Batch.Callback[R]
+  ): Unit = {
+    sys.error("Coprocessor not implemented")
+  }
+
   // -----------------------------------------------------------------------------------------------
 
   /** @return the regions info for this table. */
@@ -656,13 +684,8 @@ class FakeHTable(
     val newRegions = Buffer[HRegionLocation]()
     for ((start, end) <- toRegions(split)) {
       val fakeHost = "fake-location-%d".format(newRegions.size)
-      val regionInfo = new HRegionInfo(TableName.valueOf(tableName), start, end)
-      val seqNum = System.currentTimeMillis()
-      newRegions += new HRegionLocation(
-          regionInfo,
-          ServerName.valueOf(fakeHost, fakePort, /* startCode = */ 0),
-          /* seqNum = */ 0
-      )
+      val regionInfo = new HRegionInfo(tableName, start, end)
+      newRegions += new HRegionLocation(regionInfo, fakeHost, fakePort)
     }
     synchronized {
       this.regions = newRegions.toSeq
@@ -733,7 +756,7 @@ class FakeHTable(
   }
 
   /** See HTable.getConnection(). */
-  def getConnection: HConnection = hconnection
+  def getConnection: HConnection = connection
   // -----------------------------------------------------------------------------------------------
 
   def toHex(bytes: Bytes): String = {
@@ -778,7 +801,7 @@ class FakeHTable(
    */
   private def getFilter(filterSpec: Filter): Filter = {
     Option(filterSpec) match {
-      case Some(hfilter) => ProtobufUtil.toFilter(ProtobufUtil.toFilter(hfilter))
+      case Some(hfilter) => WritableUtils.clone(hfilter, conf)
       case None => PassThroughFilter
     }
   }
@@ -962,70 +985,6 @@ class FakeHTable(
     override def remove(): Unit = {
       throw new UnsupportedOperationException
     }
-  }
-
-  override def batchCallback[R](
-      x$1: JList[_ <: Row],
-      x$2: Batch.Callback[R]
-  ): Array[Object] = {
-    sys.error("Not implemented")
-  }
-
-  override def batchCallback[R](
-      x$1: java.util.List[_ <: Row],
-      x$2: Array[Object],
-      x$3: Batch.Callback[R]
-  ): Unit = { sys.error("Not implemented") }
-
-  override def coprocessorService[T <: com.google.protobuf.Service, R](
-    x$1: Class[T],
-    x$2: Array[Byte],
-    x$3: Array[Byte],
-    x$4: Batch.Call[T, R],
-    x$5: Batch.Callback[R]
-  ):Unit = {
-    sys.error("Not implemented")
-  }
-
-  override def coprocessorService[T <: com.google.protobuf.Service, R](
-      x$1: Class[T],
-      x$2: Array[Byte],
-      x$3: Array[Byte],
-      x$4: Batch.Call[T, R]
-  ):java.util.Map[Array[Byte],R] = {
-    sys.error("Not implemented")
-  }
-
-  override def coprocessorService(x$1: Array[Byte]): CoprocessorRpcChannel = {
-    sys.error("Not implemented")
-  }
-
-  override def exists(gets: JList[Get]): Array[JBoolean] = {
-    val exists: Array[JBoolean] = new Array[JBoolean](gets.size)
-    synchronized {
-      for (index <- 0 until gets.size) {
-        exists(index) = this.exists(gets.get(index))
-      }
-    }
-    exists
-  }
-
-  override def getName(): TableName = {
-    TableName.valueOf(mDesc.getName)
-  }
-
-  override def incrementColumnValue(
-      x$1: Array[Byte],
-      x$2: Array[Byte],
-      x$3: Array[Byte],
-      x$4: Long,
-      x$5: Durability
-  ): Long = {
-    sys.error("Not implemented")
-  }
-
-  override def setAutoFlushTo(x$1: Boolean):Unit = {
-    sys.error("Not implemented")
   }
 
   // -----------------------------------------------------------------------------------------------

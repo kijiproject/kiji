@@ -90,59 +90,31 @@ class TestFakeHTable {
 
   // -----------------------------------------------------------------------------------------------
 
-  /** Table descriptor for a test table with an HBase family named "family". */
-  def defaultTableDesc(): HTableDescriptor = {
-    val desc = new HTableDescriptor("table")
-    desc.addFamily(new HColumnDescriptor("family")
-        .setMaxVersions(HConstants.ALL_VERSIONS)
-        .setMinVersions(0)
-        .setTimeToLive(HConstants.FOREVER)
-        .setInMemory(false)
-    )
-    desc
-  }
-
-  /** Table descriptor for a test table with N HBase families named "family<N>". */
-  def makeTableDesc(nfamilies: Int): HTableDescriptor = {
-    val desc = new HTableDescriptor("table")
-    for (ifamily <- 0 until nfamilies) {
-      desc.addFamily(new HColumnDescriptor("family%s".format(ifamily))
-          .setMaxVersions(HConstants.ALL_VERSIONS)
-          .setMinVersions(0)
-          .setTimeToLive(HConstants.FOREVER)
-          .setInMemory(false)
-      )
-    }
-    desc
-  }
-
-  // -----------------------------------------------------------------------------------------------
-
   /** get() on an unknown row. */
   @Test
   def testGetUnknownRow(): Unit = {
-    val table = new FakeHTable(name = "table", desc = defaultTableDesc)
+    val table = new FakeHTable(name = "table", desc = null)
     Assert.assertEquals(true, table.get(new Get("key")).isEmpty)
   }
 
   /** scan() on an empty table. */
   @Test
   def testScanEmptyTable(): Unit = {
-    val table = new FakeHTable(name = "table", desc = defaultTableDesc)
+    val table = new FakeHTable(name = "table", desc = null)
     Assert.assertEquals(null, table.getScanner("family").next)
   }
 
   /** delete() on an unknown row. */
   @Test
   def testDeleteUnknownRow(): Unit = {
-    val table = new FakeHTable(name = "table", desc = defaultTableDesc)
+    val table = new FakeHTable(name = "table", desc = null)
     table.delete(new Delete("key"))
   }
 
   /** Write a few cells and read them back. */
   @Test
   def testPutThenGet(): Unit = {
-    val table = new FakeHTable(name = "table", desc = defaultTableDesc)
+    val table = new FakeHTable(name = "table", desc = null)
     table.put(new Put("key")
         .add("family", "qualifier", 12345L, "value"))
 
@@ -162,7 +134,7 @@ class TestFakeHTable {
   /** Write a few cells and read them back as a family scan. */
   @Test
   def testPutThenScan(): Unit = {
-    val table = new FakeHTable(name = "table", desc = defaultTableDesc)
+    val table = new FakeHTable(name = "table", desc = null)
     table.put(new Put("key")
         .add("family", "qualifier", 12345L, "value"))
 
@@ -187,7 +159,7 @@ class TestFakeHTable {
   /** Create a row and delete it. */
   @Test
   def testCreateAndDeleteRow(): Unit = {
-    val table = new FakeHTable(name = "table", desc = defaultTableDesc)
+    val table = new FakeHTable(name = "table", desc = null)
     table.put(new Put("key")
         .add("family", "qualifier", 12345L, "value"))
 
@@ -198,7 +170,7 @@ class TestFakeHTable {
   /** Increment a column. */
   @Test
   def testIncrementColumn(): Unit = {
-    val table = new FakeHTable(name = "table", desc = defaultTableDesc)
+    val table = new FakeHTable(name = "table", desc = null)
     Assert.assertEquals(1, table.incrementColumnValue(
         row = "row",
         family = "family",
@@ -219,7 +191,7 @@ class TestFakeHTable {
   /** Delete a specific cell. */
   @Test
   def testDeleteSpecificCell(): Unit = {
-    val table = new FakeHTable(name = "table", desc = defaultTableDesc)
+    val table = new FakeHTable(name = "table", desc = null)
     table.put(new Put("key")
         .add("family", "qualifier", 1L, "value1"))
     table.put(new Put("key")
@@ -241,40 +213,22 @@ class TestFakeHTable {
 
   /** Delete the most recent cell in a column. */
   @Test
-  def testDeleteMostRecentCell(): Unit = {
-    val table = new FakeHTable(name = "table", desc = defaultTableDesc)
+  def testMostRecentCell(): Unit = {
+    val table = new FakeHTable(name = "table", desc = null)
     table.put(new Put("key")
         .add("family", "qualifier", 1L, "value1"))
     table.put(new Put("key")
         .add("family", "qualifier", 2L, "value2"))
     table.put(new Put("key")
         .add("family", "qualifier", 3L, "value3"))
-
-    if (Log.isDebugEnabled)
-      table.dump()
-
     table.delete(new Delete("key")
         .deleteColumn("family", "qualifier"))
-
-    if (Log.isDebugEnabled)
-      table.dump()
-
-    val row = {
-      if (false) {
-        val scanner = table.getScanner(new Scan("key")
-            .setMaxVersions(Int.MaxValue)
-            .addColumn("family", "qualifier"))
-        val row = scanner.next()
-        Assert.assertEquals(null, scanner.next())
-        row
-      } else {
-        table.get(new Get("key")
-            .setMaxVersions(Int.MaxValue)
-            .addColumn("family", "qualifier"))
-      }
-    }
-
-    val cells = row.getColumnCells("family", "qualifier")
+    val scanner = table.getScanner(new Scan("key")
+        .setMaxVersions(Int.MaxValue)
+        .addColumn("family", "qualifier"))
+    val row = scanner.next()
+    Assert.assertEquals(null, scanner.next())
+    val cells = row.getColumn("family", "qualifier")
     Assert.assertEquals(2, cells.size())
     Assert.assertEquals(2L, cells.get(0).getTimestamp)
     Assert.assertEquals(1L, cells.get(1).getTimestamp)
@@ -282,8 +236,8 @@ class TestFakeHTable {
 
   /** Delete older versions of a qualifier. */
   @Test
-  def testDeleteOlderCellVersions(): Unit = {
-    val table = new FakeHTable(name = "table", desc = defaultTableDesc)
+  def testOlderCellVersions(): Unit = {
+    val table = new FakeHTable(name = "table", desc = null)
     table.put(new Put("key")
         .add("family", "qualifier", 1L, "value1"))
     table.put(new Put("key")
@@ -305,7 +259,7 @@ class TestFakeHTable {
   /** Delete all versions of a specific qualifier. */
   @Test
   def testDeleteSpecificQualifierAllVersions(): Unit = {
-    val table = new FakeHTable(name = "table", desc = defaultTableDesc)
+    val table = new FakeHTable(name = "table", desc = null)
     table.put(new Put("key")
         .add("family", "qualifier", 1L, "value1"))
     table.put(new Put("key")
@@ -323,7 +277,7 @@ class TestFakeHTable {
   /** Test that families are cleaned up properly when the last qualifier disappears. */
   @Test
   def testFamilyCleanupAfterDelete(): Unit = {
-    val table = new FakeHTable(name = "table", desc = makeTableDesc(nfamilies = 4))
+    val table = new FakeHTable(name = "table", desc = null)
 
     // Populate one row with 4 families, each with 4 qualifiers, each with 4 versions:
     val count = 4
@@ -358,7 +312,7 @@ class TestFakeHTable {
   /** Test ResultScanner.hasNext() on a empty table. */
   @Test
   def testResultScannerHasNextOnEmptyTable(): Unit = {
-    val table = new FakeHTable(name = "table", desc = defaultTableDesc)
+    val table = new FakeHTable(name = "table", desc = null)
     val scanner = table.getScanner(new Scan())
     val iterator = scanner.iterator()
     Assert.assertEquals(false, iterator.hasNext())
@@ -368,7 +322,7 @@ class TestFakeHTable {
   /** Test ResultScanner.hasNext() with stop row-key on an empty table. */
   @Test
   def testResultScannerWithStopRowKeyOnEmptyTable(): Unit = {
-    val table = new FakeHTable(name = "table", desc = defaultTableDesc)
+    val table = new FakeHTable(name = "table", desc = null)
     val scanner = table.getScanner(new Scan().setStopRow("stop"))
     val iterator = scanner.iterator()
     Assert.assertEquals(false, iterator.hasNext())
@@ -378,7 +332,7 @@ class TestFakeHTable {
   /** Test ResultScanner.hasNext() while scanning a full table. */
   @Test
   def testResultScannerHasNext(): Unit = {
-    val table = new FakeHTable(name = "table", desc = defaultTableDesc)
+    val table = new FakeHTable(name = "table", desc = null)
     table.put(new Put("key")
         .add("family", "qualifier", 1L, "value1"))
 
@@ -393,7 +347,7 @@ class TestFakeHTable {
   /** Test ResultScanner.hasNext() while scanning a specific column. */
   @Test
   def testResultScannerHasNextWithQualifier(): Unit = {
-    val table = new FakeHTable(name = "table", desc = defaultTableDesc)
+    val table = new FakeHTable(name = "table", desc = null)
     table.put(new Put("key1")
         .add("family", "qualifier1", 1L, "value1"))
     table.put(new Put("key2")
@@ -414,14 +368,11 @@ class TestFakeHTable {
     val table = new FakeHTable(
         name = "table",
         conf = HBaseConfiguration.create(),
-        desc = makeTableDesc(nfamilies = 2)
+        desc = null
     )
 
     val count = 2
     populateTable(table, count=count)
-
-    // if (Log.isDebugEnabled)
-      table.dump()
 
     val get = new Get("key1")
         .setMaxVersions()
@@ -449,7 +400,7 @@ class TestFakeHTable {
     val table = new FakeHTable(
         name = "table",
         conf = HBaseConfiguration.create(),
-        desc = makeTableDesc(nfamilies = 2)
+        desc = null
     )
 
     val count = 2
@@ -470,7 +421,7 @@ class TestFakeHTable {
     val table = new FakeHTable(
         name = "table",
         conf = HBaseConfiguration.create(),
-        desc = makeTableDesc(nfamilies = 4)
+        desc = null
     )
 
     val count = 4
@@ -480,7 +431,7 @@ class TestFakeHTable {
     val maxVersions = 2
     val get = new Get("key1")
         .setMaxVersions(maxVersions)
-        // .setFilter(new KeyOnlyFilter)
+        .setFilter(new KeyOnlyFilter)
     val result = table.get(get)
     Assert.assertEquals(count, result.getMap.size)
     for ((family, qmap) <- result.getMap.asScala) {
@@ -499,7 +450,7 @@ class TestFakeHTable {
     val table = new FakeHTable(
         name = "table",
         conf = HBaseConfiguration.create(),
-        desc = makeTableDesc(nfamilies = 3)
+        desc = null
     )
 
     val count = 3
@@ -526,7 +477,7 @@ class TestFakeHTable {
     val table = new FakeHTable(
       name = "table",
       conf = HBaseConfiguration.create(),
-      desc = defaultTableDesc
+      desc = null
     )
 
     val rowKey = "key"
@@ -561,7 +512,7 @@ class TestFakeHTable {
     val table = new FakeHTable(
         name = "table",
         conf = HBaseConfiguration.create(),
-        desc = makeTableDesc(nfamilies = 5)
+        desc = null
     )
     val count = 5
     for (x <- 0 until count) {
@@ -598,7 +549,7 @@ class TestFakeHTable {
     val table = new FakeHTable(
         name = "table",
         conf = HBaseConfiguration.create(),
-        desc = makeTableDesc(nfamilies = 5)
+        desc = null
     )
     val count = 5
     for (x <- 0 until count) {
@@ -635,7 +586,7 @@ class TestFakeHTable {
     val table = new FakeHTable(
         name = "table",
         conf = HBaseConfiguration.create(),
-        desc = makeTableDesc(nfamilies = 5)
+        desc = null
     )
     val count = 5
     populateTable(table, count=count)
