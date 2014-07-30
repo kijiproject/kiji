@@ -196,7 +196,7 @@ case ${command} in
     ;;
 
   create)
-    docker run ${daemon} ${remove} --hostname ${container_name} --name ${container_name} kijiproject/bento $@
+    docker run ${daemon} ${remove} --hostname ${container_name} --name ${container_name} kijiproject/bento-cluster $@
     printf "Bento container '" 1>&2
     printf ${container_name}
     printf "' created and started." 1>&2
@@ -284,7 +284,7 @@ case ${command} in
     ;;
 
   build)
-    docker build -t "kijiproject/bento" ${BENTO_CLUSTER_HOME}/docker
+    docker build -t "kijiproject/bento-cluster" ${BENTO_CLUSTER_HOME}/docker
     ;;
 
   logs)
