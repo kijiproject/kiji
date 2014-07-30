@@ -1,5 +1,5 @@
 /**
- * (c) Copyright 2012 WibiData, Inc.
+ * (c) Copyright 2014 WibiData, Inc.
  *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
@@ -17,34 +17,40 @@
  * limitations under the License.
  */
 
-package org.kiji.testing.fakehtable
+package org.kiji.testing.fakehtable;
 
-import org.easymock.internal.ClassInstantiatorFactory
-
-import net.sf.cglib.proxy.Callback
-import net.sf.cglib.proxy.Enhancer
-import net.sf.cglib.proxy.Factory
-import net.sf.cglib.proxy.MethodInterceptor
+import org.easymock.internal.ClassInstantiatorFactory;
+import net.sf.cglib.proxy.Callback;
+import net.sf.cglib.proxy.Enhancer;
+import net.sf.cglib.proxy.Factory;
+import net.sf.cglib.proxy.MethodInterceptor;
 
 /** Equivalent of java.lang.reflect.Proxy that allows proxying concrete classes. */
-object Proxy {
+class ClassProxy {
+  /** Utility class may not be instantiated. */
+  private ClassProxy() {
+  }
+
   /**
    * Creates a proxy to a given concrete class.
    *
    * @param klass Concrete class to proxy.
    * @param handler Handler processing the method calls.
    * @return a new proxy for the specified class.
+   * @throws InstantiationException on error.
    */
-  def create[T](klass: Class[_], handler: MethodInterceptor): T = {
+  @SuppressWarnings("unchecked")
+  public static <T> T create(Class<?> klass, MethodInterceptor handler)
+      throws InstantiationException {
     // Don't ask me how this work...
-    val enhancer = new Enhancer()
-    enhancer.setSuperclass(klass)
-    enhancer.setInterceptDuringConstruction(true)
-    enhancer.setCallbackType(handler.getClass)
-    val proxyClass: Class[_] = enhancer.createClass()
-    val proxy = ClassInstantiatorFactory.getInstantiator().newInstance(proxyClass)
-        .asInstanceOf[Factory]
-    proxy.setCallbacks(Array[Callback](handler))
-    return proxy.asInstanceOf[T]
+    final Enhancer enhancer = new Enhancer();
+    enhancer.setSuperclass(klass);
+    enhancer.setInterceptDuringConstruction(true);
+    enhancer.setCallbackType(handler.getClass());
+    final Class<?> proxyClass = enhancer.createClass();
+    final Factory proxy =
+        (Factory) ClassInstantiatorFactory.getInstantiator().newInstance(proxyClass);
+    proxy.setCallbacks(new Callback[] { handler });
+    return (T) proxy;
   }
 }
