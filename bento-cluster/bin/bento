@@ -100,7 +100,8 @@ function print_tool_usage() {
   echo "  ip       - Get the ip address of a Bento container."
   echo "  address  - Get the ip address of a Bento container."
   echo "  hostname - Get the host name of a Bento container."
-  echo "  build    - Build a new Bento image from the Dockerfile in ${BENTO_CLUSTER_HOME}/docker."
+  echo "  build    - Build a new local Bento image for image development."
+  echo "  pull     - Pull the latest Bento image from docker hub."
   echo "  logs     - Tail the Bento process logs."
   echo
   echo "FLAGS (following the command)"
@@ -112,6 +113,7 @@ function print_tool_usage() {
   echo "    -h     Do not add hostname to /etc/hosts."
   echo "    -c     Do not overwrite Hadoop & HBase client configuration."
   echo "  start"
+  echo "    -h     Do not add hostname to /etc/hosts."
   echo "    -c     Do not overwrite Hadoop & HBase client configuration."
   echo "  list"
   echo "    -a     List all running and stopped Bento containers."
@@ -205,7 +207,7 @@ case ${command} in
     HOST=$(docker inspect --format="{{.Config.Hostname}}" ${container_name})
     if [[ "$edit_hosts" == true ]]; then
       printf "Adding container address and host to /etc/hosts:\n" 1>&2
-      $BENTO_CLUSTER_HOME/bin/update-hosts $ADDRESS $HOST
+      $BENTO_CLUSTER_HOME/bin/update-bento-hosts $ADDRESS $HOST
     else
       printf "Not adding container address and host to /etc/hosts:\n" 1>&2
       echo "${ADDRESS} ${HOST}"
@@ -228,7 +230,7 @@ case ${command} in
         HOST=$(docker inspect --format="{{.Config.Hostname}}" ${container_name})
         if [[ "$edit_hosts" == true ]]; then
           printf "Adding container address and host to /etc/hosts:\n" 1>&2
-          $BENTO_CLUSTER_HOME/bin/update-hosts $ADDRESS $HOST
+          $BENTO_CLUSTER_HOME/bin/update-bento-hosts $ADDRESS $HOST
         else
           printf "Not adding container address and host to /etc/hosts:\n" 1>&2
           echo "${ADDRESS} ${HOST}"
@@ -285,6 +287,10 @@ case ${command} in
 
   build)
     docker build -t "kijiproject/bento-cluster" ${BENTO_CLUSTER_HOME}/docker
+    ;;
+
+  pull)
+    docker pull kijiproject/bento-cluster
     ;;
 
   logs)
