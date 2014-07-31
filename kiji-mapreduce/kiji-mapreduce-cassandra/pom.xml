@@ -154,7 +154,7 @@
           </execution>
         </executions>
         <configuration>
-          <numnodes>2</numnodes>
+          <numnodes>1</numnodes>
         </configuration>
       </plugin>
 
