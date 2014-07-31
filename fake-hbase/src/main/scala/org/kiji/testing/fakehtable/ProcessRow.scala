@@ -42,12 +42,8 @@ import org.slf4j.LoggerFactory
  *
  * FakeHTable is the only intended object of this class.
  */
-object ProcessRow {
+object ProcessRow extends FakeTypes {
   private final val Log = LoggerFactory.getLogger("ProcessRow")
-
-  type Bytes = FakeHTable#Bytes
-  type RowFamilies = FakeHTable#RowFamilies
-  type ColumnSeries = FakeHTable#ColumnSeries
 
   /** Comparator for KeyValue instances. */
   private final val KeyValueComparator = KeyValue.COMPARATOR

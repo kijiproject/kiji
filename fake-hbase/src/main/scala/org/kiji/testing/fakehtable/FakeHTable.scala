@@ -83,6 +83,7 @@ import org.slf4j.LoggerFactory
  * @param autoFlush is the initial value for the table auto-flush property.
  * @param enabled is the initial state of the table.
  * @param autoFillDesc indicates whether descriptors are required or automatically filled-in.
+ * @param hconnection Fake HConnection for this HTable.
  */
 class FakeHTable(
     val name: String,
@@ -91,8 +92,10 @@ class FakeHTable(
     private var autoFlush: Boolean = false,
     private var writeBufferSize: Long = 1,
     var enabled: Boolean = true,
-    autoFillDesc: Boolean = true
-) extends HTableInterface {
+    autoFillDesc: Boolean = true,
+    hconnection: FakeHConnection = new FakeHConnection(null)
+) extends HTableInterface
+    with FakeTypes {
   private val Log = LoggerFactory.getLogger(getClass)
   require(conf != null)
 
@@ -100,29 +103,15 @@ class FakeHTable(
   private var closed: Boolean = false
 
   /** A fake connection. */
-  private val connection: FakeHConnection = new FakeHConnection()
-  private val hconnection: HConnection = UntypedProxy.create(classOf[HConnection], connection)
+  private val mFakeHConnection: FakeHConnection = hconnection
+  private val mHConnection: HConnection =
+      UntypedProxy.create(classOf[HConnection], mFakeHConnection)
 
   /** Region splits and locations. Protected by `this`. */
   private var regions: Seq[HRegionLocation] = Seq()
 
-  /** Byte array shortcut. */
-  type Bytes = Array[Byte]
-
   /** Comparator for Bytes. */
   private final val BytesComparator: java.util.Comparator[Bytes] = Bytes.BYTES_COMPARATOR
-
-  /** Time series in a column, ordered by decreasing time stamps. */
-  type ColumnSeries = NavigableMap[JLong, Bytes]
-
-  /** Map column qualifiers to cell series. */
-  type FamilyQualifiers = NavigableMap[Bytes, ColumnSeries]
-
-  /** Map of column family names to qualifier maps. */
-  type RowFamilies = NavigableMap[Bytes, FamilyQualifiers]
-
-  /** Map of row keys. */
-  type Table = NavigableMap[Bytes, RowFamilies]
 
   /** Map: row key -> family -> qualifier -> timestamp -> cell data. */
   private val rows: Table = new JTreeMap[Bytes, RowFamilies](BytesComparator)
@@ -733,7 +722,10 @@ class FakeHTable(
   }
 
   /** See HTable.getConnection(). */
-  def getConnection: HConnection = hconnection
+  def getConnection(): HConnection = {
+    mHConnection
+  }
+
   // -----------------------------------------------------------------------------------------------
 
   def toHex(bytes: Bytes): String = {

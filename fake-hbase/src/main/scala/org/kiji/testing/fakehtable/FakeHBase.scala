@@ -36,6 +36,7 @@ import org.apache.hadoop.hbase.TableExistsException
 import org.apache.hadoop.hbase.TableNotDisabledException
 import org.apache.hadoop.hbase.TableNotFoundException
 import org.apache.hadoop.hbase.client.HBaseAdmin
+import org.apache.hadoop.hbase.client.HConnection
 import org.apache.hadoop.hbase.client.HTable
 import org.apache.hadoop.hbase.client.HTableInterface
 import org.apache.hadoop.hbase.util.Bytes
@@ -43,15 +44,30 @@ import org.apache.hadoop.hbase.util.Pair
 import org.kiji.schema.impl.HBaseAdminFactory
 import org.kiji.schema.impl.HBaseInterface
 
-/** Fake HBase instance, as a collection of fake HTable instances. */
+/**
+ * Fake HBase instance, as a collection of fake HTable instances.
+ *
+ * FakeHBase/FakeHConnection act as factories for FakeHTable.
+ * Conceptually, there is a single FakeHConnection per FakeHBase.
+ */
 class FakeHBase
-    extends HBaseInterface {
-  type Bytes = Array[Byte]
+    extends HBaseInterface
+    with FakeTypes {
 
-  /** Controls whether to automatically create unknown tables or throw a TableNotFoundException. */
-  private var createUnknownTable = false
+  /**
+   * Controls whether to automatically create unknown tables or throw a TableNotFoundException.
+   *
+   * TODO: Drop this feature, it seems like a bad idea as unknown tables have unspecified
+   *     properties (eg. max-versions, TTL, etc).
+   */
+  private var createUnknownTable: Boolean = false
 
-  /** Map of the tables. */
+  /** Default HConnection to connect to this HBase instance and the HTables it contains. */
+  private val mFakeHConnection: FakeHConnection = new FakeHConnection(this)
+  private val mHConnection: HConnection =
+      UntypedProxy.create(classOf[HConnection], mFakeHConnection)
+
+  /** Map of the FakeHTable in this FakeHBase instance, keyed on HTable name. */
   private[fakehtable] val tableMap = new JTreeMap[Bytes, FakeHTable](Bytes.BYTES_COMPARATOR)
 
   /**
@@ -82,7 +98,12 @@ class FakeHBase
             throw new TableNotFoundException(tableName)
           }
           val desc = new HTableDescriptor(tableName)
-          table = new FakeHTable(name = tableName, conf = conf, desc = desc)
+          table = new FakeHTable(
+              name = tableName,
+              conf = conf,
+              desc = desc,
+              hconnection = mFakeHConnection
+          )
           tableMap.put(tableNameBytes, table)
         }
         return UntypedProxy.create(classOf[HTable], table)
@@ -118,7 +139,8 @@ class FakeHBase
         }
         val table = new FakeHTable(
             name = desc.getNameAsString,
-            desc = desc
+            desc = desc,
+            hconnection = mFakeHConnection
         )
         Arrays.sort(split, Bytes.BYTES_COMPARATOR)
         table.setSplit(split)
@@ -246,5 +268,16 @@ class FakeHBase
     }
   }
 
-  override def getAdminFactory(): HBaseAdminFactory = AdminFactory
+  override def getAdminFactory(): HBaseAdminFactory = {
+    AdminFactory
+  }
+
+  /**
+   * Returns an HConnection for this fake HBase instance.
+   *
+   * @returns an HConnection for this fake HBase instance.
+   */
+  def getHConnection(): HConnection = {
+    return mHConnection
+  }
 }
