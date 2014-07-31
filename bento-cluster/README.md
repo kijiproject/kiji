@@ -5,10 +5,21 @@ A prototype for a Bento cluster (self contained HDFS/YARN/HBase/Cassandra enviro
 ## Usage
 
 The Bento Cluster is controlled from the `bento` script located at `bin/bento`.
-The `bento-env.sh` script located at `bin/bento-env.sh` should be sourced from
-within your `.bashrc` or `.zshrc`, this will put the `bento` script on your path
-and add the correct Hadoop & HBase client configurations to your environment.
-`bento help` will give you a full list of available options.
+The following line should be added to your `.bashrc` or `.zshrc` in order to
+put the `bento` script on your path, and add the Hadoop and HBase configuration
+to your environment.
+
+    source <path-to-bento-cluster>/bin/bento-env.sh
+
+`bento help` will show a listing of all available bento options.
+
+### Use of Sudo
+
+Bento will ask for sudo permissions when creating or starting a container by
+default. This is necessary to update `/etc/hosts` with an entry for the
+container. This can be disabled by using the `-h` flag with `bento create` or
+`bento start`.  Note that HBase and some Hadoop functionality will not work
+if the container's hostname can not be resolved.
 
 ## Requirements
 
