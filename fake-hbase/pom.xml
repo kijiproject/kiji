@@ -36,6 +36,11 @@
   </description>
   <url>http://www.kiji.org</url>
 
+  <properties>
+    <cdh5-hadoop.version>2.3.0-cdh5.0.3</cdh5-hadoop.version>
+    <cdh5-hbase.version>0.96.1.1-cdh5.0.3</cdh5-hbase.version>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
@@ -60,14 +65,22 @@
     <!-- HBase -->
     <dependency>
       <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase</artifactId>
+      <artifactId>hbase-client</artifactId>
+      <version>${cdh5-hbase.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase-server</artifactId>
+      <version>${cdh5-hbase.version}</version>
       <scope>compile</scope>
     </dependency>
 
     <!-- Hadoop -->
     <dependency>
       <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-client</artifactId>
+      <artifactId>hadoop-common</artifactId>
+      <version>${cdh5-hadoop.version}</version>
       <scope>compile</scope>
     </dependency>
 
