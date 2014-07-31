@@ -40,12 +40,7 @@
 
   <property>
     <name>mapreduce.task.tmp.dir</name>
-    <value>/var/lib/hadoop-mapreduce/tasks</value>
-  </property>
-
-  <property>
-    <name>yarn.app.mapreduce.am.staging-dir</name>
-    <value>/user</value>
+    <value>/var/lib/hadoop-mapreduce/cache/${user.name}/tasks</value>
   </property>
 
 </configuration>

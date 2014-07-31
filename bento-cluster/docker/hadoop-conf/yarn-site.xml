@@ -20,16 +20,6 @@
 <configuration>
 
   <property>
-    <name>yarn.resourcemanager.hostname</name>
-    <value>$BENTO_HOST</value>
-  </property>
-
-  <property>
-     <name>yarn.application.classpath</name>
-     <value>/etc/hadoop/conf,/usr/lib/hadoop/*,/usr/lib/hadoop/lib/*,/usr/lib/hadoop-hdfs/*,/usr/lib/hadoop-hdfs/lib/*,/usr/lib/hadoop-yarn/*,/usr/lib/hadoop-yarn/lib/*,/usr/lib/hadoop-mapreduce/*,/usr/lib/hadoop-mapreduce/lib/*,/usr/lib/hadoop-yarn/*,/usr/lib/hadoop-yarn/lib/*</value>
-  </property>
-
-  <property>
     <name>yarn.nodemanager.aux-services</name>
     <value>mapreduce_shuffle</value>
   </property>
@@ -40,34 +30,33 @@
   </property>
 
   <property>
-    <name>yarn.nodemanager.local-dirs</name>
-    <value>file:///var/lib/hadoop-yarn</value>
-  </property>
-
-  <property>
-    <name>yarn.nodemanager.log-dirs</name>
-    <value>file:///var/log/hadoop-yarn</value>
-  </property>
-
-  <property>
     <name>yarn.log-aggregation-enable</name>
     <value>true</value>
   </property>
 
   <property>
-    <description>Where to aggregate logs</description>
+    <name>yarn.dispatcher.exit-on-error</name>
+    <value>true</value>
+  </property>
+
+  <property>
+    <name>yarn.nodemanager.local-dirs</name>
+    <value>/var/lib/hadoop-yarn/cache/${user.name}/nm-local-dir</value>
+  </property>
+
+  <property>
+    <name>yarn.nodemanager.log-dirs</name>
+    <value>/var/log/hadoop-yarn/containers</value>
+  </property>
+
+  <property>
     <name>yarn.nodemanager.remote-app-log-dir</name>
-    <value>hdfs://$BENTO_HOST:8020/var/log/hadoop-yarn/apps</value>
+    <value>/var/log/hadoop-yarn/apps</value>
   </property>
 
   <property>
-    <name>yarn.log.server.url</name>
-    <value>http://$BENTO_HOST:19888/jobhistory/logs/</value>
-  </property>
-
-  <property>
-    <name>yarn.nodemanager.delete.debug-delay-sec</name>
-    <value>600</value>
+     <name>yarn.application.classpath</name>
+     <value>/etc/hadoop/conf,/usr/lib/hadoop/*,/usr/lib/hadoop/lib/*,/usr/lib/hadoop-hdfs/*,/usr/lib/hadoop-hdfs/lib/*,/usr/lib/hadoop-yarn/*,/usr/lib/hadoop-yarn/lib/*,/usr/lib/hadoop-mapreduce/*,/usr/lib/hadoop-mapreduce/lib/*,/usr/lib/hadoop-yarn/*,/usr/lib/hadoop-yarn/lib/*</value>
   </property>
 
 </configuration>

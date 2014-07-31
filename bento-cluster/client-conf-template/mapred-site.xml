@@ -3,22 +3,17 @@
 
 <configuration>
   <property>
-    <name>mapred.job.tracker</name>
-    <value>$BENTO_HOST:8021</value>
-  </property>
-
-  <property>
     <name>mapreduce.framework.name</name>
     <value>yarn</value>
   </property>
 
   <property>
-    <name>mapreduce.jobhistory.address</name>
-    <value>$BENTO_HOST:10020</value>
+    <name>mapred.job.tracker</name>
+    <value>$BENTO_HOST:8021</value>
   </property>
 
   <property>
-    <name>mapreduce.jobhistory.webapp.address</name>
-    <value>$BENTO_HOST:19888</value>
+    <name>mapreduce.jobhistory.address</name>
+    <value>$BENTO_HOST:10020</value>
   </property>
 </configuration>
