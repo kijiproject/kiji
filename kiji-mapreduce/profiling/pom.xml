@@ -88,7 +88,7 @@
           <weaveDependencies>
             <weaveDependency>
               <groupId>org.kiji.mapreduce</groupId>
-              <artifactId>kiji-mapreduce-hadoop2</artifactId>
+              <artifactId>kiji-mapreduce</artifactId>
             </weaveDependency>
           </weaveDependencies>
         </configuration>
@@ -120,7 +120,7 @@
 
     <dependency>
       <groupId>org.kiji.mapreduce</groupId>
-      <artifactId>kiji-mapreduce-hadoop2</artifactId>
+      <artifactId>kiji-mapreduce</artifactId>
       <version>${project.version}</version>
       <scope>compile</scope>
     </dependency>
