@@ -104,23 +104,22 @@ initializeDirectories() {
   echo "KIJI_REST_CONF_DIR set to ${KIJI_REST_CONF_DIR}"
 
   # Finds logs dir and adds to classpath.
+  # Creates if not there.
   if [ -z "${KIJI_REST_LOGS_DIR}" ]; then
     KIJI_REST_LOGS_DIR=${KIJI_REST_HOME}/logs
   elif [ ! -d "${KIJI_REST_LOGS_DIR}" ]; then
-    echo "KIJI_REST_LOGS_DIR ($KIJI_REST_LOGS_DIR) does not exist."
-    exit 1
-  else
-    # KIJI_REST_LOGS_DIR was specified and location exists.
-    # Override Dropwizard logging settings.
-    LOGGING_OVERRIDE_OPTS="-Ddw.http.requestLog.file.currentLogFilename=${KIJI_REST_LOGS_DIR}/requests.log \
-      -Ddw.http.requestLog.file.archivedLogFilenamePattern=${KIJI_REST_LOGS_DIR}/requests-%d.log.gz \
-      -Ddw.logging.file.currentLogFilename=${KIJI_REST_LOGS_DIR}/app.log \
-      -Ddw.logging.file.archivedLogFilenamePattern=${KIJI_REST_LOGS_DIR}/app-%d.log.gz"
+    mkdir -p ${KIJI_REST_LOGS_DIR}
   fi
+  # KIJI_REST_LOGS_DIR was specified and location exists.
+  # Override Dropwizard logging settings.
+  LOGGING_OVERRIDE_OPTS="-Ddw.http.requestLog.file.currentLogFilename=${KIJI_REST_LOGS_DIR}/requests.log \
+    -Ddw.http.requestLog.file.archivedLogFilenamePattern=${KIJI_REST_LOGS_DIR}/requests-%d.log.gz \
+    -Ddw.logging.file.currentLogFilename=${KIJI_REST_LOGS_DIR}/app.log \
+    -Ddw.logging.file.archivedLogFilenamePattern=${KIJI_REST_LOGS_DIR}/app-%d.log.gz"
 
   echo "KIJI_REST_LOGS_DIR set to $KIJI_REST_LOGS_DIR"
 
-  logfile=${KIJI_REST_LOGS_DIR}/console.out
+  console_log=${KIJI_REST_LOGS_DIR}/console.out
 }
 
 function checkStatusOfProc(){
@@ -163,7 +162,7 @@ startBackground() {
       ${KIJI_REST_JAVA_ARGUMENTS} \
       org.kiji.rest.KijiRESTService server \
       "${KIJI_REST_CONF_DIR}/configuration.yml" \
-      > "${logfile}" 2>&1 &
+      > "${console_log}" 2>&1 &
 
   echo $! > $PIDFILE
 
@@ -234,7 +233,7 @@ checkstatus(){
 restart() {
   echo "About to restart ${DESC}"
   stop
-  start
+  startBackground
 }
 
 service() {

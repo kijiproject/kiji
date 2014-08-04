@@ -4,6 +4,8 @@
 Version 1.5.0
   * POM-40. Require JDK 7 to compile Kiji projects.
   * REST-135. Support bulk gets
+  * REST-147. Fix the startup script to make the logs directory and
+       ensure logs are written there.
 
 Version 1.4.0
   * REST-133. Make Kiji/KijiTable connection expiration configurable
