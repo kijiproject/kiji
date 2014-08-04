@@ -21,14 +21,23 @@ package org.kiji.express
 
 import java.util.concurrent.atomic.AtomicInteger
 
+import scala.collection.immutable.HashMap
+
 import org.scalatest.FunSuiteLike
 
+import org.kiji.express.flow.PagingSpec
+import org.kiji.express.flow.ExpressResult
 import org.kiji.express.flow.FlowCell
+import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
+import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.util.InstanceBuilder
+import org.kiji.express.flow.util.ResourceUtil
+import org.kiji.schema.KijiDataRequestBuilder.ColumnsDef
+
 
 /** Contains convenience methods for writing tests that use Kiji. */
 trait KijiSuite extends FunSuiteLike {
@@ -58,12 +67,58 @@ trait KijiSuite extends FunSuiteLike {
         parsedName.isFullyQualified,
         "Fully qualified column names must be of the form \"family:qualifier\"."
     )
-
     values
         .map { entry: (Long, T) =>
           val (version, value) = entry
           FlowCell(parsedName.getFamily, parsedName.getQualifier, version, value)
         }
+  }
+
+  /**
+   * Builds a list of ExpressResult containing the the values provided in a single column of the
+   * specified row.
+   *
+   * @param table The instance of a kiji table.
+   * @param entityId The entityId for the row.
+   * @param columnName The name of the column.
+   * @param values List of values that are to be contained in the returning ExpressResult.
+   * @tparam T The type of the value provided.
+   * @return A sequence of ExpressResult's containing the supplied values.
+   */
+  def kijiRowDataSlice[T](
+      table: KijiTable,
+      entityId: String,
+      columnName: String,
+      values: (Long, T)*
+  ): List[ExpressResult] = {
+
+    val parsedName = KijiColumnName.create(columnName)
+    val entity = EntityIdFactory.getFactory(table.getLayout).getEntityId(entityId)
+    ResourceUtil.doAndClose(table.getWriterFactory.openAtomicPutter) {
+      atomicPutter =>
+        atomicPutter.begin(entity)
+        values.foreach {
+          value: (Long, T) =>
+            val (timestamp, valString) = value
+            atomicPutter.put(parsedName.getFamily, parsedName.getQualifier, timestamp, valString)
+        }
+        atomicPutter.commit()
+    }
+
+    val dummyDataRequest: KijiDataRequest =
+      KijiDataRequest.builder()
+        .addColumns(
+          ColumnsDef.create().withMaxVersions(5)
+            .add(parsedName.getFamily, parsedName.getQualifier))
+        .build()
+    val retList: List[ExpressResult] = List(
+        ResourceUtil.doAndClose(table.getReaderFactory.openTableReader) {
+          reader =>
+            ExpressResult(
+                reader.get(entity, dummyDataRequest),
+                HashMap[KijiColumnName, PagingSpec]())
+        })
+    retList.toList
   }
 
   /**

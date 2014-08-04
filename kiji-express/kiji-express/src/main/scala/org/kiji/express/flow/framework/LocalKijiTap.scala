@@ -62,7 +62,7 @@ import org.kiji.schema.KijiURI
 @ApiStability.Stable
 final private[express] class LocalKijiTap(
     uri: KijiURI,
-    private val scheme: LocalKijiScheme)
+    private val scheme: BaseLocalKijiScheme)
     extends Tap[Properties, InputStream, OutputStream](
         scheme.asInstanceOf[Scheme[Properties, InputStream, OutputStream, _, _]]) {
 
@@ -214,9 +214,19 @@ final private[express] class LocalKijiTap(
    *    is called.
    */
   private[express] def validate(conf: Properties): Unit =
-    KijiTap.validate(
-      uri,
-      scheme.inputColumns,
-      scheme.outputColumns,
-      HadoopUtil.createJobConf(conf, new JobConf(HBaseConfiguration.create())))
+    scheme match {
+      case localKijiScheme: LocalKijiScheme =>
+        KijiTap.validate(
+            uri,
+            localKijiScheme.inputColumns.values.toList,
+            localKijiScheme.outputColumns.values.toList,
+            HadoopUtil.createJobConf(conf, new JobConf(HBaseConfiguration.create())))
+      case typedLocalKijiScheme: TypedLocalKijiScheme =>
+        KijiTap.validate(
+            uri,
+            typedLocalKijiScheme.inputColumns,
+            // TypedLocalKijiScheme takes no output column params.
+            Seq(),
+            HadoopUtil.createJobConf(conf, new JobConf(HBaseConfiguration.create())))
+    }
 }

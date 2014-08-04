@@ -19,51 +19,62 @@
 
 package org.kiji.express.flow
 
-import scala.collection.JavaConverters.asScalaIteratorConverter
-import scala.collection.JavaConverters.mapAsScalaMapConverter
-import scala.collection.mutable.Buffer
 
 import java.io.OutputStream
 import java.util.Properties
 
+import scala.Some
+import scala.collection.mutable.Buffer
+import scala.collection.JavaConverters.asScalaIteratorConverter
+import scala.collection.JavaConverters.collectionAsScalaIterableConverter
+import scala.collection.JavaConverters.mapAsScalaMapConverter
+import scala.collection.JavaConverters.mapAsJavaMapConverter
+
 import cascading.flow.FlowProcess
-import cascading.flow.hadoop.util.HadoopUtil
 import cascading.scheme.SinkCall
 import cascading.tap.Tap
 import cascading.tuple.Fields
 import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
-import com.google.common.base.Objects
 import com.twitter.scalding.AccessMode
-import com.twitter.scalding.HadoopTest
-import com.twitter.scalding.Hdfs
-import com.twitter.scalding.Local
 import com.twitter.scalding.Mode
 import com.twitter.scalding.Read
 import com.twitter.scalding.Source
-import com.twitter.scalding.Test
 import com.twitter.scalding.Write
+import com.twitter.scalding.Test
+import com.twitter.scalding.HadoopTest
+import com.twitter.scalding.Hdfs
+import com.twitter.scalding.Local
+import com.google.common.base.Objects
+import cascading.flow.hadoop.util.HadoopUtil
+
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.mapred.JobConf
-
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.flow.framework.DirectKijiSinkContext
-import org.kiji.express.flow.framework.KijiScheme
-import org.kiji.express.flow.framework.KijiTap
-import org.kiji.express.flow.framework.LocalKijiScheme
-import org.kiji.express.flow.framework.LocalKijiTap
-import org.kiji.express.flow.util.ResourceUtil._
+
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.Kiji
+import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
-import org.kiji.schema.KijiRowData
-import org.kiji.schema.KijiRowScanner
-import org.kiji.schema.KijiTable
-import org.kiji.schema.KijiTableReader.KijiScannerOptions
+import org.kiji.schema.KijiTableReader
 import org.kiji.schema.KijiTableWriter
+import org.kiji.schema.KijiTable
+import org.kiji.schema.KijiRowScanner
+import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiURI
+import org.kiji.schema.layout.ColumnReaderSpec
+import org.kiji.schema.KijiDataRequest.Column
+import org.kiji.schema.KijiTableReader.KijiScannerOptions
+import org.kiji.express.flow.framework.BaseKijiScheme
+import org.kiji.express.flow.framework.DirectKijiSinkContext
+import org.kiji.express.flow.framework.KijiTap
+import org.kiji.express.flow.framework.KijiScheme
+import org.kiji.express.flow.framework.LocalKijiTap
+import org.kiji.express.flow.framework.LocalKijiScheme
+import org.kiji.express.flow.util.ResourceUtil
+
 
 /**
  * A read or write view of a Kiji table.
@@ -315,16 +326,16 @@ private[express] object KijiSource {
       rows: Option[Buffer[Tuple]],
       fields: Fields,
       configuration: Configuration) {
-    doAndRelease(Kiji.Factory.open(tableUri)) { kiji: Kiji =>
+    ResourceUtil.doAndRelease(Kiji.Factory.open(tableUri)) { kiji: Kiji =>
       // Layout to get the default reader schemas from.
-      val layout = withKijiTable(tableUri, configuration) { table: KijiTable =>
+      val layout = ResourceUtil.withKijiTable(tableUri, configuration) { table: KijiTable =>
         table.getLayout
       }
 
       val eidFactory = EntityIdFactory.getFactory(layout)
 
       // Write the desired rows to the table.
-      withKijiTableWriter(tableUri, configuration) { writer: KijiTableWriter =>
+      ResourceUtil.withKijiTableWriter(tableUri, configuration) { writer: KijiTableWriter =>
         rows.toSeq.flatten.foreach { row: Tuple =>
           val tupleEntry = new TupleEntry(fields, row)
           val iterator = fields.iterator()
@@ -426,12 +437,22 @@ private[express] object KijiSource {
         HadoopUtil.createJobConf(process.getConfigCopy, new JobConf(HBaseConfiguration.create()))
 
       // Read table into buffer.
-      withKijiTable(uri, conf) { table: KijiTable =>
+      ResourceUtil.withKijiTable(uri, conf) { table: KijiTable =>
         // We also want the entire time range, so the test can inspect all data in the table.
         val request: KijiDataRequest =
-          KijiScheme.buildRequest(table.getLayout, TimeRangeSpec.All, inputColumns.values)
+          BaseKijiScheme.buildRequest(table.getLayout, TimeRangeSpec.All, inputColumns.values)
 
-        doAndClose(LocalKijiScheme.openReaderWithOverrides(table, request)) { reader =>
+        val overrides: Map[KijiColumnName, ColumnReaderSpec] =
+            request
+                .getColumns
+                .asScala
+                .map { column: Column => (column.getColumnName, column.getReaderSpec)}
+                .toMap
+        val tableReader: KijiTableReader = table.getReaderFactory.readerBuilder()
+            .withColumnReaderSpecOverrides(overrides.asJava)
+            .buildAndOpen()
+
+        ResourceUtil.doAndClose(tableReader) { reader =>
           // Set up scanning options.
           val eidFactory = EntityIdFactory.getFactory(table.getLayout)
           val scannerOptions = new KijiScannerOptions()
@@ -449,29 +470,33 @@ private[express] object KijiSource {
               case None => null
             }
           )
-          doAndClose(reader.getScanner(request, scannerOptions)) { scanner: KijiRowScanner =>
-            scanner.iterator().asScala.foreach { row: KijiRowData =>
-              val tuple = KijiScheme.rowToTuple(inputColumns, getSourceFields, timestampField, row)
+          ResourceUtil.doAndClose(reader.getScanner(request, scannerOptions)) {
+            scanner: KijiRowScanner =>
+              scanner.iterator().asScala.foreach { row: KijiRowData =>
+                val tuple = KijiScheme.rowToTuple(
+                    inputColumns,
+                    getSourceFields,
+                    timestampField,
+                    row)
 
-              val newTupleValues = tuple
-                  .iterator()
-                  .asScala
-                  .map {
-                    // This converts stream into a list to force the stream to compute all of the
-                    // transformations that have been applied lazily to it. This is necessary
-                    // because some of the transformations applied in KijiScheme#rowToTuple have
-                    // dependencies on an open connection to a schema table.
-                    case stream: Stream[_] => stream.toList
-                    case x => x
-                  }
-                  .toSeq
+                val newTupleValues = tuple
+                    .iterator()
+                    .asScala
+                    .map {
+                      // This converts stream into a list to force the stream to compute all of the
+                      // transformations that have been applied lazily to it. This is necessary
+                      // because some of the transformations applied in KijiScheme#rowToTuple have
+                      // dependencies on an open connection to a schema table.
+                      case stream: Stream[_] => stream.toList
+                      case x => x
+                    }
+                    .toSeq
 
-              buffer.foreach { _ += new Tuple(newTupleValues: _*) }
+                buffer.foreach { _ += new Tuple(newTupleValues: _*) }
             }
           }
         }
       }
-
       super.sinkCleanup(process, sinkCall)
     }
   }

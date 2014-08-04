@@ -177,6 +177,6 @@ final private[express] class HFileKijiTap(
    */
   private[express] def validate(conf: Configuration): Unit = {
     val kijiUri: KijiURI = KijiURI.newBuilder(tableUri).build()
-    KijiTap.validate(kijiUri, Map(), scheme.outputColumns, conf)
+    KijiTap.validate(kijiUri, Seq(), scheme.outputColumns.values.toList, conf)
   }
 }

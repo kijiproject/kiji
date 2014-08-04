@@ -77,7 +77,7 @@ import scala.collection.JavaConverters.asScalaIteratorConverter
 final class KijiTap(
     // This is not a val because KijiTap needs to be serializable and KijiURI is not.
     uri: KijiURI,
-    private val scheme: KijiScheme
+    private val scheme: BaseKijiScheme
 ) extends Tap[
     JobConf,
     RecordReader[Container[JEntityId], Container[KijiRowData]],
@@ -287,7 +287,21 @@ final class KijiTap(
    */
   private[express] def validate(conf: Configuration): Unit = {
     val kijiUri: KijiURI = KijiURI.newBuilder(tableUri).build()
-    KijiTap.validate(kijiUri, scheme.inputColumns, scheme.outputColumns, conf)
+    scheme match {
+      case kijiScheme: KijiScheme =>  KijiTap.validate (
+          kijiUri,
+          kijiScheme.inputColumns.values.toList,
+          kijiScheme.outputColumns.values.toList,
+          conf
+      )
+      case kijiTypedScheme: TypedKijiScheme => KijiTap.validate(
+          kijiUri,
+          kijiTypedScheme.inputColumns,
+          //KijiTypedSource takes no output column params.
+          Seq(),
+          conf
+      )
+    }
   }
 }
 
@@ -302,8 +316,8 @@ object KijiTap {
    */
   private[express] def validate(
       kijiUri: KijiURI,
-      inputColumns: Map[String, ColumnInputSpec],
-      outputColumns: Map[String, ColumnOutputSpec],
+      inputColumns: Seq[ColumnInputSpec],
+      outputColumns: Seq[ColumnOutputSpec],
       conf: Configuration
   ) {
     // Try to open the Kiji instance.
@@ -333,8 +347,8 @@ object KijiTap {
     table.release() // Release the KijiTable.
 
     // Get a list of columns that don't exist
-    val inputColumnNames: Seq[KijiColumnName] = inputColumns.values.map(_.columnName).toList
-    val outputColumnNames: Seq[KijiColumnName] = outputColumns.values.map(_.columnName).toList
+    val inputColumnNames: Seq[KijiColumnName] = inputColumns.map(_.columnName).toList
+    val outputColumnNames: Seq[KijiColumnName] = outputColumns.map(_.columnName).toList
 
     val nonExistentColumnErrors = (inputColumnNames ++ outputColumnNames)
         // Filter for illegal columns, so we can throw an error.
@@ -368,4 +382,5 @@ object KijiTap {
       )
     }
   }
+
 }

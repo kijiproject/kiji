@@ -28,7 +28,7 @@ import org.kiji.schema.KijiURI
  * Factory methods for constructing [[org.kiji.express.flow.KijiSource]]s that will be used as
  * outputs of a KijiExpress flow.
  *
- * Example usage:
+ * Example usage for the fields API:
  *
  * {{{
  *   KijiOutput.builder
@@ -40,6 +40,13 @@ import org.kiji.schema.KijiURI
  *           .build)
  *       .build
  * }}}
+ *
+ * Example usage for the type safe API:
+ * {{{
+ *   // This will request all columns for the specified table.
+ *   KijiOutput.typedSinkForTable("kiji://localhost:2181/default/mytable")
+ * }}}
+ *
  */
 @ApiAudience.Public
 @ApiStability.Stable
@@ -68,6 +75,33 @@ object KijiOutput {
         timeRange = TimeRangeSpec.All,
         timestampField = timestampField,
         outputColumns = columns)
+  }
+
+  /**
+   * Create a new instance of [[TypedKijiSource]] to be used as a sink
+   *
+   * @param tableUri uri for the table.
+   * @tparam T is the type of the data written.
+   * @return a source that is used to write tuple values to a Kiji table.
+   */
+  def typedSinkForTable[T <: Iterable[ExpressColumnOutput[_]]](
+      tableUri: String
+  ): TypedKijiSource[T] = {
+    new TypedKijiSource[T](tableAddress = tableUri,  timeRange = TimeRangeSpec.All)
+  }
+
+
+  /**
+   * Create a new instance of [[TypedKijiSource]] to be used as a sink
+   *
+   * @param kijiUri is the [[KijiURI]] for the table.
+   * @tparam T is the type for the data being written.
+   * @return a TypedKijiSource that is used to write tuple values to a Kiji table.
+   */
+  def typedSinkForTable[T <: Iterable[ExpressColumnOutput[_]]](
+      kijiUri:KijiURI
+  ): TypedKijiSource[T] = {
+    typedSinkForTable(kijiUri.toString)
   }
 
   /**
