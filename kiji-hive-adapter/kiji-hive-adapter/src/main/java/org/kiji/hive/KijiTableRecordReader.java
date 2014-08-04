@@ -151,8 +151,9 @@ public class KijiTableRecordReader
       }
     }
 
-    // Close current kiji row data writable before replacing it
+    // Close and null out current kiji row data writable before replacing it
     ResourceUtils.closeOrLog(mCurrentPagedKijiRowDataWritable);
+    mCurrentPagedKijiRowDataWritable = null;
 
     // Stop if there are no more rows.
     if (!mIterator.hasNext()) {

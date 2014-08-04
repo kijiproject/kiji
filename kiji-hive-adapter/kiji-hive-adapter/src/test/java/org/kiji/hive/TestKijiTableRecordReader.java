@@ -222,6 +222,12 @@ public class TestKijiTableRecordReader extends KijiClientTest {
       kijiTableWriter.put(entityId, "jobs", "foo3", TIMESTAMP, "bar3");
       kijiTableWriter.put(entityId, "jobs", "foo4", TIMESTAMP, "bar4");
       kijiTableWriter.put(entityId, "jobs", "foo5", TIMESTAMP, "bar5");
+
+      // To test KIJIHIVE-54. Let's add another row of data that has no "jobs" data
+      // in order to test that we aren't trying to request paged data from a non-existent column
+      // in that row.
+      entityId = mTable.getEntityId("zbar");
+      kijiTableWriter.put(entityId, "info", "name", TIMESTAMP + 2, "foo-val-update2");
     } finally {
       kijiTableWriter.close();
     }
@@ -234,6 +240,7 @@ public class TestKijiTableRecordReader extends KijiClientTest {
 
     KijiDataRequest kijiDataRequest = KijiDataRequest.builder()
         .addColumns(ColumnsDef.create().withPageSize(2).addFamily("jobs"))
+        .addColumns(ColumnsDef.create().addFamily("info"))
         .build();
 
     mConf.set(KijiTableSerDe.HIVE_TABLE_NAME_PROPERTY, TABLE_NAME);
@@ -252,12 +259,13 @@ public class TestKijiTableRecordReader extends KijiClientTest {
       while (hasResult) {
         resultCount++;
         hasResult = tableRecordReader.next(key, value);
-        // Ensure that each page of mapped qualifier results is at most 2.
-        assertTrue(value.getData().size() <= 2);
+        // Ensure that each page of mapped qualifier results is at most 3 (two for the jobs
+        // and one for the info request).
+        assertTrue(value.getData().size() <= 3);
       }
 
-      // Should read 3 rows
-      assertEquals(3, resultCount);
+      // Should read 5 rows since we are requesting info and jobs columns from Kiji.
+      assertEquals(5, resultCount);
     } finally {
       tableRecordReader.close();
     }
