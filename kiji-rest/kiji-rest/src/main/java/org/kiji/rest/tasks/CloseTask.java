@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.rest.resources;
+package org.kiji.rest.tasks;
 
 import java.io.PrintWriter;
 import java.util.Collection;

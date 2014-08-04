@@ -82,16 +82,30 @@ KijiREST is implemented using DropWizard. See
 for additional Dropwizard-specific configuration options such as server settings
 and logging options (console-logging, log files, and syslog).
 
-Creating a KijiRest Plugin
+Creating a KijiREST Plugin
 --------------------------
 
-To create a KijiRest plugin project from the maven archetype, use the following command:
+To create a KijiREST plugin project from the maven archetype, use the following command:
 
 mvn archetype:generate \
 -DarchetypeCatalog=https://repo.wibidata.com/artifactory/kiji-packages/archetype-catalog.xml
 
-From there you can choose the org.kiji.rest:plugin-archetype (A skeleton KijiRest plugin project.)
+From there you can choose the org.kiji.rest:plugin-archetype (A skeleton KijiREST plugin project.)
 option.
+
+Disabling the "standard" KijiREST plugin
+---------------------------
+
+The standard KijiREST plugin is what includes the "/v1" endpoint. Some users may
+want to disable this access if KijiREST is accessible to a wider audience. For
+example, if someone deploys a custom plugin to access a certain sub-section of
+Kiji tables, then disabling access to the "/v1" endpoint will prevent users from
+reading data from all other tables/restrict access to KijiREST. This also keeps
+the deployment of plugins consistent by treating the "standard" plugin as
+separate rather than built-in to the application.
+
+To disable the "standard" KijiREST plugin, simply remove the
+standard-plugin-<version>.jar from the lib/ directory of KijiREST and restart!
 
 Issues and mailing lists
 ------------------------

@@ -31,12 +31,10 @@ import javax.ws.rs.core.UriBuilder;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.yammer.dropwizard.testing.ResourceTest;
-
 import org.junit.After;
 import org.junit.Test;
 
 import org.kiji.rest.config.FresheningConfiguration;
-import org.kiji.rest.plugins.StandardKijiRestPlugin;
 import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.rest.resources.RowsResource;
 import org.kiji.schema.EntityId;
@@ -106,7 +104,7 @@ public class TestRowsResourceFreshening extends ResourceTest {
 
     mWriter = mTable.getWriterFactory().openTableWriter();
 
-    StandardKijiRestPlugin.registerSerializers(this.getObjectMapperFactory());
+    KijiRESTService.registerSerializers(this.getObjectMapperFactory());
     mKijiClient = new ManagedKijiClient(mKiji.getURI());
     mKijiClient.start();
 

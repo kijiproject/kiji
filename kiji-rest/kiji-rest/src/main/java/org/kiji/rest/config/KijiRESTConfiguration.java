@@ -17,18 +17,15 @@
  * limitations under the License.
  */
 
-package org.kiji.rest;
+package org.kiji.rest.config;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Sets;
 import com.yammer.dropwizard.config.Configuration;
 import org.hibernate.validator.constraints.NotEmpty;
-
-import org.kiji.rest.config.FresheningConfiguration;
 
 /**
  * The Java object which is deserialized from the YAML configuration file.
@@ -50,7 +47,7 @@ public class KijiRESTConfiguration extends Configuration {
 
   /** Subconfiguration controlling the visibility of instances. */
   @JsonProperty("instances")
-  private Set<String> mInstances = Sets.newHashSet();
+  private Set<String> mInstances;
 
   /** Set global CORS support. */
   @JsonProperty("cors")

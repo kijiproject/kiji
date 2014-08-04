@@ -18,19 +18,6 @@
  */
 
 /**
- * The main package for KijiREST
- *
- * <p>
- * KijiREST provides a RESTful interface to a data stored in Kiji tables.
- * </p>
- *
- * <p>
- *   Classes of note:
- * </p>
- * <ul>
- *   <li>{@link org.kiji.rest.config.KijiRESTConfiguration} Configuration class for KijiREST.
- *   <li>{@link org.kiji.rest.KijiRESTService} Service that provides REST resources.
- *   <li>{@link org.kiji.rest.RoutesConstants} Class that defines routes and endpoints used.
- * </ul>
+ * Contains the location of KijiREST plugins.
  */
-package org.kiji.rest;
+package org.kiji.rest.plugins;

@@ -51,6 +51,7 @@
   <modules>
     <module>build-resources</module>
     <module>kiji-rest</module>
+    <module>standard-plugin</module>
     <module>load-testing</module>
     <module>plugin-archetype</module>
     <module>cdh4</module>

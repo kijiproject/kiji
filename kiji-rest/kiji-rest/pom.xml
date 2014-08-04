@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <!--
     (c) Copyright 2013 WibiData, Inc.
 
@@ -216,6 +217,11 @@
       </exclusions>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro</artifactId>
+    </dependency>
+
     <!--  For CORS support -->
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
@@ -224,18 +230,6 @@
     </dependency>
 
     <!-- Testing Dependencies -->
-    <dependency>
-      <groupId>com.yammer.dropwizard</groupId>
-      <artifactId>dropwizard-testing</artifactId>
-      <version>${dropwizard.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
 
     <dependency>
       <groupId>org.kiji.testing</groupId>
@@ -268,6 +262,13 @@
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-test</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>com.yammer.dropwizard</groupId>
+      <artifactId>dropwizard-testing</artifactId>
+      <version>${dropwizard.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -298,12 +299,6 @@
         <artifactId>findbugs-maven-plugin</artifactId>
       </plugin>
 
-      <!-- Generate Java sources from Avro IDL -->
-      <plugin>
-        <groupId>org.apache.avro</groupId>
-        <artifactId>avro-maven-plugin</artifactId>
-      </plugin>
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
@@ -320,7 +315,7 @@
                 <requireFilesSize>
                   <maxsize>0</maxsize>
                   <files>
-                   <file>target/cleanup.log</file>
+                    <file>target/cleanup.log</file>
                   </files>
                 </requireFilesSize>
               </rules>

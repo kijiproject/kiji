@@ -21,12 +21,12 @@ package org.kiji.rest;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
@@ -53,6 +53,7 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.rest.config.KijiRESTConfiguration;
 import org.kiji.rest.util.KijiInstanceCache;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiNotInstalledException;
@@ -124,7 +125,7 @@ public class ManagedKijiClient implements KijiClient, Managed {
    * @throws IOException if error while creating connections to the cluster.
    */
   public ManagedKijiClient(final KijiURI clusterURI) throws IOException {
-    this(clusterURI, DEFAULT_TIMEOUT, new HashSet<String>());
+    this(clusterURI, DEFAULT_TIMEOUT, null);
   }
 
 
@@ -337,14 +338,20 @@ public class ManagedKijiClient implements KijiClient, Managed {
     LOG.info("Refreshing instances.");
 
     Set<String> instances = Sets.newHashSet();
-    for (ChildData node : mZKInstances.getCurrentData()) {
-      instances.add(Iterables.getLast(Splitter.on('/').split(node.getPath())));
-    }
-    // Keep the intersection of the visible and actual sets.
-    if (!mVisibleKijiInstances.isEmpty()) {
-      instances.retainAll(mVisibleKijiInstances);
-    }
 
+    // If the visible instances configured is not specified OR it's not empty then
+    // iterate on the ZK instances to find the valid instances and make them accessible
+    // by KijiREST keeping only the ones that were specified in the config.
+    if (mVisibleKijiInstances == null || !mVisibleKijiInstances.isEmpty()) {
+      for (ChildData node : mZKInstances.getCurrentData()) {
+        instances.add(Iterables.getLast(Splitter.on('/').split(node.getPath())));
+      }
+
+      if (mVisibleKijiInstances != null) {
+        // Keep the intersection of the visible and actual sets.
+        instances.retainAll(mVisibleKijiInstances);
+      }
+    }
     final ImmutableSet.Builder<String> instancesBuilder = ImmutableSet.builder();
     instancesBuilder.addAll(instances);
     mKijiInstances = instancesBuilder.build();

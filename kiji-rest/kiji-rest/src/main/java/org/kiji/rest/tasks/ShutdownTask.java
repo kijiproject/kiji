@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.rest.resources;
+package org.kiji.rest.tasks;
 
 import java.io.PrintWriter;
 import java.util.Collection;
@@ -27,12 +27,11 @@ import javax.ws.rs.core.Response;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.yammer.dropwizard.tasks.Task;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.rest.KijiRESTConfiguration;
 import org.kiji.rest.ManagedKijiClient;
+import org.kiji.rest.config.KijiRESTConfiguration;
 
 /**
  * This REST task allows administrators to shutdown the system.

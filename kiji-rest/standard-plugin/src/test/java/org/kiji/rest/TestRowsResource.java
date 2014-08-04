@@ -48,7 +48,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.yammer.dropwizard.testing.ResourceTest;
-
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
@@ -57,7 +56,6 @@ import org.junit.After;
 import org.junit.Test;
 
 import org.kiji.rest.config.FresheningConfiguration;
-import org.kiji.rest.plugins.StandardKijiRestPlugin;
 import org.kiji.rest.representations.KijiRestEntityId;
 import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.rest.representations.SchemaOption;
@@ -215,7 +213,7 @@ public class TestRowsResource extends ResourceTest {
     playersTableWriter.close();
     playersTable.release();
 
-    StandardKijiRestPlugin.registerSerializers(this.getObjectMapperFactory());
+    KijiRESTService.registerSerializers(this.getObjectMapperFactory());
     mKijiClient = new ManagedKijiClient(mFakeKiji.getURI());
     mKijiClient.start();
 

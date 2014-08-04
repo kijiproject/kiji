@@ -2,6 +2,8 @@
                               KijiREST Release Notes
 
 Version 1.5.0
+  * REST-144. Split the standard plugin into its own module to allow for the
+      "/v1" endpoint to be removed/disabled.
   * POM-40. Require JDK 7 to compile Kiji projects.
   * REST-135. Support bulk gets
   * REST-147. Fix the startup script to make the logs directory and

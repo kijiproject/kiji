@@ -23,7 +23,7 @@ import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 
 import org.kiji.rest.KijiClient;
-import org.kiji.rest.KijiRESTConfiguration;
+import org.kiji.rest.config.KijiRESTConfiguration;
 
 /**
  * Interface for plugins which will add custom resources to the Dropwizard environment.

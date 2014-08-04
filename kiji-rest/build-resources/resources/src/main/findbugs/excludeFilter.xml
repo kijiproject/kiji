@@ -43,7 +43,7 @@
 
   <Match>
     <!-- These anonymous classes are compact and not performance sensitive. -->
-    <Class name="~org\.kiji\.rest\.resources\.ShutdownTask.*" />
+    <Class name="~org\.kiji\.rest\.tasks\.ShutdownTask.*" />
     <Bug pattern="DM_EXIT" />
   </Match>
 
