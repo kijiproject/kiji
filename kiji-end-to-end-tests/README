@@ -2,3 +2,8 @@ This project includes end-to-end tests for the Kiji platform.
 
 The kiji/ directory contains shared libraries.
 You must include this directory in your PYTHONPATH.
+
+This project dependson the 'python-base' module.  If you have pip installed, you may use:
+    $ pip install python-base
+or, if you have python2 and python3 on your system, you need to explicitly use pip3:
+    $ pip3 install python-base
