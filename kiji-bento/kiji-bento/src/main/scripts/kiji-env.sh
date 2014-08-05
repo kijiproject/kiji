@@ -58,7 +58,7 @@
 #   PATH                The $PATH is modified so that $BENTO_CLUSTER_HOME/bin,
 #                       $HADOOP_HOME/bin, $HBASE_HOME/bin are on it.
 #
-
+# If you want to override the bento-cluster environment variables anyway, use --override.
 
 # Get the directory this script is located in, no matter how the script is being
 # run.
@@ -90,9 +90,10 @@ export PATH
 echo "Added kiji, kiji-mr, kiji-schema-shell, and kiji-express binaries to PATH."
 
 # Source the bento-env.sh script to configure the rest of the environment.
-if [ -z "$HADOOP_HOME" -a -z "$HBASE_HOME" ]; then
+if [ "$1" == "--override" ] || [ -z "$HADOOP_HOME" -a -z "$HBASE_HOME" ]; then
   source "${KIJI_HOME}/cluster/bin/bento-env.sh"
 else
-  echo "HADOOP_HOME or HBASE_HOME already set, not overriding with Bento cluster configuration."
+  echo "HADOOP_HOME or HBASE_HOME already set, not overriding with Bento cluster configuration. " \
+  "To override anyway, use --override."
 fi
 
