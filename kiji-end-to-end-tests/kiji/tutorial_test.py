@@ -26,7 +26,7 @@ class KijiCommand(command.Command):
     args = [
         '/bin/bash',
         '-c',
-        'source ./bin/kiji-env.sh > /dev/null 2>&1 && %s' % command,
+        'source ./bin/kiji-env.sh --override > /dev/null 2>&1 && %s' % command,
     ]
     super(KijiCommand, self).__init__(*args, **kwargs)
 
