@@ -43,7 +43,7 @@ if [[ $address != 172.17.* ]]; then
   exit 1;
 fi
 
-temp=$(mktemp /tmp/hosts.tmp.XX)
+temp=$(mktemp /tmp/hosts.tmp.XXXXXX)
 
 cat /etc/hosts | grep --invert-match "\s${host}$" > $temp
 echo "${address}	${host}" >> $temp

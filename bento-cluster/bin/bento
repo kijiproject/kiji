@@ -129,6 +129,16 @@ if [[ -z ${1:-} ]]; then
   exit 0
 fi
 
+# Locate the Docker binary:
+# Ubuntu installs the docker binary as docker.io to avoid a conflict with another package:
+if docker=$(which "docker.io"); then :
+elif docker=$(which "docker"); then :
+else
+  echo "Docker command-line tool not found : please install Docker."
+  exit 1
+fi
+
+
 command=$1
 shift  # pop off the command
 
@@ -172,7 +182,7 @@ done
 shift $((OPTIND-1))
 
 function set_client_conf() {
-  HOST=$(docker inspect --format="{{.Config.Hostname}}" ${container_name})
+  HOST=$($docker inspect --format="{{.Config.Hostname}}" ${container_name})
   if [[ "$client_config" == true ]]; then
     echo "Adding address to Bento container '${container_name}' to local Hadoop & HBase client configurations." 1>&2
     mkdir -p $BENTO_CLUSTER_HOME/client-conf/hadoop
@@ -198,13 +208,13 @@ case ${command} in
     ;;
 
   create)
-    docker run ${daemon} ${remove} --hostname ${container_name} --name ${container_name} kijiproject/bento-cluster $@
+    $docker run ${daemon} ${remove} --hostname ${container_name} --name ${container_name} kijiproject/bento-cluster $@
     printf "Bento container '" 1>&2
     printf ${container_name}
     printf "' created and started." 1>&2
     printf "\n"
-    ADDRESS=$(docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
-    HOST=$(docker inspect --format="{{.Config.Hostname}}" ${container_name})
+    ADDRESS=$($docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
+    HOST=$($docker inspect --format="{{.Config.Hostname}}" ${container_name})
     if [[ "$edit_hosts" == true ]]; then
       printf "Adding container address and host to /etc/hosts:\n" 1>&2
       $BENTO_CLUSTER_HOME/bin/update-bento-hosts $ADDRESS $HOST
@@ -216,18 +226,18 @@ case ${command} in
     ;;
 
   start)
-    if status=$(docker inspect --format="{{.State.Running}}" ${container_name} 2> /dev/null); then
+    if status=$($docker inspect --format="{{.State.Running}}" ${container_name} 2> /dev/null); then
       if [[ $status == 'true' ]]; then
         echo "Bento container '${container_name}' is already started." 1>&2
         exit 1;
       else
-        docker start ${container_name} > /dev/null
+        $docker start ${container_name} > /dev/null
         printf "Bento container '" 1>&2;
         printf ${container_name}
         printf "' started." 1>&2;
         printf "\n"
-        ADDRESS=$(docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
-        HOST=$(docker inspect --format="{{.Config.Hostname}}" ${container_name})
+        ADDRESS=$($docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
+        HOST=$($docker inspect --format="{{.Config.Hostname}}" ${container_name})
         if [[ "$edit_hosts" == true ]]; then
           printf "Adding container address and host to /etc/hosts:\n" 1>&2
           $BENTO_CLUSTER_HOME/bin/update-bento-hosts $ADDRESS $HOST
@@ -244,17 +254,17 @@ case ${command} in
     ;;
 
   stop)
-    docker stop ${container_name} > /dev/null
+    $docker stop ${container_name} > /dev/null
     echo "Bento container '${container_name}' stopped."
     ;;
 
   rm)
-    docker rm ${container_name} > /dev/null
+    $docker rm ${container_name} > /dev/null
     echo "Bento container '${container_name}' removed."
     ;;
 
   status)
-    if status=$(docker inspect --format="{{.State.Running}}" ${container_name} 2> /dev/null); then
+    if status=$($docker inspect --format="{{.State.Running}}" ${container_name} 2> /dev/null); then
       printf "Bento container " 1>&2
       if [[ $status == 'true' ]]; then
         printf "started"
@@ -270,31 +280,31 @@ case ${command} in
     ;;
 
   list)
-    docker ps $all | awk 'NR==1 || /kijiproject\/bento/'
+    $docker ps $all | awk 'NR==1 || /kijiproject\/bento/'
     ;;
 
   ip)
-    echo $(docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
+    echo $($docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
     ;;
 
   address)
-    echo $(docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
+    echo $($docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
     ;;
 
   hostname)
-    echo $(docker inspect --format="{{.Config.Hostname}}" ${container_name})
+    echo $($docker inspect --format="{{.Config.Hostname}}" ${container_name})
     ;;
 
   build)
-    docker build -t "kijiproject/bento-cluster" ${BENTO_CLUSTER_HOME}/docker
+    $docker build -t "kijiproject/bento-cluster" ${BENTO_CLUSTER_HOME}/docker
     ;;
 
   pull)
-    docker pull kijiproject/bento-cluster
+    $docker pull kijiproject/bento-cluster
     ;;
 
   logs)
-    docker logs -f ${container_name}
+    $docker logs -f ${container_name}
     ;;
 
   *)
