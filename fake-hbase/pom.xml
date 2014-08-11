@@ -21,7 +21,7 @@
 
   <groupId>org.kiji.testing</groupId>
   <artifactId>fake-hbase</artifactId>
-  <version>0.2.0-SNAPSHOT</version>
+  <version>0.3.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
