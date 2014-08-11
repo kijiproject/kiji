@@ -138,6 +138,12 @@ else
   exit 1
 fi
 
+# Ensure that Docker version is not less than 1.0.0.
+docker_version=$($docker version | head -1 | cut -f 3 -d " ")
+if [[ ${docker_version} < 1.0.0 ]] ; then
+  echo "Docker version should be 1.0.0 or above. Found version $docker_version." 1>&2
+  exit 1
+fi
 
 command=$1
 shift  # pop off the command
