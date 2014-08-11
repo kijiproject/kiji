@@ -68,13 +68,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.yammer.metrics.annotation.Timed;
-
 import org.apache.hadoop.hbase.HConstants;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
+import org.kiji.rest.FresheningConfiguration;
 import org.kiji.rest.KijiClient;
-import org.kiji.rest.config.FresheningConfiguration;
 import org.kiji.rest.representations.KijiRestEntityId;
 import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.rest.util.RowResourceUtil;

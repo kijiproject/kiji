@@ -37,6 +37,15 @@
   </properties>
 
   <dependencies>
+    <!-- Bring in the skeleton -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>kiji-rest</artifactId>
+      <version>${project.version}</version>
+      <classifier>release</classifier>
+      <type>tar.gz</type>
+    </dependency>
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>kiji-rest</artifactId>
@@ -227,6 +236,22 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>pre-release-requirements</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <descriptors>
+                <descriptor>${basedir}/../build-resources/src/main/assembly/pre-release-requirements.xml</descriptor>
+              </descriptors>
+              <attach>false</attach>
+              <finalName>prereqs</finalName>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

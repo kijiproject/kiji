@@ -34,7 +34,6 @@ import com.yammer.dropwizard.testing.ResourceTest;
 import org.junit.After;
 import org.junit.Test;
 
-import org.kiji.rest.config.FresheningConfiguration;
 import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.rest.resources.RowsResource;
 import org.kiji.schema.EntityId;

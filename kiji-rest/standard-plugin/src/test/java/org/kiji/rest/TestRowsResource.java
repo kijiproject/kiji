@@ -55,7 +55,6 @@ import org.apache.commons.codec.binary.Hex;
 import org.junit.After;
 import org.junit.Test;
 
-import org.kiji.rest.config.FresheningConfiguration;
 import org.kiji.rest.representations.KijiRestEntityId;
 import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.rest.representations.SchemaOption;

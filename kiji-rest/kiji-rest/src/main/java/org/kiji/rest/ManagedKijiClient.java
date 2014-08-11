@@ -53,7 +53,6 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.rest.config.KijiRESTConfiguration;
 import org.kiji.rest.util.KijiInstanceCache;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiNotInstalledException;

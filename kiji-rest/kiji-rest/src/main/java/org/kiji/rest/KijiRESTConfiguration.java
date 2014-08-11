@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.rest.config;
+package org.kiji.rest;
 
 import java.util.Collections;
 import java.util.Map;

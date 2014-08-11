@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.rest.config;
+package org.kiji.rest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.yammer.dropwizard.config.Configuration;

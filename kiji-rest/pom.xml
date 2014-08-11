@@ -28,7 +28,7 @@
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1-SNAPSHOT</version>
   </parent>
 
   <name>The Kiji REST Servlet top-level project</name>
@@ -60,32 +60,6 @@
 
   <build>
     <plugins>
-      <plugin>
-        <!--
-            REST is built depending on the oldest version of KijiSchema that supports it.
-            To test whether the latest Kiji dependency SNAPSHOTs have introduced a regression:
-
-            Run the following commands in your shell
-
-            mvn versions:update-properties -N # Update the kiji-*.version properties
-                                              # in the top-level pom file; don't recurse.
-            mvn clean verify                  # Uses the new snapshot versions
-            mvn versions:revert               # Revert the pom file to before update-properties.
-                                    # Do not check in new Kiji SNAPSHOT dependencies in the pom.
-        -->
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>versions-maven-plugin</artifactId>
-        <configuration>
-          <includeProperties>kiji-schema.version</includeProperties>
-        </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>org.kiji.schema</groupId>
-            <artifactId>kiji-schema</artifactId>
-            <version>${kiji-schema.version}</version>
-          </dependency>
-        </dependencies>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
@@ -139,6 +113,35 @@
                 </includes>
                 <testSourceDirectory>${project.basedir}/src/test/avro/</testSourceDirectory>
               </configuration>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <!-- if you enable this plugin, you must supply release.xml -->
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <version>2.4.1</version>
+          <configuration>
+            <descriptors>
+              <descriptor>${basedir}/src/main/assembly/release.xml</descriptor>
+            </descriptors>
+            <tarLongFileMode>gnu</tarLongFileMode>
+            <archiverConfig>
+              <directoryMode>0755</directoryMode>
+              <!-- Undoing POM-35 since it seems that Maven Assembly 2.4+ fixes this
+              problem and having 644 doesn't preserve execute perms on existing files.-->
+              <fileMode>-1</fileMode>
+              <defaultDirectoryMode>0755</defaultDirectoryMode>
+            </archiverConfig>
+          </configuration>
+          <executions>
+            <execution>
+              <id>make-assembly</id>
+              <phase>package</phase>
+              <goals>
+                <goal>single</goal>
+              </goals>
             </execution>
           </executions>
         </plugin>

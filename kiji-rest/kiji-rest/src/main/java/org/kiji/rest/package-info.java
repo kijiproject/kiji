@@ -28,7 +28,7 @@
  *   Classes of note:
  * </p>
  * <ul>
- *   <li>{@link org.kiji.rest.config.KijiRESTConfiguration} Configuration class for KijiREST.
+ *   <li>{@link org.kiji.rest.KijiRESTConfiguration} Configuration class for KijiREST.
  *   <li>{@link org.kiji.rest.KijiRESTService} Service that provides REST resources.
  *   <li>{@link org.kiji.rest.RoutesConstants} Class that defines routes and endpoints used.
  * </ul>

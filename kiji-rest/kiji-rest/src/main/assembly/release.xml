@@ -28,26 +28,38 @@ http://maven.apache.org/xsd/assembly-1.1.2.xsd">
     <format>tar.gz</format>
   </formats>
   <includeBaseDirectory>true</includeBaseDirectory>
-
-  <!-- KijiREST -->
   <fileSets>
     <fileSet>
+      <useDefaultExcludes>true</useDefaultExcludes>
+      <outputDirectory></outputDirectory>
+      <directory>${project.basedir}/../</directory>
+      <fileMode>0644</fileMode>
+      <includes>
+        <include>NOTICE.txt</include>
+        <include>LICENSE.txt</include>
+        <include>README.md</include>
+        <include>RELEASE_NOTES.txt</include>
+      </includes>
+      <filtered>true</filtered>
+    </fileSet>
+    <fileSet>
       <useDefaultExcludes>false</useDefaultExcludes>
-      <outputDirectory>.</outputDirectory>
-      <directory>target/prereqs-dir/kiji-rest-${project.version}</directory>
+      <outputDirectory>bin</outputDirectory>
+      <directory>${project.basedir}/../kiji-rest/src/main/scripts</directory>
+      <fileMode>0755</fileMode>
+      <directoryMode>0755</directoryMode>
       <filtered>false</filtered>
     </fileSet>
+    <fileSet>
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>conf</outputDirectory>
+      <directory>${project.basedir}/../kiji-rest/src/main/conf</directory>
+    </fileSet>
+    <fileSet>
+      <!-- rest clients -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>clients</outputDirectory>
+      <directory>${project.basedir}/../kiji-rest/../clients</directory>
+    </fileSet>
   </fileSets>
-
-  <dependencySets>
-    <dependencySet>
-      <outputDirectory>lib</outputDirectory>
-      <useProjectArtifact>false</useProjectArtifact>
-      <scope>runtime</scope>
-      <useTransitiveFiltering>true</useTransitiveFiltering>
-      <excludes>
-        <exclude>*:release</exclude>
-      </excludes>
-    </dependencySet>
-  </dependencySets>
 </assembly>

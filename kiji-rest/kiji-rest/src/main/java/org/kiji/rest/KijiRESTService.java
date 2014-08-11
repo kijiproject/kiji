@@ -36,7 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.delegation.Lookups;
-import org.kiji.rest.config.KijiRESTConfiguration;
 import org.kiji.rest.health.KijiClientHealthCheck;
 import org.kiji.rest.plugins.KijiRestPlugin;
 import org.kiji.rest.representations.KijiRestEntityId;

@@ -30,8 +30,8 @@ import com.yammer.dropwizard.tasks.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.rest.KijiRESTConfiguration;
 import org.kiji.rest.ManagedKijiClient;
-import org.kiji.rest.config.KijiRESTConfiguration;
 
 /**
  * This REST task allows administrators to shutdown the system.
