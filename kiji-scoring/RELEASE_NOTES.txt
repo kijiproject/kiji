@@ -2,6 +2,10 @@
                               Kiji Scoring Release Notes
 
 Version 0.17.0
+    * SCORE-184. Scoring now supports a pluggable Counter API similar to the one provided by
+        KijiMapReduce. KijiFreshnessPolicy and ScoreFunction implementations may now increment
+        counters via FreshenerContext.getCounterManager. Users may implement custom CounterManager
+        and inject that implementation using FreshKijiTableReader.Builder.withCounterManager.
     * POM-40. Require JDK 7 to compile Kiji projects.
 
 Version 0.14.0
