@@ -90,7 +90,7 @@ export PATH
 echo "Added kiji, kiji-mr, kiji-schema-shell, and kiji-express binaries to PATH."
 
 # Source the bento-env.sh script to configure the rest of the environment.
-if [ "$1" == "--override" ] || [ -z "$HADOOP_HOME" -a -z "$HBASE_HOME" ]; then
+if [[ "$1" == "--override" ]] || [[ -z "$HADOOP_HOME" && -z "$HBASE_HOME" ]]; then
   source "${KIJI_HOME}/cluster/bin/bento-env.sh"
 else
   echo "HADOOP_HOME or HBASE_HOME already set, not overriding with Bento cluster configuration. " \
