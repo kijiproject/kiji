@@ -19,10 +19,10 @@
 
 # ------------------------------------------------------------------------------
 
-# This script either creates (if not present) or updates a ${HOME}/.bento-hosts
-# file with an entry for a newly created or started bento. The .bento-hosts
-# file will be used to supplement /etc/hosts when resolving hostnames if the
-# $HOSTALIASES environment variable points to it on Linux systems.
+# This script updates the /etc/hosts file with an entry for a newly created or
+# started bento. Modifying /etc/hosts requires root access, therefore running
+# this script will prompt for a password (and the user must have sudoer
+# permissions).
 
 # ------------------------------------------------------------------------------
 
@@ -37,11 +37,6 @@ fi
 
 # ------------------------------------------------------------------------------
 
-if [[ -n "$HOSTALIASES" ]]; then
-  echo "\$HOSTALIASES is unset. Please source \$BENTO_CLUSTER_HOME/bin/bento-env.sh."
-  exit 1
-fi
-
 address=$1
 host=$2
 
@@ -55,11 +50,8 @@ if [[ $address != 172.17.* ]]; then
   exit 1;
 fi
 
-if [[ -f $HOSTALIASES ]]; then
-  temp=$(mktemp /tmp/hosts-aliases.tmp.XXXXXX)
-  cat $HOSTALIASES | grep --invert-match "\s${host}$" > $temp
-  echo "${address}	${host}" >> $temp
-  cp $temp $HOSTALIASES
-else
-  echo "${address}	${host}" >> $HOSTALIASES
-fi
+temp=$(mktemp /tmp/hosts.tmp.XXXXXX)
+
+cat /etc/hosts | grep --invert-match "\s${host}$" > $temp
+echo "${address}	${host}" >> $temp
+sudo cp $temp /etc/hosts

@@ -106,14 +106,15 @@ function print_tool_usage() {
   echo
   echo "FLAGS (following the command)"
   echo "  all"
-  echo "    -n     Specify a container name. Defaults to 'bento'."
+  echo "    -n     Specify a container name. Defaults to 'bento'. The provided"
+  echo "           name will be appended to 'bento-' to create the container name."
   echo "  create"
   echo "    -f     Create container in foreground (will attach stdin/tty)."
   echo "    -r     Remove the container on stop. Will start container in foreground."
-  echo "    -h     Do not add hostname to /etc/hosts."
+  echo "    -h     Do not modify environment for bento hostname resolution."
   echo "    -c     Do not overwrite Hadoop & HBase client configuration."
   echo "  start"
-  echo "    -h     Do not add hostname to /etc/hosts."
+  echo "    -h     Do not modify environment for bento hostname resolution."
   echo "    -c     Do not overwrite Hadoop & HBase client configuration."
   echo "  list"
   echo "    -a     List all running and stopped Bento containers."
@@ -166,7 +167,7 @@ while getopts ":f :h :n: :r :a" opt; do
       edit_hosts=false
       ;;
     n)
-      container_name="${OPTARG}"
+      container_name="bento-${OPTARG}"
       ;;
     r)
       remove='--rm=true'
@@ -206,6 +207,20 @@ function set_client_conf() {
   fi
 }
 
+function update_hostname_resolution() {
+  if [[ "$edit_hosts" == true ]]; then
+    if [[ $(uname) == "Darwin" ]]; then
+      echo "Adding container address and host to /etc/hosts:" 1>&2
+      $BENTO_CLUSTER_HOME/bin/update-etc-hosts $ADDRESS $HOST
+    else
+      echo "Adding container address and host to ${HOSTALIASES}." 1>&2
+      $BENTO_CLUSTER_HOME/bin/update-bento-hosts $ADDRESS $HOST
+    fi
+  else
+      echo "Not adding container address and host to enviroment:" 1>&2
+  fi
+}
+
 case ${command} in
 
   help)
@@ -221,13 +236,7 @@ case ${command} in
     printf "\n"
     ADDRESS=$($docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
     HOST=$($docker inspect --format="{{.Config.Hostname}}" ${container_name})
-    if [[ "$edit_hosts" == true ]]; then
-      printf "Adding container address and host to /etc/hosts:\n" 1>&2
-      $BENTO_CLUSTER_HOME/bin/update-bento-hosts $ADDRESS $HOST
-    else
-      printf "Not adding container address and host to /etc/hosts:\n" 1>&2
-      echo "${ADDRESS} ${HOST}"
-    fi
+    update_hostname_resolution
     set_client_conf
     ;;
 
@@ -244,13 +253,7 @@ case ${command} in
         printf "\n"
         ADDRESS=$($docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
         HOST=$($docker inspect --format="{{.Config.Hostname}}" ${container_name})
-        if [[ "$edit_hosts" == true ]]; then
-          printf "Adding container address and host to /etc/hosts:\n" 1>&2
-          $BENTO_CLUSTER_HOME/bin/update-bento-hosts $ADDRESS $HOST
-        else
-          printf "Not adding container address and host to /etc/hosts:\n" 1>&2
-          echo "${ADDRESS} ${HOST}"
-        fi
+        update_hostname_resolution
         set_client_conf
       fi
     else

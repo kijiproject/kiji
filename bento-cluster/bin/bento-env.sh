@@ -67,16 +67,18 @@ bento_env_path=$(resolve_symlink "${bento_env_path}")
 BENTO_CLUSTER_HOME=$(dirname "$(dirname "${bento_env_path}")")
 BENTO_CLUSTER_HOME=$(cd "${BENTO_CLUSTER_HOME}"; pwd -P)
 
-BENTO_ADDRESS=$(docker inspect --format="{{.NetworkSettings.IPAddress}}" bento 2> /dev/null)
-BENTO_HOST=$(docker inspect --format="{{.Config.Hostname}}" bento 2> /dev/null)
-
 HADOOP_CONF_DIR="${BENTO_CLUSTER_HOME}/client-conf/hadoop"
 HBASE_CONF_DIR="${BENTO_CLUSTER_HOME}/client-conf/hbase"
 
 export BENTO_CLUSTER_HOME
-export BENTO_ADDRESS
-export BENTO_HOST
 export HADOOP_CONF_DIR
 export HBASE_CONF_DIR
+
+if [[ "$(uname)" != "Darwin" ]]; then
+  if [[ -n "$HOSTALIASES" ]]; then
+    echo "WARNING: please update your bash configuration and add: export HOSTALIASES=${HOME}/.bento-hosts" 1>&2
+    export HOSTALIASES=${HOME}/.bento-hosts
+  fi
+fi
 
 export PATH="${BENTO_CLUSTER_HOME}/bin:${PATH}"
