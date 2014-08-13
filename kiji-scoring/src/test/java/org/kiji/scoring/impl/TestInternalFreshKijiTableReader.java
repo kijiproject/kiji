@@ -134,6 +134,20 @@ public class TestInternalFreshKijiTableReader {
   }
 
   public static final class TestTimeoutScoreFunction extends ScoreFunction<String> {
+    private long mSleepDuration;
+    public TestTimeoutScoreFunction() {
+      mSleepDuration = 1000L;
+    }
+    public TestTimeoutScoreFunction(
+        final long sleepDuration
+    ) {
+      mSleepDuration = sleepDuration;
+    }
+    public Map<String, String> serializeToParameters() {
+      final Map<String, String> parameters = Maps.newHashMap();
+      parameters.put("sleep_duration", String.valueOf(mSleepDuration));
+      return parameters;
+    }
     public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {
       return FAMILY_QUAL0_R;
     }
@@ -141,7 +155,7 @@ public class TestInternalFreshKijiTableReader {
         final KijiRowData dataToScore, final FreshenerContext context
     ) throws IOException {
       try {
-        Thread.sleep(1000L);
+        Thread.sleep(Long.valueOf(context.getParameter("sleep_duration")));
       } catch (InterruptedException ie) {
         throw new RuntimeException(ie);
       }
@@ -956,7 +970,7 @@ public class TestInternalFreshKijiTableReader {
   }
 
   @Test
-  public void testPartialFreshening() throws IOException, InterruptedException {
+  public void testPartialFresheningFalse() throws IOException, InterruptedException {
     final EntityId eid = mTable.getEntityId("foo");
     final KijiDataRequestBuilder builder = KijiDataRequest.builder();
     builder.newColumnsDef().add("family", "qual1").add("family", "qual0");
@@ -995,11 +1009,10 @@ public class TestInternalFreshKijiTableReader {
       writer.close();
     }
 
-
-    // Default partial freshening is false.
     final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .withTimeout(500)
+        .withPartialFreshening(false)
         .build();
     try {
       assertEquals("foo-val",
@@ -1016,36 +1029,69 @@ public class TestInternalFreshKijiTableReader {
     } finally {
       freshReader.close();
     }
+  }
 
-    final KijiTableWriter writer2 = mTable.openTableWriter();
+  @Test
+  public void testPartialFresheningTrue() throws IOException, InterruptedException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequestBuilder builder = KijiDataRequest.builder();
+    builder.newColumnsDef().add("family", "qual1").add("family", "qual0");
+    final KijiDataRequest request = builder.build();
+
+    // Create a KijiFreshnessManager and register two Fresheners.
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
     try {
-      writer2.put(eid, "family", "qual0", "foo-val");
-      writer2.put(eid, "family", "qual1", "foo-val");
+      manager.registerFreshener(
+          TABLE_NAME,
+          FAMILY_QUAL0,
+          ALWAYS,
+          TEST_SCORE_FN,
+          EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
+          false,
+          false);
+      manager.registerFreshener(
+          TABLE_NAME,
+          FAMILY_QUAL1,
+          ALWAYS,
+          new TestTimeoutScoreFunction(4000),
+          EMPTY_PARAMS,
+          EMPTY_DESCRIPTIONS,
+          false,
+          true);
     } finally {
-      writer2.close();
+      manager.close();
+    }
+
+    final KijiTableWriter writer = mTable.openTableWriter();
+    try {
+      writer.put(eid, "family", "qual0", "foo-val");
+      writer.put(eid, "family", "qual1", "foo-val");
+    } finally {
+      writer.close();
     }
 
     // Reset and try again with partial freshness allowed.
-    final FreshKijiTableReader freshReader2 = FreshKijiTableReader.Builder.create()
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
-        .withTimeout(900)
+        .withTimeout(2000)
         .withPartialFreshening(true)
         .build();
 
     try {
       assertEquals("new-val",
-          freshReader2.get(eid, request).getMostRecentValue("family", "qual0").toString());
+          freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
       assertEquals("foo-val",
           mReader.get(eid, request).getMostRecentValue("family", "qual1").toString());
 
-      Thread.sleep(1000);
+      Thread.sleep(4000);
 
       assertEquals("new-val",
           mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
       assertEquals("new-val",
           mReader.get(eid, request).getMostRecentValue("family", "qual1").toString());
     } finally {
-      freshReader2.close();
+      freshReader.close();
     }
   }
 
