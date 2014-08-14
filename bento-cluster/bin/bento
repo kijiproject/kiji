@@ -102,6 +102,7 @@ function print_tool_usage() {
   echo "  build    - Build a new local Bento image for image development."
   echo "  pull     - Pull the latest Bento image from docker hub."
   echo "  logs     - Tail the Bento process logs."
+  echo "  config   - Dump config files in specified directory."
   echo
   echo "FLAGS (following the command)"
   echo "  all"
@@ -112,11 +113,15 @@ function print_tool_usage() {
   echo "    -r     Remove the container on stop. Will start container in foreground."
   echo "    -h     Do not modify environment for bento hostname resolution."
   echo "    -c     Do not overwrite Hadoop & HBase client configuration."
+  echo "    -o     Directory to dump config files in."
   echo "  start"
   echo "    -h     Do not modify environment for bento hostname resolution."
   echo "    -c     Do not overwrite Hadoop & HBase client configuration."
+  echo "    -o     Directory to dump config files in."
   echo "  list"
   echo "    -a     List all running and stopped Bento containers."
+  echo "  config"
+  echo "    -o     Directory to dump config files in."
 }
 
 
@@ -154,8 +159,9 @@ edit_hosts=true
 remove=""
 client_config=true
 all=''
+client_config_dir=$BENTO_CLUSTER_HOME/client-conf
 
-while getopts ":f :h :n: :r :a" opt; do
+while getopts ":f :h :n: :r :a :o:" opt; do
   case $opt in
     f)
       daemon='-it'
@@ -180,6 +186,9 @@ while getopts ":f :h :n: :r :a" opt; do
     a)
       all='-a'
       ;;
+    o)
+      client_config_dir="${OPTARG}"
+      ;;
     \?)
       echo "Unknown option: -${OPTARG}" >&2
       ;;
@@ -191,16 +200,17 @@ function set_client_conf() {
   HOST=$($docker inspect --format="{{.Config.Hostname}}" ${container_name})
   if [[ "$client_config" == true ]]; then
     echo "Adding address to Bento container '${container_name}' to local Hadoop & HBase client configurations." 1>&2
-    mkdir -p $BENTO_CLUSTER_HOME/client-conf/hadoop
-    mkdir -p $BENTO_CLUSTER_HOME/client-conf/hbase
+    mkdir -p $client_config_dir/hadoop
+    mkdir -p $client_config_dir/hbase
+    echo "Writing client configuration files to ${client_config_dir} ..." 1>&2
     sed "s/\$BENTO_HOST/$HOST/" $BENTO_CLUSTER_HOME/client-conf-template/core-site.xml > \
-      $BENTO_CLUSTER_HOME/client-conf/hadoop/core-site.xml
+      $client_config_dir/hadoop/core-site.xml
     sed "s/\$BENTO_HOST/$HOST/" $BENTO_CLUSTER_HOME/client-conf-template/mapred-site.xml > \
-      $BENTO_CLUSTER_HOME/client-conf/hadoop/mapred-site.xml
+      $client_config_dir/hadoop/mapred-site.xml
     sed "s/\$BENTO_HOST/$HOST/" $BENTO_CLUSTER_HOME/client-conf-template/yarn-site.xml > \
-      $BENTO_CLUSTER_HOME/client-conf/hadoop/yarn-site.xml
+      $client_config_dir/hadoop/yarn-site.xml
     sed "s/\$BENTO_HOST/$HOST/" $BENTO_CLUSTER_HOME/client-conf-template/hbase-site.xml > \
-      $BENTO_CLUSTER_HOME/client-conf/hbase/hbase-site.xml
+      $client_config_dir/hbase/hbase-site.xml
   else
     echo "Not adding address to Bento container '${container_name}' to local Hadoop & HBase client configurations." 1>&2
   fi
@@ -316,6 +326,15 @@ case ${command} in
 
   logs)
     $docker logs -f ${container_name}
+    ;;
+
+  config)
+    if status=$($docker inspect --format="{{.State.Running}}" ${container_name} 2> /dev/null); then
+      set_client_conf
+    else
+      echo "Bento container '${container_name}' does not exist."
+      exit 1;
+    fi
     ;;
 
   *)

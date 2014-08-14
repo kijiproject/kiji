@@ -37,7 +37,7 @@ fi
 
 # ------------------------------------------------------------------------------
 
-if [[ -n "$HOSTALIASES" ]]; then
+if [[ -z "$HOSTALIASES" ]]; then
   echo "\$HOSTALIASES is unset. Please source \$BENTO_CLUSTER_HOME/bin/bento-env.sh."
   exit 1
 fi
@@ -54,7 +54,6 @@ if [[ $address != 172.17.* ]]; then
   echo "Invalid address: '${address}'. Must be be in the 172.17.0.0/16 subnet."
   exit 1;
 fi
-
 if [[ -f $HOSTALIASES ]]; then
   temp=$(mktemp /tmp/hosts-aliases.tmp.XXXXXX)
   cat $HOSTALIASES | grep --invert-match "\s${host}$" > $temp
@@ -63,3 +62,4 @@ if [[ -f $HOSTALIASES ]]; then
 else
   echo "${address}	${host}" >> $HOSTALIASES
 fi
+
