@@ -600,7 +600,7 @@
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-yarn-client</artifactId>
+        <artifactId>hadoop-mapreduce-client-jobclient</artifactId>
         <version>${hadoop.version}</version>
         <scope>provided</scope>
       </dependency>
@@ -612,13 +612,7 @@
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-minicluster</artifactId>
-        <version>${hadoop.version}</version>
-        <scope>provided</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-test</artifactId>
+        <artifactId>hadoop-yarn-server-tests</artifactId>
         <version>${hadoop.version}</version>
         <scope>test</scope>
       </dependency>
@@ -627,19 +621,64 @@
         <artifactId>hbase-client</artifactId>
         <version>${hbase.version}</version>
         <scope>provided</scope>
+        <exclusions>
+          <!-- Exclude mr1 dependencies. -->
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-minicluster</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.hbase</groupId>
         <artifactId>hbase-server</artifactId>
         <version>${hbase.version}</version>
         <scope>provided</scope>
+        <exclusions>
+          <!-- Exclude mr1 dependencies. -->
+          <exclusion>
+	        <groupId>org.apache.hadoop</groupId>
+	        <artifactId>hadoop-core</artifactId>
+	      </exclusion>
+          <exclusion>
+	        <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+	      </exclusion>
+          <exclusion>
+	        <groupId>org.apache.hadoop</groupId>
+	        <artifactId>hadoop-minicluster</artifactId>
+	      </exclusion>
+	    </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.hbase</groupId>
-        <artifactId>hbasetesting-util</artifactId>
+        <artifactId>hbase-testing-util</artifactId>
         <version>${hbase.version}</version>
         <scope>provided</scope>
         <type>test-jar</type>
+        <exclusions>
+          <!-- Exclude mr1 dependencies. -->
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-minicluster</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.curator</groupId>
