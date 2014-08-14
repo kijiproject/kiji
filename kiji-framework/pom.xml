@@ -41,7 +41,7 @@
     <maven.compiler.target>1.6</maven.compiler.target>
 
     <!-- Versions for program dependencies -->
-    <fake-hbase.version>0.2.0-SNAPSHOT</fake-hbase.version>
+    <fake-hbase.version>0.3.0-SNAPSHOT</fake-hbase.version>
     <kiji-platforms.version>1.4.0-SNAPSHOT</kiji-platforms.version>
     <kiji-schema.version>1.6.0-SNAPSHOT</kiji-schema.version>
     <kiji-schema-shell.version>1.4.0-SNAPSHOT</kiji-schema-shell.version>
