@@ -98,7 +98,6 @@ function print_tool_usage() {
   echo "  list     - List all Bento containers."
   echo "  rm       - Deletes a Bento container and all data."
   echo "  ip       - Get the ip address of a Bento container."
-  echo "  address  - Get the ip address of a Bento container."
   echo "  hostname - Get the host name of a Bento container."
   echo "  build    - Build a new local Bento image for image development."
   echo "  pull     - Pull the latest Bento image from docker hub."
@@ -255,6 +254,13 @@ case ${command} in
         HOST=$($docker inspect --format="{{.Config.Hostname}}" ${container_name})
         update_hostname_resolution
         set_client_conf
+
+        echo "Visit http://${HOST}:9001 to see the running services." 1>&2
+        echo "Useful Links:"  1>&2
+        echo "  HDFS: http://${HOST}:50070" 1>&2
+        echo "  HBase Master: http://${HOST}:60010" 1>&2
+        echo "  YARN Resource Manager: http://${HOST}:8088" 1>&2
+        echo "  DataStax OpsCenter : http://${HOST}:8888" 1>&2
       fi
     else
       echo "Bento container '${container_name}' does not exist." 1>&2
@@ -293,10 +299,6 @@ case ${command} in
     ;;
 
   ip)
-    echo $($docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
-    ;;
-
-  address)
     echo $($docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
     ;;
 
