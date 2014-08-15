@@ -61,7 +61,7 @@ public class TestAvroTypeAdapter {
 
     // Construct the Hive column type
     List<String> columnNames = Lists.newArrayList("a", "b", "c");
-    List<TypeInfo> columnTypes = Lists.newArrayList(
+    List<TypeInfo> columnTypes = Lists.<TypeInfo>newArrayList(
         TypeInfoFactory.stringTypeInfo,
         TypeInfoFactory.intTypeInfo,
         TypeInfoFactory.doubleTypeInfo);
@@ -91,7 +91,7 @@ public class TestAvroTypeAdapter {
     Schema unionSchema = Schema.createUnion(unionSchemas);
 
     // Construct the Hive union type
-    List<TypeInfo> unionTypes = Lists.newArrayList(
+    List<TypeInfo> unionTypes = Lists.<TypeInfo>newArrayList(
         TypeInfoFactory.stringTypeInfo,
         TypeInfoFactory.intTypeInfo,
         TypeInfoFactory.doubleTypeInfo);
@@ -132,7 +132,7 @@ public class TestAvroTypeAdapter {
     Schema unionSchema = Schema.createUnion(unionSchemas);
 
     // Construct the Hive union type
-    List<TypeInfo> unionTypes = Lists.newArrayList(
+    List<TypeInfo> unionTypes = Lists.<TypeInfo>newArrayList(
         TypeInfoFactory.stringTypeInfo,
         TypeInfoFactory.intTypeInfo,
         TypeInfoFactory.doubleTypeInfo);
@@ -165,7 +165,7 @@ public class TestAvroTypeAdapter {
 
     // Construct the Hive union type
     List<String> columnNames = Lists.newArrayList("a", "b", "c");
-    List<TypeInfo> columnTypes = Lists.newArrayList(
+    List<TypeInfo> columnTypes = Lists.<TypeInfo>newArrayList(
         TypeInfoFactory.stringTypeInfo,
         TypeInfoFactory.intTypeInfo,
         TypeInfoFactory.doubleTypeInfo);
