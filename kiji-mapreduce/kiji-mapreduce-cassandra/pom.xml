@@ -18,32 +18,7 @@
   <description>A framework for interacting with Kiji Through MapReduce</description>
   <url>http://www.kiji.org</url>
 
-  <properties>
-    <!--Set the IP address for the first node in the Cassandra ring used for integration tests.
-    This property is used by the Cassandra Maven plugin and also gets applied to
-    src/test/resources/cassandra-maven-plugin.properties.-->
-    <cassandra.initialIp>127.0.0.10</cassandra.initialIp>
-  </properties>
-
   <build>
-    <!--Fill in the reserved ports and the initial IP address for the Cassandra Maven plugin.-->
-    <testResources>
-      <testResource>
-        <directory>src/test/resources</directory>
-        <filtering>true</filtering>
-        <includes>
-          <include>**/cassandra-maven-plugin.properties</include>
-        </includes>
-      </testResource>
-      <testResource>
-        <directory>src/test/resources</directory>
-        <filtering>false</filtering>
-        <excludes>
-          <exclude>**/cassandra-maven-plugin.properties</exclude>
-        </excludes>
-      </testResource>
-    </testResources>
-
     <plugins>
 
       <plugin>
@@ -106,71 +81,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
-      </plugin>
-
-      <!--Needed for Hadoop / MapReduce-->
-      <plugin>
-        <groupId>org.kiji.maven.plugins</groupId>
-        <artifactId>hbase-maven-plugin</artifactId>
-      </plugin>
-
-      <!--Reserve ports for Cassandra integration tests.-->
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <version>1.9</version>
-        <executions>
-          <execution>
-            <id>reserve-network-port</id>
-            <goals>
-              <goal>reserve-network-port</goal>
-            </goals>
-            <!--Note that this has to happen during the process-resources phase, not
-            process-test-resources, because we have to do this before filtering the test
-            resources.-->
-            <phase>process-resources</phase>
-            <configuration>
-              <portNames>
-                <portName>cassandra.nativePort</portName>
-                <portName>cassandra.rpcPort</portName>
-                <portName>cassandra.storagePort</portName>
-                <portName>cassandra.sslStoragePort</portName>
-              </portNames>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.kiji.maven.plugins</groupId>
-        <artifactId>cassandra-maven-plugin</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>start</goal>
-              <goal>stop</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <numnodes>1</numnodes>
-        </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-        <configuration>
-          <additionalClasspathElements>
-            <additionalClasspathElement>
-              ${project.build.directory}/${project.artifactId}-${project.version}.jar
-            </additionalClasspathElement>
-            <additionalClasspathElement>
-              ${project.build.directory}/${project.artifactId}-${project.version}-tests.jar
-            </additionalClasspathElement>
-          </additionalClasspathElements>
-        </configuration>
       </plugin>
     </plugins>
   </build>
@@ -238,6 +148,12 @@
     <dependency>
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-test</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.cassandra</groupId>
+      <artifactId>cassandra-all</artifactId>
+      <version>2.0.9</version>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
