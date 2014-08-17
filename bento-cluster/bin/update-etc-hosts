@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# -*- coding: utf-8 -*-
+# -*- mode: shell -*-
 
 # (c) Copyright 2014 WibiData, Inc.
 #
@@ -23,6 +25,11 @@
 # started bento. Modifying /etc/hosts requires root access, therefore running
 # this script will prompt for a password (and the user must have sudoer
 # permissions).
+
+# Usage:
+#
+#   $ update-etc-hosts <IP address> <host name>
+#
 
 # ------------------------------------------------------------------------------
 

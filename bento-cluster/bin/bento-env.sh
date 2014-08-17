@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# -*- coding: utf-8 -*-
+# -*- mode: shell -*-
 
 # (c) Copyright 2014 WibiData, Inc.
 #
@@ -74,10 +76,17 @@ export BENTO_CLUSTER_HOME
 export HADOOP_CONF_DIR
 export HBASE_CONF_DIR
 
-if [[ "$(uname)" != "Darwin" ]]; then
-  if [[ -n "$HOSTALIASES" ]]; then
-    echo "WARNING: please update your bash configuration and add: export HOSTALIASES=${HOME}/.bento-hosts" 1>&2
-    export HOSTALIASES=${HOME}/.bento-hosts
+# Linux environments obey the HOSTALIASES environment variable:
+if [[ "$(uname)" == "Linux" ]]; then
+  if [[ -z "$HOSTALIASES" ]]; then
+    echo "WARNING: The HOSTALIASES environment variable is not set." 1>&2
+    echo "WARNING: This may prevent applications from resolving the Bento host name." 1>&2
+    echo "WARNING: Please update your bash configuration and add: " 1>&2
+    echo "WARNING:     export HOSTALIASES=${HOME}/.hosts" 1>&2
+
+    # Make sure the file exists
+    touch "${HOME}/.hosts"
+    export HOSTALIASES="${HOME}/.hosts"
   fi
 fi
 

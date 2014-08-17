@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# -*- coding: utf-8 -*-
+# -*- mode: shell -*-
 
 # (c) Copyright 2014 WibiData, Inc.
 #
@@ -218,12 +220,14 @@ function set_client_conf() {
 
 function update_hostname_resolution() {
   if [[ "$edit_hosts" == true ]]; then
-    if [[ $(uname) == "Darwin" ]]; then
+    # Linux environments obey the HOSTALIASES environment variable.
+    # Other environments are required to modify /etc/hosts.
+    if [[ $(uname) == "Linux" ]]; then
+      echo "Adding Bento docker container host name to ${HOSTALIASES}." 1>&2
+      $BENTO_CLUSTER_HOME/bin/update-user-hosts $ADDRESS $HOST
+    else
       echo "Adding container address and host to /etc/hosts:" 1>&2
       $BENTO_CLUSTER_HOME/bin/update-etc-hosts $ADDRESS $HOST
-    else
-      echo "Adding container address and host to ${HOSTALIASES}." 1>&2
-      $BENTO_CLUSTER_HOME/bin/update-bento-hosts $ADDRESS $HOST
     fi
   else
       echo "Not adding container address and host to enviroment:" 1>&2

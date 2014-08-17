@@ -21,6 +21,12 @@ container. This can be disabled by using the `-h` flag with `bento create` or
 `bento start`.  Note that HBase and some Hadoop functionality will not work
 if the container's hostname can not be resolved.
 
+Linux systems may use the `HOSTALIASES` environment variable in order to avoid
+the need for sudo: `export HOSTALIASES=~/.hosts`.
+Make sure the `HOSTALIASES` variable is set globally in your environments
+(shell and desktop graphical sessions) or else you might encounter problems
+resolving the host names created for the Bento docker container.
+
 ## Requirements
 
 #### Linux Host
