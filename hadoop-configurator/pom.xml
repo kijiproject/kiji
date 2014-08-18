@@ -34,6 +34,8 @@
     <maven.compiler.target>${java.version}</maven.compiler.target>
 
     <scm.connection>scm:git:git@github.com:kijiproject/hadoop-configurator.git</scm.connection>
+
+    <hadoop.version>2.3.0-cdh5.0.3</hadoop.version>
   </properties>
 
   <build>
@@ -64,7 +66,7 @@
         <version>2.8</version>
         <configuration>
           <links>
-            <link>http://archive.cloudera.com/cdh/4/hadoop-2.0.0-cdh4.0.1/api</link>
+            <link>http://archive.cloudera.com/cdh5/cdh/5/hadoop-2.3.0-cdh5.0.3/api</link>
           </links>
           <reportOutputDirectory>target/apidocs</reportOutputDirectory>
         </configuration>
@@ -82,7 +84,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.11</version>
-      </plugin>  
+      </plugin>
     </plugins>
   </build>
 
@@ -95,8 +97,8 @@
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-client</artifactId>
-      <version>2.0.0-mr1-cdh4.1.2</version>
+      <artifactId>hadoop-common</artifactId>
+      <version>${hadoop.version}</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
@@ -125,11 +127,6 @@
       <id>kiji-repos</id>
       <name>kiji-repos</name>
       <url>https://repo.wibidata.com/artifactory/kiji</url>
-    </repository>
-    <repository>
-      <id>kiji-nightly</id>
-      <name>kiji-nightly</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
     </repository>
   </repositories>
 
