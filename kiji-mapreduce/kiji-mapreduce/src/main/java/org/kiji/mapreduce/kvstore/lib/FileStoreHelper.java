@@ -369,7 +369,7 @@ public final class FileStoreHelper implements Configurable {
       throw new IOException("Required attribute not set: input path");
     }
 
-    if (mUseDCache && !"local".equals(conf.get("mapred.job.tracker", ""))) {
+    if (mUseDCache && !"local".equals(conf.get("mapreduce.jobtracker.address", ""))) {
       // If we're scheduled to use the distributed cache, and we're not in the LocalJobRunner,
       // add these files to the DistributedCache.
 

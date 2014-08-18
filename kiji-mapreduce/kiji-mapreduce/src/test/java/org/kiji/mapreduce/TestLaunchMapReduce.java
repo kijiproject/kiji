@@ -144,7 +144,7 @@ public class TestLaunchMapReduce {
   @Test
   public void testMapReduce() throws Exception {
     final Configuration jobConf = new Configuration();
-    jobConf.set("mapred.job.tracker", "local");
+    jobConf.set("mapreduce.jobtracker.address", "local");
 
     final String tmpDir = "file:///tmp/hdfs-testing-" + System.nanoTime();
     jobConf.set("fs.default.name", tmpDir);
