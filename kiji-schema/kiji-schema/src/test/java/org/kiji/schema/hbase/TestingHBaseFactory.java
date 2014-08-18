@@ -26,10 +26,12 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.client.HConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.delegation.Priority;
+import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.impl.HBaseAdminFactory;
 import org.kiji.schema.impl.HTableInterfaceFactory;
@@ -95,6 +97,16 @@ public final class TestingHBaseFactory implements HBaseFactory {
       return fake.getAdminFactory();
     }
     return DELEGATE.getHBaseAdminFactory(uri);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public HConnection getHConnection(Kiji kiji) {
+    final FakeHBase fake = getFakeHBase(kiji.getURI());
+    if (fake != null) {
+      return fake.getHConnection();
+    }
+    return DELEGATE.getHConnection(kiji);
   }
 
   /** {@inheritDoc} */

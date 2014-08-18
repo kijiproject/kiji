@@ -23,9 +23,13 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.client.HConnectionManager;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.delegation.Priority;
+import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiIOException;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.hbase.HBaseFactory;
 import org.kiji.schema.impl.HBaseAdminFactory;
@@ -54,6 +58,16 @@ public final class DefaultHBaseFactory implements HBaseFactory {
   @Override
   public HBaseAdminFactory getHBaseAdminFactory(KijiURI uri) {
     return DefaultHBaseAdminFactory.get();
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public HConnection getHConnection(Kiji kiji) {
+    try {
+      return HConnectionManager.createConnection(kiji.getConf());
+    } catch (IOException ioe) {
+      throw new KijiIOException("Couldn't create an HConnection.", ioe);
+    }
   }
 
   /** {@inheritDoc} */

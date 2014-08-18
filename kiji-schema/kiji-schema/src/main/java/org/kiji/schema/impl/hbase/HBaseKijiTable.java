@@ -36,7 +36,6 @@ import org.apache.hadoop.hbase.HRegionLocation;
 import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
@@ -60,6 +59,7 @@ import org.kiji.schema.KijiURI;
 import org.kiji.schema.KijiWriterFactory;
 import org.kiji.schema.avro.RowKeyFormat;
 import org.kiji.schema.avro.RowKeyFormat2;
+import org.kiji.schema.hbase.HBaseFactory;
 import org.kiji.schema.hbase.KijiManagedHBaseTableName;
 import org.kiji.schema.impl.HTableInterfaceFactory;
 import org.kiji.schema.impl.LayoutConsumer;
@@ -183,7 +183,7 @@ public final class HBaseKijiTable implements KijiTable {
     mLayoutMonitor = layoutMonitor;
     mEntityIdFactory = createEntityIdFactory(mLayoutMonitor.getLayout());
 
-    mHConnection = HConnectionManager.createConnection(mKiji.getConf());
+    mHConnection = HBaseFactory.Provider.get().getHConnection(mKiji);
 
     // Table is now open and must be released properly:
     mRetainCount.set(1);

@@ -22,12 +22,14 @@ package org.kiji.schema.hbase;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.client.HConnection;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 import org.kiji.delegation.Lookups;
 import org.kiji.delegation.PriorityProvider;
+import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.impl.HBaseAdminFactory;
 import org.kiji.schema.impl.HTableInterfaceFactory;
@@ -74,6 +76,15 @@ public interface HBaseFactory extends PriorityProvider {
    * @return a factory for HBaseAdmin for the specified HBase instance.
    */
   HBaseAdminFactory getHBaseAdminFactory(KijiURI uri);
+
+  /**
+   * Gets an HConnection for the specified configuration. Caller is responsible
+   * for closing this.
+   *
+   * @param kiji The Kiji to get a connection for.
+   * @return a HConnection for the Kiji. Caller is responsible for closing this.
+   */
+  HConnection getHConnection(Kiji kiji);
 
   /**
    * Creates a lock factory for a given Kiji instance.

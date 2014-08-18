@@ -37,13 +37,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiTableAnnotator;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
 
-public class TestHBaseKijiTableAnnotator {
+public class TestHBaseKijiTableAnnotator extends KijiClientTest {
 
   private static final String KEY = "abc";
   private static final String VALUE = "def";
@@ -58,16 +58,15 @@ public class TestHBaseKijiTableAnnotator {
   private static final KijiColumnName INFOEMAIL = KijiColumnName.create("info:email");
   private static final String INFO = "info";
 
-  private Kiji mKiji = null;
   private HBaseKijiTable mTable = null;
   private KijiTableAnnotator mAnnotator = null;
 
   @Before
   public void setup() throws IOException {
-    mKiji = new InstanceBuilder()
+    new InstanceBuilder(getKiji())
         .withTable(KijiTableLayouts.getLayout(KijiTableLayouts.USER_TABLE))
         .build();
-    mTable = HBaseKijiTable.downcast(mKiji.openTable("user"));
+    mTable = HBaseKijiTable.downcast(getKiji().openTable("user"));
     mAnnotator = mTable.openTableAnnotator();
   }
 
@@ -75,7 +74,6 @@ public class TestHBaseKijiTableAnnotator {
   public void cleanup() throws IOException {
     mAnnotator.close();
     mTable.release();
-    mKiji.release();
   }
 
   @Test
@@ -120,19 +118,19 @@ public class TestHBaseKijiTableAnnotator {
     mAnnotator.setTableAnnotation(KEY3, VALUE3);
     mAnnotator.setTableAnnotations(KVS);
 
-    assertEquals(VALUE, Bytes.toString(mKiji.getMetaTable().getValue(mTable.getName(),
+    assertEquals(VALUE, Bytes.toString(getKiji().getMetaTable().getValue(mTable.getName(),
         HBaseKijiTableAnnotator.getMetaTableKey(mTable, INFONAME, KEY))));
-    assertEquals(VALUE, Bytes.toString(mKiji.getMetaTable().getValue(mTable.getName(),
+    assertEquals(VALUE, Bytes.toString(getKiji().getMetaTable().getValue(mTable.getName(),
         HBaseKijiTableAnnotator.getMetaTableKey(
             mTable, INFOEMAIL, KEY))));
-    assertEquals(VALUE2, Bytes.toString(mKiji.getMetaTable().getValue(mTable.getName(),
+    assertEquals(VALUE2, Bytes.toString(getKiji().getMetaTable().getValue(mTable.getName(),
         HBaseKijiTableAnnotator.getMetaTableKey(
             mTable, INFOEMAIL, KEY2))));
-    assertEquals(VALUE, Bytes.toString(mKiji.getMetaTable().getValue(mTable.getName(),
+    assertEquals(VALUE, Bytes.toString(getKiji().getMetaTable().getValue(mTable.getName(),
         HBaseKijiTableAnnotator.getMetaTableKey(KEY))));
-    assertEquals(VALUE2, Bytes.toString(mKiji.getMetaTable().getValue(mTable.getName(),
+    assertEquals(VALUE2, Bytes.toString(getKiji().getMetaTable().getValue(mTable.getName(),
         HBaseKijiTableAnnotator.getMetaTableKey(KEY2))));
-    assertEquals(VALUE3, Bytes.toString(mKiji.getMetaTable().getValue(mTable.getName(),
+    assertEquals(VALUE3, Bytes.toString(getKiji().getMetaTable().getValue(mTable.getName(),
         HBaseKijiTableAnnotator.getMetaTableKey(KEY3))));
   }
 
@@ -142,7 +140,9 @@ public class TestHBaseKijiTableAnnotator {
     mAnnotator.setTableAnnotation(KEY, VALUE);
     mAnnotator.removeTableAnnotation(KEY);
     try {
-      mKiji.getMetaTable().getValue(mTable.getName(), HBaseKijiTableAnnotator.getMetaTableKey(KEY));
+      getKiji()
+          .getMetaTable()
+          .getValue(mTable.getName(), HBaseKijiTableAnnotator.getMetaTableKey(KEY));
       fail("Should have thrown IOException for missing key.");
     } catch (IOException ioe) {
       assertEquals(String.format("Could not find any values associated with table %s and key %s",
@@ -153,7 +153,7 @@ public class TestHBaseKijiTableAnnotator {
     assertEquals(
         Sets.newHashSet(KEY2), mAnnotator.removeTableAnnotationsStartingWith(KEY2.substring(0, 1)));
     try {
-      mKiji.getMetaTable().getValue(
+      getKiji().getMetaTable().getValue(
           mTable.getName(), HBaseKijiTableAnnotator.getMetaTableKey(KEY2));
       fail("Should have thrown IOException for missing key.");
     } catch (IOException ioe) {
@@ -165,7 +165,7 @@ public class TestHBaseKijiTableAnnotator {
     assertEquals(
         Sets.newHashSet(KEY), mAnnotator.removeTableAnnotationsContaining(KEY.substring(1, 2)));
     try {
-      mKiji.getMetaTable().getValue(
+      getKiji().getMetaTable().getValue(
           mTable.getName(), HBaseKijiTableAnnotator.getMetaTableKey(KEY));
       fail("Should have thrown IOException for missing key.");
     } catch (IOException ioe) {
@@ -176,7 +176,7 @@ public class TestHBaseKijiTableAnnotator {
     mAnnotator.setTableAnnotation(KEY2, VALUE2);
     assertEquals(Sets.newHashSet(KEY2), mAnnotator.removeTableAnnotationsMatching("^[0-9]*$"));
     try {
-      mKiji.getMetaTable().getValue(
+      getKiji().getMetaTable().getValue(
           mTable.getName(), HBaseKijiTableAnnotator.getMetaTableKey(KEY2));
       fail("Should have thrown IOException for missing key.");
     } catch (IOException ioe) {
@@ -187,7 +187,7 @@ public class TestHBaseKijiTableAnnotator {
     mAnnotator.setTableAnnotations(KVS);
     assertEquals(KEYS, mAnnotator.removeAllTableAnnotations());
     try {
-      mKiji.getMetaTable().getValue(
+      getKiji().getMetaTable().getValue(
           mTable.getName(), HBaseKijiTableAnnotator.getMetaTableKey(KEY2));
       fail("Should have thrown IOException for missing key.");
     } catch (IOException ioe) {
@@ -199,7 +199,7 @@ public class TestHBaseKijiTableAnnotator {
     mAnnotator.setColumnAnnotation(INFONAME, KEY, VALUE);
     mAnnotator.removeColumnAnnotation(INFONAME, KEY);
     try {
-      mKiji.getMetaTable().getValue(mTable.getName(),
+      getKiji().getMetaTable().getValue(mTable.getName(),
           HBaseKijiTableAnnotator.getMetaTableKey(mTable, INFONAME, KEY));
       fail("Should have thrown IOException for missing key.");
     } catch (IOException ioe) {
@@ -212,7 +212,7 @@ public class TestHBaseKijiTableAnnotator {
     assertEquals(Sets.newHashSet(KEY2),
         mAnnotator.removeColumnAnnotationsStartingWith(INFONAME, KEY2.substring(0, 1)));
     try {
-      mKiji.getMetaTable().getValue(mTable.getName(), HBaseKijiTableAnnotator.getMetaTableKey(
+      getKiji().getMetaTable().getValue(mTable.getName(), HBaseKijiTableAnnotator.getMetaTableKey(
           mTable, INFONAME, KEY2));
       fail("Should have thrown IOException for missing key.");
     } catch (IOException ioe) {
@@ -225,7 +225,7 @@ public class TestHBaseKijiTableAnnotator {
     assertEquals(Sets.newHashSet(KEY),
         mAnnotator.removeColumnAnnotationsContaining(INFOEMAIL, KEY.substring(1, 2)));
     try {
-      mKiji.getMetaTable().getValue(mTable.getName(), HBaseKijiTableAnnotator.getMetaTableKey(
+      getKiji().getMetaTable().getValue(mTable.getName(), HBaseKijiTableAnnotator.getMetaTableKey(
           mTable, INFOEMAIL, KEY));
       fail("Should have thrown IOException for missing key.");
     } catch (IOException ioe) {
@@ -238,7 +238,7 @@ public class TestHBaseKijiTableAnnotator {
     assertEquals(
         Sets.newHashSet(KEY2), mAnnotator.removeColumnAnnotationsMatching(INFOEMAIL, "^[0-9]*$"));
     try {
-      mKiji.getMetaTable().getValue(mTable.getName(), HBaseKijiTableAnnotator.getMetaTableKey(
+      getKiji().getMetaTable().getValue(mTable.getName(), HBaseKijiTableAnnotator.getMetaTableKey(
           mTable, INFOEMAIL, KEY2));
       fail("Should have thrown IOException for missing key.");
     } catch (IOException ioe) {
@@ -250,7 +250,7 @@ public class TestHBaseKijiTableAnnotator {
     mAnnotator.setColumnAnnotations(INFONAME, KVS);
     assertEquals(KEYS, mAnnotator.removeAllColumnAnnotations(INFONAME));
     try {
-      mKiji.getMetaTable().getValue(
+      getKiji().getMetaTable().getValue(
           mTable.getName(), HBaseKijiTableAnnotator.getMetaTableKey(mTable, INFONAME, KEY2));
       fail("Should have thrown IOException for missing key.");
     } catch (IOException ioe) {
@@ -266,7 +266,7 @@ public class TestHBaseKijiTableAnnotator {
     mAnnotator.setColumnAnnotation(INFONAME, KEY, VALUE);
     assertEquals(Sets.newHashSet(INFONAME), mAnnotator.removeColumnAnnotationsInFamily(INFO, KEY));
     try {
-      mKiji.getMetaTable().getValue(
+      getKiji().getMetaTable().getValue(
           mTable.getName(), HBaseKijiTableAnnotator.getMetaTableKey(mTable, INFONAME, KEY));
       fail("Should have thrown IOException for missing key.");
     } catch (IOException ioe) {
@@ -281,7 +281,7 @@ public class TestHBaseKijiTableAnnotator {
     assertEquals(removedMatcher,
         mAnnotator.removeColumnAnnotationsInFamilyStartingWith(INFO, KEY.substring(0, 1)));
     try {
-      mKiji.getMetaTable().getValue(
+      getKiji().getMetaTable().getValue(
           mTable.getName(), HBaseKijiTableAnnotator.getMetaTableKey(mTable, INFONAME, KEY));
       fail("Should have thrown IOException for missing key.");
     } catch (IOException ioe) {
@@ -294,7 +294,7 @@ public class TestHBaseKijiTableAnnotator {
     assertEquals(removedMatcher,
         mAnnotator.removeColumnAnnotationsInFamilyContaining(INFO, KEY.substring(1, 2)));
     try {
-      mKiji.getMetaTable().getValue(mTable.getName(), HBaseKijiTableAnnotator.getMetaTableKey(
+      getKiji().getMetaTable().getValue(mTable.getName(), HBaseKijiTableAnnotator.getMetaTableKey(
           mTable, INFONAME, KEY));
       fail("Should have thrown IOException for missing key.");
     } catch (IOException ioe) {
@@ -309,7 +309,7 @@ public class TestHBaseKijiTableAnnotator {
     assertEquals(removedMatcher,
         mAnnotator.removeColumnAnnotationsInFamilyMatching(INFO, "^[a-z]*$"));
     try {
-      mKiji.getMetaTable().getValue(mTable.getName(), HBaseKijiTableAnnotator.getMetaTableKey(
+      getKiji().getMetaTable().getValue(mTable.getName(), HBaseKijiTableAnnotator.getMetaTableKey(
           mTable, INFONAME, KEY));
       fail("Should have thrown IOException for missing key.");
     } catch (IOException ioe) {
