@@ -35,6 +35,8 @@ import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.HRegionLocation;
 import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
@@ -129,8 +131,8 @@ public final class HBaseKijiTable implements KijiTable {
   /** Reader factory for this table. */
   private final KijiReaderFactory mReaderFactory;
 
-  /** Pool of HTable connections. Safe for concurrent access. */
-  private final KijiHTablePool mHTablePool;
+  /** HConnection used for creating lightweight tables. Should be closed by us. */
+  private final HConnection mHConnection;
 
   /** Name of the HBase table backing this Kiji table. */
   private final String mHBaseTableName;
@@ -181,7 +183,7 @@ public final class HBaseKijiTable implements KijiTable {
     mLayoutMonitor = layoutMonitor;
     mEntityIdFactory = createEntityIdFactory(mLayoutMonitor.getLayout());
 
-    mHTablePool = new KijiHTablePool(mName, mKiji, mHTableFactory);
+    mHConnection = HConnectionManager.createConnection(mKiji.getConf());
 
     // Table is now open and must be released properly:
     mRetainCount.set(1);
@@ -278,7 +280,7 @@ public final class HBaseKijiTable implements KijiTable {
     final State state = mState.get();
     Preconditions.checkState(state == State.OPEN,
         "Cannot open an HTable connection for a KijiTable in state %s.", state);
-    return mHTablePool.getTable();
+    return mHConnection.getTable(mHBaseTableName);
   }
 
   /**
@@ -416,7 +418,7 @@ public final class HBaseKijiTable implements KijiTable {
         "Cannot close KijiTable instance %s in state %s.", this, oldState);
     LOG.debug("Closing HBaseKijiTable '{}'.", this);
 
-    ResourceUtils.closeOrLog(mHTablePool);
+    ResourceUtils.closeOrLog(mHConnection);
     ResourceUtils.closeOrLog(mLayoutMonitor);
     ResourceUtils.releaseOrLog(mKiji);
     if (oldState != State.UNINITIALIZED) {

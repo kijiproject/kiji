@@ -34,7 +34,7 @@ import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.security.access.AccessControlLists;
-import org.apache.hadoop.hbase.security.access.AccessControllerProtocol;
+import org.apache.hadoop.hbase.security.access.AccessController;
 import org.apache.hadoop.hbase.security.access.Permission.Action;
 import org.apache.hadoop.hbase.security.access.UserPermission;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -49,6 +49,7 @@ import org.kiji.schema.hbase.KijiManagedHBaseTableName;
 import org.kiji.schema.impl.HTableInterfaceFactory;
 import org.kiji.schema.impl.Versions;
 import org.kiji.schema.impl.hbase.HBaseKiji;
+import org.kiji.schema.platform.SchemaPlatformBridge;
 import org.kiji.schema.util.Lock;
 import org.kiji.schema.zookeeper.ZooKeeperLock;
 import org.kiji.schema.zookeeper.ZooKeeperUtils;
@@ -79,7 +80,7 @@ final class KijiSecurityManagerImpl implements KijiSecurityManager {
   private final KijiSystemTable mSystemTable;
 
   /** The HBase ACL (Access Control List) table to use. */
-  private final AccessControllerProtocol mAccessController;
+  //private final AccessController mAccessController;
 
   /** ZooKeeper client connection responsible for creating instance locks. */
   private final CuratorFramework mZKClient;
@@ -123,12 +124,12 @@ final class KijiSecurityManagerImpl implements KijiSecurityManager {
 
     mAdmin = ((HBaseKiji) mKiji).getHBaseAdmin();
 
-    // Get the access controller.
-    HTableInterface accessControlTable = tableFactory
-        .create(conf, new String(AccessControlLists.ACL_TABLE_NAME, Charsets.UTF_8));
-    mAccessController = accessControlTable.coprocessorProxy(
-        AccessControllerProtocol.class,
-        HConstants.EMPTY_START_ROW);
+//    // Get the access controller.
+//    HTableInterface accessControlTable = tableFactory
+//        .create(conf, new String(AccessControlLists.ACL_TABLE_NAME, Charsets.UTF_8));
+//    mAccessController = accessControlTable.coprocessorProxy(
+//        AccessControllerProtocol.class,
+//        HConstants.EMPTY_START_ROW);
 
     mZKClient = ZooKeeperUtils.getZooKeeperClient(mInstanceUri);
     mLock = new ZooKeeperLock(mZKClient, ZooKeeperUtils.getInstancePermissionsLock(instanceUri));
@@ -523,7 +524,7 @@ final class KijiSecurityManagerImpl implements KijiSecurityManager {
       byte[] hTableName,
       Action[] hActions) throws IOException {
     // Construct the HBase UserPermission to grant.
-    UserPermission hTablePermission = new UserPermission(
+    UserPermission hTablePermission = SchemaPlatformBridge.get().createUserPermission(
         hUser,
         hTableName,
         null,
@@ -538,7 +539,8 @@ final class KijiSecurityManagerImpl implements KijiSecurityManager {
     mAdmin.disableTable(hTableName);
     LOG.debug("Table {} disabled.", Bytes.toString(hTableName));
     // Grant the permissions.
-    mAccessController.grant(hTablePermission);
+    //AccessControlLists.addUserPermission();
+    //mAccessController.grant(hTablePermission);
     LOG.debug("Enabling table {}.", Bytes.toString(hTableName));
     mAdmin.enableTable(hTableName);
     LOG.debug("Table {} enabled.", Bytes.toString(hTableName));
@@ -557,7 +559,7 @@ final class KijiSecurityManagerImpl implements KijiSecurityManager {
       byte[] hTableName,
       Action[] hActions) throws IOException {
     // Construct the HBase UserPermission to revoke.
-    UserPermission hTablePermission = new UserPermission(
+    UserPermission hTablePermission = SchemaPlatformBridge.get().createUserPermission(
         hUser,
         hTableName,
         null,
@@ -572,7 +574,8 @@ final class KijiSecurityManagerImpl implements KijiSecurityManager {
     mAdmin.disableTable(hTableName);
     LOG.debug("Table {} disabled.", Bytes.toString(hTableName));
     // Revoke the permissions.
-    mAccessController.revoke(hTablePermission);
+    // mAccessController.revoke();
+    // mAccessController.revoke(hTablePermission);
     LOG.debug("Enabling table {}.", Bytes.toString(hTableName));
     mAdmin.enableTable(hTableName);
     LOG.debug("Table {} enabled.", Bytes.toString(hTableName));
