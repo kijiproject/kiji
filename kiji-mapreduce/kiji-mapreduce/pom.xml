@@ -36,10 +36,14 @@
   <url>http://www.kiji.org</url>
 
   <properties>
-    <kiji-avro.version>1.1.2-cdh4</kiji-avro.version>
+    <kiji-avro.version>1.1.3-cdh5-SNAPSHOT</kiji-avro.version>
     <kiji-schema.classifier />
     <aspectj-maven-plugin.version>1.4</aspectj-maven-plugin.version>
     <aspectjrt.version>1.7.2</aspectjrt.version>
+    <!-- CDH5 versions of hadoop and hbase artifacts. -->
+    <cdh5-hadoop.version>2.3.0-cdh5.0.3</cdh5-hadoop.version>
+
+    <cdh5-hbase.version>0.96.1.1-cdh5.0.3</cdh5-hbase.version>
   </properties>
 
   <build>
@@ -178,42 +182,32 @@
       <version>${kiji-avro.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase</artifactId>
-      <scope>test</scope>
-      <type>test-jar</type>
-    </dependency>
-    <dependency>
       <groupId>org.easymock</groupId>
       <artifactId>easymock</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-client</artifactId>
-      <version>${hadoop.version}</version>
+      <artifactId>hadoop-mapreduce-client-core</artifactId>
+      <version>${cdh5-hadoop.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-core</artifactId>
-      <version>${hadoop.version}</version>
+      <artifactId>hadoop-common</artifactId>
+      <version>${cdh5-hadoop.version}</version>
       <scope>provided</scope>
     </dependency>
+<!--    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase-server</artifactId>
+      <version>${cdh5-hbase.version}</version>
+      <scope>provided</scope>
+    </dependency>-->
     <dependency>
       <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase</artifactId>
-      <version>${hbase.version}</version>
+      <artifactId>hbase-client</artifactId>
+      <version>${cdh5-hbase.version}</version>
       <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-minicluster</artifactId>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.mrunit</groupId>
@@ -260,10 +254,10 @@
   <profiles>
     <profile>
       <!--
-         Active by default: cdh4 build.
+         Active by default: cdh5 build.
       -->
 
-      <id>cdh4</id>
+      <id>cdh5</id>
       <activation>
         <property>
           <name>!platform</name>
@@ -272,7 +266,7 @@
 
       <build>
         <plugins>
-          <!-- Activate integration tests for Hadoop 2 / CDH 4 -->
+          <!-- Activate integration tests for Hadoop 2 / CDH 5 -->
 
           <plugin>
             <groupId>org.kiji.maven.plugins</groupId>
@@ -301,34 +295,36 @@
         <!-- Marked as 'optional' to prevent propagation to transitive projects. -->
         <dependency>
           <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-core</artifactId>
+          <artifactId>hadoop-common</artifactId>
+          <version>${cdh5-hadoop.version}</version>
           <scope>compile</scope>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-client</artifactId>
-          <scope>compile</scope>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-minicluster</artifactId>
-          <scope>test</scope>
           <optional>true</optional>
         </dependency>
         <dependency>
           <groupId>org.apache.hbase</groupId>
-          <artifactId>hbase</artifactId>
-          <type>test-jar</type>
-          <scope>test</scope>
+          <artifactId>hbase-client</artifactId>
+          <version>${cdh5-hbase.version}</version>
+          <scope>compile</scope>
           <optional>true</optional>
+          <exclusions>
+            <exclusion>
+              <groupId>org.apache.hadoop</groupId>
+              <artifactId>hadoop-core</artifactId>
+            </exclusion>
+          </exclusions>
         </dependency>
         <dependency>
           <groupId>org.apache.hbase</groupId>
-          <artifactId>hbase</artifactId>
+          <artifactId>hbase-server</artifactId>
+          <version>${cdh5-hbase.version}</version>
           <scope>compile</scope>
           <optional>true</optional>
+          <exclusions>
+            <exclusion>
+              <groupId>org.apache.hadoop</groupId>
+              <artifactId>hadoop-core</artifactId>
+            </exclusion>
+          </exclusions>
         </dependency>
       </dependencies>
     </profile>

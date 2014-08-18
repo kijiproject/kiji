@@ -307,7 +307,7 @@ public class TestXmlKeyValueStoreParser extends KijiClientTest {
         XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(stringAsInputStream(
             "<stores>\n"
             + ("  <store class=\"" + AvroKVRecordKeyValueStore.class.getName()
-               + "\" name=\"meep\">\n")
+            + "   \" name=\"meep\">\n")
             + "    <configuration>\n"
             + "      <property>\n"
             + "        <name>paths</name>\n"

@@ -222,6 +222,11 @@ public class KijiMultithreadedMapper<K, V>
     }
 
     @Override
+    public float getProgress() {
+      return 0;
+    }
+
+    @Override
     public void setStatus(String status) {
       outer.setStatus(status);
     }

@@ -166,7 +166,7 @@ public class TestKijiHFileOutputFormat {
     Preconditions.checkState(mTempDir.mkdir());
 
     mConf.set("fs.defaultFS", "file://" + mTempDir.toString());
-    mConf.set("mapred.output.dir", "file://" + mTempDir.toString());
+    mConf.set("mapreduce.output.fileoutputformat.outputdir", "file://" + mTempDir.toString());
 
     HBaseKijiInstaller.get().install(mTableURI, mConf);
     mKiji = Kiji.Factory.open(mTableURI);
@@ -195,7 +195,7 @@ public class TestKijiHFileOutputFormat {
     mConf.setInt(KijiHFileOutputFormat.CONF_HREGION_MAX_FILESIZE, entry1.getLength() + 1);
 
     final TaskAttemptID taskAttemptId = KijiMRPlatformBridge.get().newTaskAttemptID(
-        "jobTracker:jtPort", 314, TaskType.MAP, 159, 2);
+        "jobTracker_jtPort", 314, TaskType.MAP, 159, 2);
     final TaskAttemptContext context = KijiMRPlatformBridge.get().newTaskAttemptContext(
             mConf, taskAttemptId);
     final Path outputDir =
@@ -227,7 +227,7 @@ public class TestKijiHFileOutputFormat {
     mConf.setInt(KijiHFileOutputFormat.CONF_HREGION_MAX_FILESIZE, entry1.getLength() + 1);
 
     final TaskAttemptID taskAttemptId = KijiMRPlatformBridge.get().newTaskAttemptID(
-        "jobTracker:jtPort", 314, TaskType.MAP, 159, 2);
+        "jobTracker_jtPort", 314, TaskType.MAP, 159, 2);
     final TaskAttemptContext context = KijiMRPlatformBridge.get().newTaskAttemptContext(
         mConf, taskAttemptId);
     final Path outputDir =
@@ -255,7 +255,7 @@ public class TestKijiHFileOutputFormat {
   @Test
   public void testMultipleLayouts() throws Exception {
     final TaskAttemptID taskAttemptId = KijiMRPlatformBridge.get().newTaskAttemptID(
-        "jobTracker:jtPort", 314, TaskType.MAP, 159, 2);
+        "jobTracker_jtPort", 314, TaskType.MAP, 159, 2);
     final TaskAttemptContext context = KijiMRPlatformBridge.get().newTaskAttemptContext(
         mConf, taskAttemptId);
     final Path outputDir =

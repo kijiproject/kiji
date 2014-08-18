@@ -11,3 +11,9 @@ Further documentation is available at the Kiji project
 [Documentation Portal](http://docs.kiji.org)
 
 Issues are being tracked at [the Kiji JIRA instance](https://jira.kiji.org/browse/KIJIMR).
+
+CDH5.0.3 Notes
+--------------
+
+* TotalOrderPartitioner is now in a new package structure which might be incompatible.
+  This should be bridgeable.
