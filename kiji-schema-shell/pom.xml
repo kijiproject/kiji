@@ -38,8 +38,8 @@
   <properties>
     <kiji-schema.version>1.6.0-SNAPSHOT</kiji-schema.version>
     <kiji-cdh5-platform.version>1.4.0-SNAPSHOT</kiji-cdh5-platform.version>
-    <kiji-delegation.version>1.1.1</kiji-delegation.version>
-    <kiji-common-flags.version>1.1.0</kiji-common-flags.version>
+    <kiji-delegation.version>1.1.2-SNAPSHOT</kiji-delegation.version>
+    <kiji-common-flags.version>1.1.1-SNAPSHOT</kiji-common-flags.version>
     <fake-hbase.version>0.3.0-SNAPSHOT</fake-hbase.version>
   </properties>
 
