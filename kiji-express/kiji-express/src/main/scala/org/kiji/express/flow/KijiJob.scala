@@ -63,6 +63,8 @@ import org.kiji.express.flow.framework.LocalKijiTap
 import org.kiji.express.flow.framework.hfile.HFileFlowStepStrategy
 import org.kiji.express.flow.framework.hfile.HFileKijiTap
 import org.kiji.express.flow.framework.serialization.KijiKryoInstantiator
+import org.kiji.express.flow.histogram.HistogramConfig
+import org.kiji.express.flow.histogram.TupleProfiling
 import org.kiji.express.flow.util.AvroTupleConversions
 import org.kiji.express.flow.util.PipeConversions
 import org.kiji.express.flow.util.ResourcesShutdown
@@ -223,6 +225,14 @@ class KijiJob(args: Args)
   }
 
   /**
+   * Override this to add custom histograms. For registered histograms to be printed when specifying
+   * custom listeners, the desired custom listeners must be concatenated with `super.listeners`.
+   *
+   * @return a List of custom histograms that are used in this job.
+   */
+  def histograms: List[HistogramConfig] = List()
+
+  /**
    * Record the history of this job into all relevant Kiji instances. This includes all Kiji
    * instances which are read from or written to by flows in this Job.
    *
@@ -345,6 +355,12 @@ class KijiJob(args: Args)
     val jobSuccess: Boolean = super.run
     val endTime: Long = System.currentTimeMillis()
     recordJobHistory(startTime, endTime, jobSuccess)
+
+    // Output registered histograms
+    histograms.foreach { histogram: HistogramConfig =>
+      TupleProfiling.writeHistogram(histogram, flowCounters)
+    }
+
     return jobSuccess
   }
 }

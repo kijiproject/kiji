@@ -23,7 +23,6 @@ import java.io.IOException
 import java.io.ByteArrayOutputStream
 import java.io.Closeable
 
-import scala.Some
 import scala.collection.JavaConversions.asScalaIterator
 
 import org.apache.hadoop.conf.Configuration
@@ -39,7 +38,6 @@ import org.kiji.schema.KijiRowScanner
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiDataRequestBuilder
 import org.kiji.schema.KijiDataRequest
-import org.kiji.schema.KijiTableReader
 import org.kiji.schema.KijiTableReader.KijiScannerOptions
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.express.flow.util.ResourceUtil.doAndClose
@@ -339,7 +337,7 @@ object ExpressJobHistoryKijiTable {
   private val JobHistoryFailureValue: String = "FAILED"
 
   /** FlowStepId that represents metrics for the entire flow in the job history table. */
-  private val DefaultFlowStepId: java.lang.Long = 0
+  private val DefaultFlowStepId: java.lang.Long = 0L
 
   /**
    * Factory method to create a instance of ExpressJobHistoryKijiTable.
