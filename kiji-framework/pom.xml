@@ -48,9 +48,9 @@
     <kiji-schema-shell.version>1.4.0-SNAPSHOT</kiji-schema-shell.version>
     <kiji-mapreduce.version>1.3.0-SNAPSHOT</kiji-mapreduce.version>
     <kiji-mapreduce-lib.version>1.2.0-SNAPSHOT</kiji-mapreduce-lib.version>
-    <kiji-annotations.version>1.1.1</kiji-annotations.version>
-    <kiji-delegation.version>1.1.1</kiji-delegation.version>
-    <kiji-common-flags.version>1.1.0</kiji-common-flags.version>
+    <kiji-annotations.version>1.1.2-SNAPSHOT</kiji-annotations.version>
+    <kiji-delegation.version>1.1.2-SNAPSHOT</kiji-delegation.version>
+    <kiji-common-flags.version>1.1.1-SNAPSHOT</kiji-common-flags.version>
   </properties>
 
   <!--
@@ -152,11 +152,6 @@
       <name>kiji-repos</name>
       <url>https://repo.wibidata.com/artifactory/kiji</url>
     </repository>
-    <repository>
-      <id>kiji-nightly</id>
-      <name>kiji-nightly</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-    </repository>
   </repositories>
 
   <build>
@@ -188,11 +183,6 @@
       <name>kiji-maven-releases</name>
       <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
     </repository>
-    <snapshotRepository>
-      <id>kiji-maven</id>
-      <name>kiji-maven-snapshots</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
-    </snapshotRepository>
   </distributionManagement>
 
   <profiles>
