@@ -39,8 +39,8 @@
     <kiji-platforms.version>1.4.0-SNAPSHOT</kiji-platforms.version>
     <kiji-schema.version>1.6.0-SNAPSHOT</kiji-schema.version>
     <fake-hbase.version>0.3.0-SNAPSHOT</fake-hbase.version>
-    <kiji-annotations.version>1.1.1</kiji-annotations.version>
-    <kiji-delegation.version>1.1.1</kiji-delegation.version>
+    <kiji-annotations.version>1.1.2-SNAPSHOT</kiji-annotations.version>
+    <kiji-delegation.version>1.1.2-SNAPSHOT</kiji-delegation.version>
   </properties>
 
   <modules>
@@ -154,11 +154,6 @@
       <id>kiji-repos</id>
       <name>kiji-repos</name>
       <url>https://repo.wibidata.com/artifactory/kiji</url>
-    </repository>
-    <repository>
-      <id>kiji-nightly</id>
-      <name>kiji-nightly</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
     </repository>
   </repositories>
 
