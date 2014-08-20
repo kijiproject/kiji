@@ -52,7 +52,7 @@
     <kiji-express-examples.version>${kiji-express.version}</kiji-express-examples.version>
     <kiji-express-tools.version>${kiji-express.version}</kiji-express-tools.version>
     <kiji-rest.version>1.5.0-SNAPSHOT</kiji-rest.version>
-    <kiji-scoring.version>0.17.0-SNAPSHOT</kiji-scoring.version>
+    <kiji-scoring.version>0.18.0-SNAPSHOT</kiji-scoring.version>
     <kiji-scoring-server.version>0.16.0-SNAPSHOT</kiji-scoring-server.version>
     <kiji-model-repository.version>0.11.0-SNAPSHOT</kiji-model-repository.version>
     <kiji-common-flags.version>1.1.0</kiji-common-flags.version>
