@@ -42,6 +42,7 @@
     <module>kiji-cdh4-4-platform</module>
     <module>kiji-cdh4-platform</module>
     <module>kiji-cdh5-0-3-platform</module>
+    <module>kiji-cdh5-0-3-test-platform</module>
 
     <module>kiji-hadoop1-hbase94-platform</module>
     <module>kiji-hadoop1-hbase92-platform</module>

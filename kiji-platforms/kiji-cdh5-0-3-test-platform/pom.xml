@@ -20,7 +20,7 @@
   -->
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>kiji-cdh5-0-3-platform</artifactId>
+  <artifactId>kiji-cdh5-0-3-test-platform</artifactId>
   <packaging>jar</packaging>
 
   <parent>
@@ -30,8 +30,8 @@
     <relativePath>..</relativePath>
   </parent>
 
-  <name>kiji-cdh5-0-3-platform</name>
-  <description>Dependency on CDH5.0.3</description>
+  <name>kiji-cdh5-0-3-test-platform</name>
+  <description>Test Dependencies on CDH5.0.3</description>
   <inceptionYear>2014</inceptionYear>
 
   <properties>
@@ -43,29 +43,27 @@
   </build>
 
   <dependencies>
+    <!-- Depend on the non-test cdh5.0.3 platform as well. -->
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-mapreduce-client-jobclient</artifactId>
-      <version>${hadoop.version}</version>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-cdh5-0-3-platform</artifactId>
+      <version>${project.version}</version>
+      <type>jar</type>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-mapreduce-client-app</artifactId>
+      <artifactId>hadoop-yarn-server-tests</artifactId>
       <version>${hadoop.version}</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-common</artifactId>
-      <version>${hadoop.version}</version>
+      <type>test-jar</type>
       <scope>compile</scope>
     </dependency>
 
     <dependency>
       <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-client</artifactId>
+      <artifactId>hbase-testing-util</artifactId>
       <version>${hbase.version}</version>
+      <type>test-jar</type>
       <scope>compile</scope>
       <exclusions>
         <!-- Exclude mr1 dependencies. -->
