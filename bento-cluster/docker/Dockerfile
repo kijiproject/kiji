@@ -21,6 +21,7 @@ RUN yum install -y --nogpgcheck \
   hadoop-mapreduce-historyserver \
   hbase-master \
   hbase-regionserver \
+  cassandra-2.0.9 \
   jna \
   dsc20 \
   opscenter \
