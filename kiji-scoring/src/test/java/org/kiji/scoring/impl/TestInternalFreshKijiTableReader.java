@@ -1305,14 +1305,17 @@ public class TestInternalFreshKijiTableReader {
 
     final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
-        .withTimeout(500)
+        .withTimeout(2000)
         .withStatisticsGathering(StatisticGatheringMode.ALL, 0)
         .build();
 
     try {
-      freshReader.get(eid, request);
+      final KijiRowData data = freshReader.get(eid, request);
+      assertEquals(
+          "new-val",
+          data.getMostRecentValue(FAMILY_QUAL0.getFamily(), FAMILY_QUAL0.getQualifier()));
       // Sleep to give the statistics gatherer time to gather.
-      Thread.sleep(100);
+      Thread.sleep(2000);
 
       final FreshKijiTableReaderStatistics stats = freshReader.getStatistics();
       assertTrue(1 == stats.getRawFreshenerRunStatistics().size());
@@ -1323,7 +1326,7 @@ public class TestInternalFreshKijiTableReader {
       assertTrue(1 == freshenerStatistics.getScoreFunctionRanPercent().getCount());
       assertTrue(0 == freshenerStatistics.getTimedOutPercent().getMean());
       assertTrue(1 == freshenerStatistics.getTimedOutPercent().getCount());
-      assertTrue(600000000 > freshenerStatistics.getMeanFresheningDuration().getMean());
+      assertTrue(2100000000 > freshenerStatistics.getMeanFresheningDuration().getMean());
       assertTrue(1 == freshenerStatistics.getMeanFresheningDuration().getCount());
 
       freshReader.get(eid, request);
@@ -1335,7 +1338,7 @@ public class TestInternalFreshKijiTableReader {
       assertTrue(2 == freshenerStatistics.getScoreFunctionRanPercent().getCount());
       assertTrue(0 == freshenerStatistics.getTimedOutPercent().getMean());
       assertTrue(2 == freshenerStatistics.getTimedOutPercent().getCount());
-      assertTrue(600000000 > freshenerStatistics.getMeanFresheningDuration().getMean());
+      assertTrue(2100000000 > freshenerStatistics.getMeanFresheningDuration().getMean());
       assertTrue(2 == freshenerStatistics.getMeanFresheningDuration().getCount());
     } finally {
       freshReader.close();
