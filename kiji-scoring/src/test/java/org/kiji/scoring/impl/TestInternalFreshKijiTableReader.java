@@ -1313,7 +1313,8 @@ public class TestInternalFreshKijiTableReader {
       final KijiRowData data = freshReader.get(eid, request);
       assertEquals(
           "new-val",
-          data.getMostRecentValue(FAMILY_QUAL0.getFamily(), FAMILY_QUAL0.getQualifier()));
+          data.getMostRecentValue(FAMILY_QUAL0.getFamily(), FAMILY_QUAL0.getQualifier()).toString()
+      );
       // Sleep to give the statistics gatherer time to gather.
       Thread.sleep(2000);
 
@@ -1365,9 +1366,13 @@ public class TestInternalFreshKijiTableReader {
         .withStatisticsGathering(StatisticGatheringMode.ALL, 0)
         .build();
     try {
-      freshReader.get(eid, request);
+      final KijiRowData data = freshReader.get(eid, request);
+      assertEquals(
+          "foo-val",
+          data.getMostRecentValue(FAMILY_QUAL0.getFamily(), FAMILY_QUAL0.getQualifier()).toString()
+      );
       // Sleep to give the Freshener time to finish and the statistics gatherer time to gather.
-      Thread.sleep(1000);
+      Thread.sleep(3000);
 
       final FreshKijiTableReaderStatistics stats = freshReader.getStatistics();
       assertTrue(1 == stats.getRawFreshenerRunStatistics().size());
