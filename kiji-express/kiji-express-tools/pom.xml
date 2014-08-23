@@ -82,7 +82,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase</artifactId>
+      <artifactId>hbase-client</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -107,7 +107,7 @@
     <!-- Test dependencies. -->
     <dependency>
       <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase</artifactId>
+      <artifactId>hbase-testing-util</artifactId>
       <scope>test</scope>
       <type>test-jar</type>
     </dependency>

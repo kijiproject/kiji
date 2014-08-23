@@ -27,12 +27,14 @@ import scala.collection.JavaConverters.iterableAsScalaIterableConverter
 import cascading.flow.Flow
 import cascading.flow.FlowStep
 import cascading.flow.FlowStepStrategy
-import org.apache.hadoop.filecache.DistributedCache
+import org.apache.hadoop.mapreduce.filecache.DistributedCache
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.io.NullWritable
 import org.apache.hadoop.mapred.JobConf
 import org.apache.hadoop.mapred.lib.IdentityReducer
 import org.apache.hadoop.mapred.lib.TotalOrderPartitioner
+import org.apache.hadoop.mapreduce.lib.partition.{
+    TotalOrderPartitioner => TotalOrderPartitionerMR2 }
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
@@ -93,12 +95,15 @@ object HFileFlowStepStrategy extends FlowStepStrategy[JobConf] {
 
       // Write the partition file for the TotalOrderPartitioner
       val partitionPath = {
-        val path = new Path(sink.hFileOutput, TotalOrderPartitioner.DEFAULT_PATH)
+        // For some reason, TotalOrderPartitioner.DEFAULT_PATH does not compile,
+        // even though TotalOrderPartitioner inherits from TotalOrderPartitionerMR2,
+        // so we had to import TotalPartitionerMR2 separately.
+        val path = new Path(sink.hFileOutput, TotalOrderPartitionerMR2.DEFAULT_PATH)
         path.getFileSystem(conf).makeQualified(path)
       }
       HFileMapReduceJobOutput.writePartitionFile(conf, partitionPath, splits)
       conf.set("total.order.partitioner.path", partitionPath.toString)
-      val cacheUri = new URI(partitionPath.toString + "#" + TotalOrderPartitioner.DEFAULT_PATH)
+      val cacheUri = new URI(partitionPath.toString + "#" + TotalOrderPartitionerMR2.DEFAULT_PATH)
       DistributedCache.addCacheFile(cacheUri, conf)
       DistributedCache.createSymlink(conf)
     }

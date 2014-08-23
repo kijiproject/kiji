@@ -19,14 +19,13 @@
 
 package org.kiji.express.flow.framework.serialization
 
-import java.io.DataInputStream
-import java.io.DataOutputStream
-
 import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.Serializer
 import com.esotericsoftware.kryo.io.Input
 import com.esotericsoftware.kryo.io.Output
 import org.apache.hadoop.hbase.client.Result
+import org.apache.hadoop.hbase.protobuf.ProtobufUtil
+import org.apache.hadoop.hbase.protobuf.generated.ClientProtos
 
 /**
  * Kryo serializer for [[org.apache.hadoop.hbase.client.Result]].  Takes advantage of the fact
@@ -35,16 +34,14 @@ import org.apache.hadoop.hbase.client.Result
  */
 class ResultSerializer extends Serializer[Result] {
   override def write(kryo: Kryo, output: Output, result: Result): Unit = {
-    val dataOutputStream = new DataOutputStream(output)
-    result.write(dataOutputStream)
-    dataOutputStream.close()
+    val protoResult: ClientProtos.Result = ProtobufUtil.toResult(result)
+    protoResult.writeTo(output)
   }
 
   override def read(kryo: Kryo, input: Input, clazz: Class[Result]): Result = {
-    val result = new Result()
-    val dataInputStream = new DataInputStream(input)
-    result.readFields(dataInputStream)
-    dataInputStream.close()
+    val protoResult: ClientProtos.Result =
+      ClientProtos.Result.parseFrom(input)
+    val result: Result = ProtobufUtil.toResult(protoResult)
     result
   }
 }
