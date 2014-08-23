@@ -323,7 +323,7 @@
       <!-- kiji-rest -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>rest</outputDirectory>
-      <directory>target/prereqs-dir/kiji-rest-cdh4-${kiji-rest.version}</directory>
+      <directory>target/prereqs-dir/kiji-rest-cdh5-${kiji-rest.version}</directory>
       <filtered>false</filtered>
       <excludes>
         <exclude>bin/**</exclude>
@@ -334,7 +334,7 @@
       <!-- kiji-rest binaries -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>rest/bin</outputDirectory>
-      <directory>target/prereqs-dir/kiji-rest-cdh4-${kiji-rest.version}/bin</directory>
+      <directory>target/prereqs-dir/kiji-rest-cdh5-${kiji-rest.version}/bin</directory>
       <filtered>false</filtered>
       <fileMode>0755</fileMode>
     </fileSet>
@@ -349,42 +349,6 @@
         <exclude>docs/**</exclude>
       </excludes>
       <fileMode>0644</fileMode>
-    </fileSet>
-    <fileSet>
-      <!-- kiji-model-repository -->
-      <useDefaultExcludes>false</useDefaultExcludes>
-      <outputDirectory>model-repo</outputDirectory>
-      <directory>target/prereqs-dir/kiji-model-repository-${kiji-model-repository.version}</directory>
-      <filtered>false</filtered>
-      <excludes>
-        <exclude>RELEASE_NOTES.txt</exclude>
-      </excludes>
-      <fileMode>0644</fileMode>
-    </fileSet>
-    <fileSet>
-      <!-- kiji-scoring-server -->
-      <useDefaultExcludes>false</useDefaultExcludes>
-      <outputDirectory>scoring-server</outputDirectory>
-      <directory>target/prereqs-dir/kiji-scoring-server-${kiji-scoring-server.version}</directory>
-      <filtered>false</filtered>
-      <excludes>
-        <exclude>RELEASE_NOTES.txt</exclude>
-        <exclude>README.md</exclude>
-        <exclude>bin/**</exclude>
-      </excludes>
-      <fileMode>0644</fileMode>
-    </fileSet>
-    <fileSet>
-      <!-- kiji-scoring-server startup script -->
-      <useDefaultExcludes>false</useDefaultExcludes>
-      <outputDirectory>scoring-server/bin</outputDirectory>
-      <directory>target/prereqs-dir/kiji-scoring-server-${kiji-scoring-server.version}/bin</directory>
-      <filtered>false</filtered>
-      <includes>
-        <include>kiji-scoring-server</include>
-        <include>kiji-scoring-server.initd</include>
-      </includes>
-      <fileMode>0755</fileMode>
     </fileSet>
     <fileSet>
       <!-- bento-checkin -->
@@ -481,13 +445,6 @@
       <source>target/prereqs-dir/kiji-scoring-${kiji-scoring.version}/RELEASE_NOTES.txt</source>
       <outputDirectory>release-notes</outputDirectory>
       <destName>SCORING_RELEASE_NOTES.txt</destName>
-      <fileMode>0644</fileMode>
-    </file>
-    <file>
-      <!-- kiji-model-repository release notes -->
-      <source>target/prereqs-dir/kiji-model-repository-${kiji-model-repository.version}/RELEASE_NOTES.txt</source>
-      <outputDirectory>release-notes</outputDirectory>
-      <destName>MODEL_REPO_RELEASE_NOTES.txt</destName>
       <fileMode>0644</fileMode>
     </file>
   </files>

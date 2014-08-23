@@ -37,7 +37,7 @@
 
   <properties>
     <codename>fugu</codename>
-    <bento-cluster.version>1.3.0-SNAPSHOT</bento-cluster.version>
+    <bento-cluster.version>2.0.0-SNAPSHOT</bento-cluster.version>
     <kiji-checkin.version>1.0.6</kiji-checkin.version>
     <kiji-schema.version>1.6.0-SNAPSHOT</kiji-schema.version>
     <kiji-schema-shell.version>1.4.0-SNAPSHOT</kiji-schema-shell.version>
@@ -82,7 +82,7 @@
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>versions-maven-plugin</artifactId>
         <configuration>
-          <includeProperties>bento-cluster.version,kiji-checkin.version,kiji-schema.version,kiji-schema-shell.version,kiji-phonebook.version,kiji-mapreduce.version,kiji-mapreduce-lib.version,kiji-hive-adapter.version,kiji-music.version,kiji-express.version,kiji-express-music.version,kiji-express-examples.version,kiji-rest.version,kiji-scoring.version,kiji-scoring-server.version,kiji-model-repository.version,kiji-modeling.version</includeProperties>
+          <includeProperties>bento-cluster.version,kiji-checkin.version,kiji-schema.version,kiji-schema-shell.version,kiji-phonebook.version,kiji-mapreduce.version,kiji-mapreduce-lib.version,kiji-hive-adapter.version,kiji-music.version,kiji-express.version,kiji-express-music.version,kiji-express-examples.version,kiji-rest.version,kiji-scoring.version,kiji-modeling.version</includeProperties>
         </configuration>
         <dependencies>
           <!--
@@ -162,16 +162,6 @@
             <version>${kiji-scoring.version}</version>
           </dependency>
           <dependency>
-            <groupId>org.kiji.scoring</groupId>
-            <artifactId>kiji-scoring-server</artifactId>
-            <version>${kiji-scoring-server.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.kiji.modelrepo</groupId>
-            <artifactId>kiji-model-repository</artifactId>
-            <version>${kiji-model-repository.version}</version>
-          </dependency>
-          <dependency>
             <groupId>org.kiji.modeling</groupId>
             <artifactId>kiji-modeling</artifactId>
             <version>${kiji-modeling.version}</version>
@@ -192,14 +182,6 @@
       <url>https://repo.wibidata.com/artifactory/kiji</url>
       <snapshots>
         <enabled>false</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>kiji-nightly</id>
-      <name>kiji-nightly</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-      <snapshots>
-        <enabled>true</enabled>
       </snapshots>
     </repository>
   </repositories>

@@ -145,7 +145,7 @@
     <dependencySet>
       <outputDirectory>.</outputDirectory>
       <includes>
-        <include>org.kiji.rest:kiji-rest-cdh4:tar.gz</include>
+        <include>org.kiji.rest:kiji-rest-cdh5:tar.gz</include>
       </includes>
       <unpack>true</unpack>
       <useProjectArtifact>false</useProjectArtifact>
@@ -154,22 +154,6 @@
       <outputDirectory>.</outputDirectory>
       <includes>
         <include>org.kiji.scoring:kiji-scoring:tar.gz</include>
-      </includes>
-      <unpack>true</unpack>
-      <useProjectArtifact>false</useProjectArtifact>
-    </dependencySet>
-    <dependencySet>
-      <outputDirectory>.</outputDirectory>
-      <includes>
-        <include>org.kiji.modelrepo:kiji-model-repository:tar.gz</include>
-      </includes>
-      <unpack>true</unpack>
-      <useProjectArtifact>false</useProjectArtifact>
-    </dependencySet>
-    <dependencySet>
-      <outputDirectory>.</outputDirectory>
-      <includes>
-        <include>org.kiji.scoring:kiji-scoring-server:tar.gz</include>
       </includes>
       <unpack>true</unpack>
       <useProjectArtifact>false</useProjectArtifact>

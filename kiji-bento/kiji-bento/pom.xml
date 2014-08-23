@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
@@ -273,7 +274,7 @@
     </dependency>
     <dependency>
       <groupId>org.kiji.rest</groupId>
-      <artifactId>kiji-rest-cdh4</artifactId>
+      <artifactId>kiji-rest-cdh5</artifactId>
       <version>${kiji-rest.version}</version>
       <classifier>release</classifier>
       <type>tar.gz</type>
@@ -282,20 +283,6 @@
       <groupId>org.kiji.scoring</groupId>
       <artifactId>kiji-scoring</artifactId>
       <version>${kiji-scoring.version}</version>
-      <classifier>release</classifier>
-      <type>tar.gz</type>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.modelrepo</groupId>
-      <artifactId>kiji-model-repository</artifactId>
-      <version>${kiji-model-repository.version}</version>
-      <classifier>release</classifier>
-      <type>tar.gz</type>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.scoring</groupId>
-      <artifactId>kiji-scoring-server</artifactId>
-      <version>${kiji-scoring-server.version}</version>
       <classifier>release</classifier>
       <type>tar.gz</type>
     </dependency>
