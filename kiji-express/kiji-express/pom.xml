@@ -257,15 +257,16 @@
         <artifactId>maven-surefire-plugin</artifactId>
       </plugin>
 
+      <!-- Disabled for now due to the hbase-maven-plugin not working with cdh5. -->
       <!-- Integration-tests, using the HBase maven-plugin -->
-      <plugin>
-        <groupId>org.kiji.maven.plugins</groupId>
-        <artifactId>hbase-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-      </plugin>
+      <!-- <plugin> -->
+      <!--   <groupId>org.kiji.maven.plugins</groupId> -->
+      <!--   <artifactId>hbase-maven-plugin</artifactId> -->
+      <!-- </plugin> -->
+      <!-- <plugin> -->
+      <!--   <groupId>org.apache.maven.plugins</groupId> -->
+      <!--   <artifactId>maven-failsafe-plugin</artifactId> -->
+      <!-- </plugin> -->
 
     </plugins>
   </build>
