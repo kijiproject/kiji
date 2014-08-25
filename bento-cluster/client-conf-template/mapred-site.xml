@@ -8,11 +8,6 @@
   </property>
 
   <property>
-    <name>mapred.job.tracker</name>
-    <value>$BENTO_HOST:8021</value>
-  </property>
-
-  <property>
     <name>mapreduce.jobhistory.address</name>
     <value>$BENTO_HOST:10020</value>
   </property>
