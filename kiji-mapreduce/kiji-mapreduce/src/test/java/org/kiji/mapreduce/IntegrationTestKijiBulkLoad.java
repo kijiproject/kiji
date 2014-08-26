@@ -19,8 +19,10 @@
 
 package org.kiji.mapreduce;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Random;
 
@@ -29,6 +31,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,10 +40,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
+import org.kiji.mapreduce.bulkimport.KijiBulkImporter;
 import org.kiji.mapreduce.input.MapReduceJobInputs;
 import org.kiji.mapreduce.output.MapReduceJobOutputs;
+import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiDataRequestBuilder;
+import org.kiji.schema.KijiRowData;
+import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
+import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.testutil.AbstractKijiIntegrationTest;
 
@@ -121,6 +132,75 @@ public class IntegrationTestKijiBulkLoad
     // There is only one reducer, hence one HFile shard:
     final Path hfilePath = new Path(hfileDirPath, "part-r-00000.hfile");
     loader.load(hfilePath, mOutputTable);
+  }
+
+  /**
+   * Bulk importer intended to run on the generic KijiMR test layout. Uses the resource
+   * org/kiji/mapreduce/layout/test.json.
+   *
+   * This importer emits cells, but immediately deletes some of them as well: we should
+   * not see the deleted cells after bulk load.
+   */
+  public static class TombstoningBulkImporter extends KijiBulkImporter<LongWritable, Text> {
+    /** {@inheritDoc} */
+    @Override
+    public void produce(LongWritable inputKey, Text value, KijiTableContext context)
+        throws IOException {
+      final String line = value.toString();
+      final String[] split = line.split(":");
+      Preconditions.checkState(split.length == 2,
+          String.format("Unable to parse bulk-import test input line: '%s'.", line));
+      final String rowKey = split[0];
+      final String name = split[1];
+
+      final EntityId eid = context.getEntityId(rowKey);
+      context.put(eid, "primitives", "string", 1L, name);
+      context.put(eid, "primitives", "long", 1L, inputKey.get());
+
+      // Now delete the long
+      context.deleteCell(eid, "primitives", "long", 1L);
+    }
+  }
+
+  @Test
+  public void testBulkLoadHFilesWithTombstones() throws Exception {
+    final Path hfileDirPath = this.makeRandomPath("hfile-output");
+    final KijiMapReduceJob mrjob = KijiBulkImportJobBuilder.create()
+        .withConf(getConf())
+        .withInput(MapReduceJobInputs.newTextMapReduceJobInput(mBulkImportInputPath))
+        .withBulkImporter(TombstoningBulkImporter.class)
+        .withOutput(MapReduceJobOutputs.newHFileMapReduceJobOutput(
+            mOutputTable.getURI(), hfileDirPath))
+        .build();
+    assertTrue(mrjob.run());
+
+    final HFileLoader loader = HFileLoader.create(mConf);
+    loader.load(hfileDirPath, mOutputTable);
+
+    final KijiDataRequestBuilder dataRequestBuilder = KijiDataRequest.builder();
+    dataRequestBuilder
+        .newColumnsDef()
+        .add("primitives", "string")
+        .add("primitives", "long");
+    final KijiDataRequest dataRequest = dataRequestBuilder.build();
+
+    final KijiTableReader tableReader = mOutputTable.openTableReader();
+    try {
+      final KijiRowScanner scanner = tableReader.getScanner(dataRequest);
+      try {
+        int rows = 0;
+        for (KijiRowData row : scanner) {
+          rows++;
+          assertTrue(row.containsColumn("primitives", "string"));
+          assertFalse(row.containsColumn("primitives", "long"));
+        }
+        assertTrue("At least one row should have been found.", rows > 0);
+      } finally {
+        scanner.close();
+      }
+    } finally {
+      tableReader.close();
+    }
   }
 
   @Test

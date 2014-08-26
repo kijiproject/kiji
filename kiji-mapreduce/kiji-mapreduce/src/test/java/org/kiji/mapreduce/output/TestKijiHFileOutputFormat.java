@@ -90,7 +90,7 @@ public class TestKijiHFileOutputFormat {
   }
 
   /**
-   * Makes an HFile entry (KeyValue writable-comparable).
+   * Makes an HFile put entry (KeyValue writable-comparable).
    *
    * @param row Row key.
    * @param family HBase family (as a Kiji locality group column ID).
@@ -103,6 +103,24 @@ public class TestKijiHFileOutputFormat {
       String row, ColumnId family, String qualifier, long timestamp, byte[] value) {
     return new HFileKeyValue(
         toBytes(row), family.toByteArray(), toBytes(qualifier), timestamp, value);
+  }
+
+  /**
+   * Makes an HFile delete entry (KeyValue writable-comparable).
+   *
+   * @param row Row key.
+   * @param family HBase family (as a Kiji locality group column ID).
+   * @param qualifier HBase qualifier.
+   * @param timestamp Cell timestamp.
+   * @param type Cell type (put or one of the flavors of delete)
+   * @return a new HFileKeyValue with the specified parameters.
+   */
+  private static HFileKeyValue entry(
+      String row, ColumnId family, String qualifier, long timestamp,
+      HFileKeyValue.Type type) {
+    return new HFileKeyValue(
+        toBytes(row), family.toByteArray(), toBytes(qualifier), timestamp, type,
+        HConstants.EMPTY_BYTE_ARRAY);
   }
 
   /**
@@ -291,6 +309,45 @@ public class TestKijiHFileOutputFormat {
 
     assertHFileContent(new Path(defaultDir, "00000"), defaultEntry.getKeyValue());
     assertHFileContent(new Path(inMemoryDir, "00000"), inMemoryEntry.getKeyValue());
+
+    mFormat.getOutputCommitter(context).commitTask(context);
+  }
+
+  @Test
+  public void testTombstonesInHFile() throws Exception {
+    final HFileKeyValue put = entry("row-key1", mDefaultLGId, "a", 1L, makeBytes(0, 1024));
+    final HFileKeyValue deleteCell =
+      entry("row-key2", mDefaultLGId, "a", 1L, HFileKeyValue.Type.DeleteCell);
+    final HFileKeyValue deleteColumn =
+      entry("row-key3", mDefaultLGId, "a", 1L, HFileKeyValue.Type.DeleteColumn);
+    final HFileKeyValue deleteFamily =
+      entry("row-key4", mDefaultLGId, "a", 1L, HFileKeyValue.Type.DeleteFamily);
+
+    final TaskAttemptID taskAttemptId = KijiMRPlatformBridge.get().newTaskAttemptID(
+        "jobTracker_jtPort", 314, TaskType.MAP, 159, 2);
+    final TaskAttemptContext context = KijiMRPlatformBridge.get().newTaskAttemptContext(
+            mConf, taskAttemptId);
+    final Path outputDir =
+        mFormat.getDefaultWorkFile(context, KijiHFileOutputFormat.OUTPUT_EXTENSION);
+    final FileSystem fs = outputDir.getFileSystem(mConf);
+
+    final RecordWriter<HFileKeyValue, NullWritable> writer = mFormat.getRecordWriter(context);
+    writer.write(put, NW);
+    writer.write(deleteCell, NW);
+    writer.write(deleteColumn, NW);
+    writer.write(deleteFamily, NW);
+    writer.close(context);
+
+    final Path defaultDir = new Path(outputDir, mDefaultLGId.toString());
+    assertTrue(fs.exists(defaultDir));
+
+    assertHFileContent(
+      new Path(defaultDir, "00000"),
+      put.getKeyValue(),
+      deleteCell.getKeyValue(),
+      deleteColumn.getKeyValue(),
+      deleteFamily.getKeyValue());
+    assertFalse(fs.exists(new Path(defaultDir, "00001")));
 
     mFormat.getOutputCommitter(context).commitTask(context);
   }

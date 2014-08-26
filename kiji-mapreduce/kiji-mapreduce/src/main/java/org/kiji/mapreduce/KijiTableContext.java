@@ -24,13 +24,14 @@ import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.EntityIdFactory;
+import org.kiji.schema.KijiDeleter;
 import org.kiji.schema.KijiPutter;
 
 /** Context for Kiji bulk-importers or reducers to output to a Kiji table. */
 @ApiAudience.Public
 @ApiStability.Stable
 @Inheritance.Sealed
-public interface KijiTableContext extends KijiContext, KijiPutter {
+public interface KijiTableContext extends KijiContext, KijiPutter, KijiDeleter {
   /** @return a factory to create entity IDs to write to the output Kiji table. */
   EntityIdFactory getEntityIdFactory();
 

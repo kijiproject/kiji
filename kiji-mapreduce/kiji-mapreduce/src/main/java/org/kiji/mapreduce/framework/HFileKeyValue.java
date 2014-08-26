@@ -76,7 +76,23 @@ public final class HFileKeyValue implements WritableComparable<HFileKeyValue> {
    */
   public HFileKeyValue(byte[] rowKey, byte[] family, byte[] qualifier, long timestamp,
       byte[] value) {
-    mKeyValue = new KeyValue(rowKey, family, qualifier, timestamp, value);
+    this(rowKey, family, qualifier, timestamp, Type.Put, value);
+  }
+
+  /**
+   * Constructor that builds a filled HFileKeyValue.
+   *
+   * @param rowKey The row key.
+   * @param family The column family.
+   * @param qualifier The column qualifier.
+   * @param timestamp The cell timestamp.
+   * @param type The HBase cell type (put or one of the various deletes)
+   * @param value The cell value.
+   */
+  public HFileKeyValue(byte[] rowKey, byte[] family, byte[] qualifier, long timestamp,
+      Type type, byte[] value) {
+    mKeyValue = new KeyValue(rowKey, family, qualifier, timestamp, type.getKeyValueType(),
+        value);
   }
 
   /**
@@ -172,6 +188,40 @@ public final class HFileKeyValue implements WritableComparable<HFileKeyValue> {
   @Override
   public String toString() {
     return mKeyValue.toString();
+  }
+
+  /**
+   * A type code to identify key values as puts or various deletes.
+   *
+   * <p>This reflects the namesake enum within KeyValue.  There is no DeleteRow since
+   * HBase does not represent that operation with a single KeyValue: instead a
+   * DeleteFamily would be issued for each locality group in the table.</p>
+   */
+  public static enum Type {
+    Put(KeyValue.Type.Put),
+    DeleteFamily(KeyValue.Type.DeleteFamily),
+    DeleteColumn(KeyValue.Type.DeleteColumn),
+    DeleteCell(KeyValue.Type.Delete);
+
+    private final KeyValue.Type mKeyValueType;
+
+    /**
+     * Constructor.
+     *
+     * @param keyValueType The equivalent underlying HBase KeyValue.Type.
+     */
+    Type(final KeyValue.Type keyValueType) {
+      this.mKeyValueType = keyValueType;
+    }
+
+    /**
+     * Get the equivalent HBase KeyValue.Type.
+     *
+     * @return The equivalent underlying HBase KeyValue.Type.
+     */
+    private KeyValue.Type getKeyValueType() {
+      return mKeyValueType;
+    }
   }
 
   /**

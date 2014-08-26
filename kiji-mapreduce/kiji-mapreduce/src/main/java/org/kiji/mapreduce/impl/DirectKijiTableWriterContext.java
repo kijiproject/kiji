@@ -30,7 +30,7 @@ import org.kiji.mapreduce.framework.KijiConfKeys;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.EntityIdFactory;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiPutter;
+import org.kiji.schema.KijiBufferedWriter;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
 
@@ -50,7 +50,7 @@ public final class DirectKijiTableWriterContext
 
   private final Kiji mKiji;
   private final KijiTable mTable;
-  private final KijiPutter mPutter;
+  private final KijiBufferedWriter mWriter;
   private final EntityIdFactory mEntityIdFactory;
 
   /**
@@ -68,7 +68,7 @@ public final class DirectKijiTableWriterContext
         KijiURI.newBuilder(conf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI)).build();
     mKiji = Kiji.Factory.open(outputURI, conf);
     mTable = mKiji.openTable(outputURI.getTable());
-    mPutter = mTable.getWriterFactory().openBufferedWriter();
+    mWriter = mTable.getWriterFactory().openBufferedWriter();
     mEntityIdFactory = EntityIdFactory.getFactory(mTable.getLayout());
   }
 
@@ -89,14 +89,65 @@ public final class DirectKijiTableWriterContext
   @Override
   public <T> void put(EntityId entityId, String family, String qualifier, T value)
       throws IOException {
-    mPutter.put(entityId, family, qualifier, value);
+    mWriter.put(entityId, family, qualifier, value);
   }
 
   /** {@inheritDoc} */
   @Override
   public <T> void put(EntityId entityId, String family, String qualifier, long timestamp, T value)
       throws IOException {
-    mPutter.put(entityId, family, qualifier, timestamp, value);
+    mWriter.put(entityId, family, qualifier, timestamp, value);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void deleteRow(EntityId entityId) throws IOException {
+    mWriter.deleteRow(entityId);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void deleteRow(EntityId entityId, long upToTimestamp) throws IOException {
+    mWriter.deleteRow(entityId, upToTimestamp);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void deleteFamily(EntityId entityId, String family) throws IOException {
+    mWriter.deleteFamily(entityId, family);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void deleteFamily(EntityId entityId, String family, long upToTimestamp)
+      throws IOException {
+    mWriter.deleteFamily(entityId, family, upToTimestamp);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void deleteColumn(EntityId entityId, String family, String qualifier) throws IOException {
+    mWriter.deleteColumn(entityId, family, qualifier);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void deleteColumn(EntityId entityId, String family, String qualifier, long upToTimestamp)
+      throws IOException {
+    mWriter.deleteColumn(entityId, family, qualifier, upToTimestamp);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void deleteCell(EntityId entityId, String family, String qualifier) throws IOException {
+    mWriter.deleteCell(entityId, family, qualifier);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void deleteCell(EntityId entityId, String family, String qualifier, long timestamp)
+      throws IOException {
+    mWriter.deleteCell(entityId, family, qualifier, timestamp);
   }
 
   /** {@inheritDoc} */
@@ -114,14 +165,14 @@ public final class DirectKijiTableWriterContext
   /** {@inheritDoc} */
   @Override
   public void flush() throws IOException {
-    mPutter.flush();
+    mWriter.flush();
     super.flush();
   }
 
   /** {@inheritDoc} */
   @Override
   public void close() throws IOException {
-    mPutter.close();
+    mWriter.close();
     mTable.release();
     mKiji.release();
     super.close();
