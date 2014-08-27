@@ -19,13 +19,12 @@
 
 package org.kiji.mapreduce.output;
 
+import org.apache.avro.mapreduce.AvroKeyValueOutputFormat;
 import org.apache.hadoop.fs.Path;
-
 import org.apache.hadoop.mapreduce.OutputFormat;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
-import org.kiji.avro.mapreduce.AvroKeyValueOutputFormat;
 
 /**
  * The class AvroKeyValueMapReduceJobOutput is used to indicate the usage of Avro container files

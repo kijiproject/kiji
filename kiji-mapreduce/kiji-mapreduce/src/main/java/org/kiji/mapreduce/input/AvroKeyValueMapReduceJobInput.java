@@ -19,12 +19,12 @@
 
 package org.kiji.mapreduce.input;
 
+import org.apache.avro.mapreduce.AvroKeyValueInputFormat;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputFormat;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
-import org.kiji.avro.mapreduce.AvroKeyValueInputFormat;
 
 /**
  * The class AvroKeyValueMapReduceJobInput is used to indicate the usage of Avro container
