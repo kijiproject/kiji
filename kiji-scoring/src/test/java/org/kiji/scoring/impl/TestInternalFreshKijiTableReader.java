@@ -1388,7 +1388,7 @@ public class TestInternalFreshKijiTableReader {
 
       freshReader.get(eid, request);
       // Sleep to give the Freshener time to finish and the statistics gatherer time to gather.
-      Thread.sleep(1000);
+      Thread.sleep(3000);
 
       assertTrue(2 == stats.getRawFreshenerRunStatistics().size());
       assertTrue(1 == freshenerStatistics.getScoreFunctionRanPercent().getMean());
