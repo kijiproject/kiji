@@ -90,7 +90,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-common</artifactId>
+      <artifactId>hadoop-mapreduce-client-jobclient</artifactId>
     </dependency>
     <dependency>
       <groupId>cascading</groupId>

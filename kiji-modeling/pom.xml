@@ -88,6 +88,12 @@
         <scope>provided</scope>
       </dependency>
       <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-mapreduce-client-job-client</artifactId>
+        <version>${hadoop.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
         <groupId>org.kiji.schema</groupId>
         <artifactId>kiji-schema</artifactId>
         <version>${kiji-schema.version}</version>
