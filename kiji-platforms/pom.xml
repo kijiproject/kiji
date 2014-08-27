@@ -43,5 +43,7 @@
     <module>kiji-cdh4-platform</module>
     <module>kiji-cdh5-0-3-platform</module>
     <module>kiji-cdh5-0-3-test-platform</module>
+    <module>kiji-cdh5-1-platform</module>
+    <module>kiji-cdh5-1-test-platform</module>
   </modules>
 </project>
