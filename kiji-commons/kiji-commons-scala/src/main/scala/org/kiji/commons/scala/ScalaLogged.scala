@@ -17,7 +17,11 @@
  * limitations under the License.
  */
 
+package org.kiji.commons.scala
+
 /**
- * Contains base classes for creating command-line tools.
+ * Automatically registers a logger for whichever class mixes this trait in.
  */
-package org.kiji.common.tools;
+trait ScalaLogged {
+  protected[this] final val LOG: ScalaLogger = ScalaLogger(this.getClass)
+}

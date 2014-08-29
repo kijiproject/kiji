@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <!--
-    (c) Copyright 2012 WibiData, Inc.
+    (c) Copyright 2014 WibiData, Inc.
 
     See the NOTICE file distributed with this work for additional
     information regarding copyright ownership.
@@ -20,8 +20,8 @@
   -->
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.kiji.common</groupId>
-  <artifactId>kiji-common-root</artifactId>
+  <groupId>org.kiji.commons</groupId>
+  <artifactId>kiji-commons-root</artifactId>
   <version>0.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
@@ -31,8 +31,8 @@
     <version>1.1.8</version>
   </parent>
 
-  <name>KijiCommon top-level project</name>
-  <description>Common code used by the kiji project.</description>
+  <name>KijiCommons top-level project</name>
+  <description>Commons code used by the Kiji project.</description>
   <inceptionYear>2014</inceptionYear>
 
   <properties>
@@ -42,7 +42,8 @@
 
   <modules>
     <module>build-resources</module>
-    <module>tools</module>
+    <module>kiji-commons-java</module>
+    <module>kiji-commons-scala</module>
   </modules>
 
   <dependencyManagement>
@@ -72,7 +73,7 @@
           <artifactId>maven-checkstyle-plugin</artifactId>
           <dependencies>
             <dependency>
-              <groupId>org.kiji.common</groupId>
+              <groupId>org.kiji.commons</groupId>
               <artifactId>build-resources</artifactId>
               <version>${project.version}</version>
             </dependency>
@@ -86,7 +87,7 @@
           <artifactId>findbugs-maven-plugin</artifactId>
           <dependencies>
             <dependency>
-              <groupId>org.kiji.common</groupId>
+              <groupId>org.kiji.commons</groupId>
               <artifactId>build-resources</artifactId>
               <version>${project.version}</version>
             </dependency>
@@ -98,21 +99,16 @@
 
   <repositories>
     <repository>
-      <id>kiji-repos</id>
-      <name>kiji-repos</name>
-      <url>https://repo.wibidata.com/artifactory/kiji</url>
-    </repository>
-    <repository>
-      <id>kiji-nightly</id>
-      <name>kiji-nightly</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
+      <id>kiji-releases</id>
+      <name>Kiji artifact releases</name>
+      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
     </repository>
   </repositories>
 
   <scm>
-    <connection>scm:git:git@github.com:kijiproject/kiji-common.git</connection>
-    <url>scm:git:git@github.com:kijiproject/kiji-common.git</url>
-    <developerConnection>scm:git:git@github.com:kijiproject/kiji-common.git</developerConnection>
+    <connection>scm:git:git@github.com:kijiproject/kiji-commons.git</connection>
+    <url>scm:git:git@github.com:kijiproject/kiji-commons.git</url>
+    <developerConnection>scm:git:git@github.com:kijiproject/kiji-commons.git</developerConnection>
   </scm>
 
 </project>

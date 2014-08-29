@@ -1,6 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <!--
-    (c) Copyright 2012 WibiData, Inc.
+    (c) Copyright 2014 WibiData, Inc.
 
     See the NOTICE file distributed with this work for additional
     information regarding copyright ownership.
@@ -23,8 +24,8 @@
   <packaging>jar</packaging>
 
   <parent>
-    <groupId>org.kiji.common</groupId>
-    <artifactId>kiji-common-root</artifactId>
+    <groupId>org.kiji.commons</groupId>
+    <artifactId>kiji-commons-root</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
