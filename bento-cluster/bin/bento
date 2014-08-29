@@ -111,6 +111,7 @@ function print_tool_usage() {
   echo "    -n     Specify a container name. Defaults to 'bento'. The provided"
   echo "           name will be appended to 'bento-' to create the container name."
   echo "  create"
+  echo "    -v     Platform version (Defaults to cdh5.0.3)."
   echo "    -f     Create container in foreground (will attach stdin/tty)."
   echo "    -r     Remove the container on stop. Will start container in foreground."
   echo "    -h     Do not modify environment for bento hostname resolution."
@@ -124,6 +125,8 @@ function print_tool_usage() {
   echo "    -a     List all running and stopped Bento containers."
   echo "  config"
   echo "    -o     Directory to dump config files in."
+  echo "  build"
+  echo "    -v     Platform version (Defaults to cdh5.0.3)."
 }
 
 
@@ -162,8 +165,9 @@ remove=""
 client_config=true
 all=''
 client_config_dir=$BENTO_CLUSTER_HOME/client-conf
+platform_version="cdh5.0.3"
 
-while getopts ":f :h :n: :r :a :o:" opt; do
+while getopts ":f :h :n: :r :a :o: :v:" opt; do
   case $opt in
     f)
       daemon='-it'
@@ -190,6 +194,9 @@ while getopts ":f :h :n: :r :a :o:" opt; do
       ;;
     o)
       client_config_dir="${OPTARG}"
+      ;;
+    v)
+      platform_version="${OPTARG}"
       ;;
     \?)
       echo "Unknown option: -${OPTARG}" >&2
@@ -242,7 +249,7 @@ case ${command} in
     ;;
 
   create)
-    $docker run ${daemon} ${remove} --hostname ${container_name} --name ${container_name} kijiproject/bento-cluster $@
+    $docker run ${daemon} ${remove} --hostname ${container_name} --name ${container_name} kijiproject/bento-cluster:${platform_version} $@
     printf "Bento container '" 1>&2
     printf ${container_name}
     printf "' created and started." 1>&2
@@ -321,7 +328,8 @@ case ${command} in
     ;;
 
   build)
-    $docker build -t "kijiproject/bento-cluster" ${BENTO_CLUSTER_HOME}/docker
+    $docker build -t "kijiproject/bento-cluster-cdh5-base" ${BENTO_CLUSTER_HOME}/docker-cdh5-base
+    $docker build -t "kijiproject/bento-cluster:${platform_version}" ${BENTO_CLUSTER_HOME}/docker-${platform_version}
     ;;
 
   pull)

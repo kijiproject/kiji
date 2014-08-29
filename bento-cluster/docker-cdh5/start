@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -o nounset   # Fail when referencing undefined variables
+set -o errexit   # Script exits on the first error
+set -o pipefail  # Pipeline status failure if any command fails
+
+hostname=`hostname`
+
+sed -i -e "s/\$BENTO_HOST/$hostname/" /etc/cassandra/conf.bento/*
+sed -i -e "s/\$BENTO_HOST/$hostname/" /etc/hbase/conf.bento/*
+sed -i -e "s/\$BENTO_HOST/$hostname/" /etc/hadoop/conf.bento/*
+sed -i -e "s/\$BENTO_HOST/$hostname/" /etc/zookeeper/conf.bento/*
+
+/usr/bin/supervisord -c /etc/supervisor/supervisord.conf

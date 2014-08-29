@@ -6,21 +6,9 @@ RUN yum clean all
 RUN yum install -y yum-utils python-setuptools
 
 RUN yum-config-manager --add-repo http://archive.cloudera.com/cm5/redhat/6/x86_64/cm/cloudera-manager.repo
-RUN yum-config-manager --add-repo http://archive.cloudera.com/cdh5/redhat/6/x86_64/cdh/5.0.3/
 RUN yum-config-manager --add-repo http://rpm.datastax.com/community
 
 RUN yum install -y --nogpgcheck \
-  oracle-j2sdk1.7 \
-  zookeeper-server \
-  hadoop-hdfs-namenode \
-  hadoop-hdfs-datanode \
-  hadoop-yarn-resourcemanager \
-  hadoop-yarn-nodemanager \
-  hadoop-yarn-proxyserver \
-  hadoop-mapreduce \
-  hadoop-mapreduce-historyserver \
-  hbase-master \
-  hbase-regionserver \
   cassandra-2.0.9 \
   jna \
   dsc20 \
@@ -72,20 +60,10 @@ RUN /usr/sbin/alternatives --install \
   --slave /usr/bin/wsimport     wsimport     /usr/java/jre/jdk1.7.0_55-cloudera/bin/wsimport \
   --slave /usr/bin/xjc          xjc          /usr/java/jre/jdk1.7.0_55-cloudera/bin/xjc
 
-# Install Hadoop configuration
+# Add CDH configuration
 ADD hadoop-conf /etc/hadoop/conf.bento
-RUN alternatives --verbose --install /etc/hadoop/conf hadoop-conf /etc/hadoop/conf.bento 50
-RUN alternatives --set hadoop-conf /etc/hadoop/conf.bento
-
-# Install ZooKeeper configuration
 ADD zookeeper-conf /etc/zookeeper/conf.bento
-RUN alternatives --verbose --install /etc/zookeeper/conf zookeeper-conf /etc/zookeeper/conf.bento 50
-RUN alternatives --set zookeeper-conf /etc/zookeeper/conf.bento
-
-# Install HBase configuration
 ADD hbase-conf /etc/hbase/conf.bento
-RUN alternatives --verbose --install /etc/hbase/conf hbase-conf /etc/hbase/conf.bento 50
-RUN alternatives --set hbase-conf /etc/hbase/conf.bento
 
 # Install Cassandra configuration
 ADD cassandra-conf /etc/cassandra/conf.bento
@@ -96,32 +74,8 @@ RUN alternatives --set cassandra-conf /etc/cassandra/conf.bento
 RUN /usr/bin/easy_install supervisor
 ADD supervisord.conf /etc/supervisor/supervisord.conf
 
-# Format namenode
-USER hdfs
-RUN /usr/bin/hdfs namenode -format
-RUN mkdir -p /var/log/hadoop-hdfs
-
-# Initialize ZooKeeper
-USER zookeeper
-RUN /usr/bin/zookeeper-server-initialize
-RUN mkdir -p /var/log/zookeeper
-
-# Initialize HBase
-USER hbase
-RUN mkdir -p /var/log/hbase
-
-# Initialize YARN
-USER yarn
-RUN mkdir -p /var/log/hadoop-yarn
-
-# Initialize MapReduce
-USER mapred
-RUN mkdir -p /var/log/hadoop-mapreduce
-
 USER root
 
 ADD hdfs-init /hdfs-init
 
 ADD start /start
-
-CMD ["/start"]
