@@ -1,7 +1,7 @@
 FROM kijiproject/bento-cluster-base:cdh5
 MAINTAINER Kiji Project <dev@kiji.org>
 
-RUN yum-config-manager --add-repo http://archive.cloudera.com/cdh5/redhat/6/x86_64/cdh/5.1.0/
+RUN yum-config-manager --add-repo http://archive.cloudera.com/cdh5/redhat/6/x86_64/cdh/5.0.4/
 
 RUN yum install -y --nogpgcheck \
   zookeeper-server \

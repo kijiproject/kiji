@@ -328,7 +328,7 @@ case ${command} in
     ;;
 
   build)
-    $docker build -t "kijiproject/bento-cluster-cdh5-base" ${BENTO_CLUSTER_HOME}/docker-cdh5-base
+    $docker build -t "kijiproject/bento-cluster-base:cdh5" ${BENTO_CLUSTER_HOME}/docker-cdh5-base
     $docker build -t "kijiproject/bento-cluster:${platform_version}" ${BENTO_CLUSTER_HOME}/docker-${platform_version}
     ;;
 

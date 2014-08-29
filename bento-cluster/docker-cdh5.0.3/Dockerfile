@@ -1,9 +1,5 @@
-FROM kijiproject/bento-cluster-cdh5-base
+FROM kijiproject/bento-cluster-base:cdh5
 MAINTAINER Kiji Project <dev@kiji.org>
-
-RUN yum clean all
-
-RUN yum install -y yum-utils python-setuptools
 
 RUN yum-config-manager --add-repo http://archive.cloudera.com/cdh5/redhat/6/x86_64/cdh/5.0.3/
 
