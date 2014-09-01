@@ -19,14 +19,18 @@
 
 package org.kiji.express.flow.framework.hfile
 
-import java.lang.UnsupportedOperationException
-
 import cascading.tap.Tap
 import com.twitter.scalding.AccessMode
+import com.twitter.scalding.CascadingLocal
 import com.twitter.scalding.HadoopTest
 import com.twitter.scalding.Hdfs
+import com.twitter.scalding.Local
 import com.twitter.scalding.Mode
+import com.twitter.scalding.Read
 import com.twitter.scalding.Source
+import com.twitter.scalding.Test
+import com.twitter.scalding.TestMode
+import com.twitter.scalding.TestTapFactory
 import com.twitter.scalding.Write
 
 import org.kiji.annotations.ApiAudience
@@ -83,9 +87,17 @@ final case class HFileKijiSource private[express] (
   override def createTap(readOrWrite: AccessMode)(implicit mode: Mode): Tap[_, _, _] = {
     (readOrWrite, mode) match {
       case (Write, Hdfs(_, _)) =>  new HFileKijiTap(tableAddress, hfileScheme, hFileOutput)
-      case (Write, HadoopTest(_, _)) => new HFileKijiTap(tableAddress, hfileScheme, hFileOutput)
-      case (Write, _) => throw new UnsupportedOperationException("Cascading local mode unsupported")
-      case (_, _) => throw new UnsupportedOperationException("Read unsupported")
+      case (Write, mode: Test) =>
+        TestTapFactory(this, hfileScheme.getSinkFields).createTap(readOrWrite)(mode)
+      case (Write, mode: HadoopTest) =>
+        TestTapFactory(this, hfileScheme.getSinkFields).createTap(readOrWrite)(mode)
+      case (Write, Local(_)) =>
+        throw new UnsupportedOperationException("Cascading local mode unsupported")
+      case (Read, _) => throw new UnsupportedOperationException("Read unsupported")
+      case (accessMode: AccessMode, mode: Mode) =>
+        throw new UnsupportedOperationException(
+            "Unable to handle AccessMode %s and Mode %s.".format(accessMode, mode)
+        )
     }
   }
 }

@@ -134,7 +134,6 @@ class KijiSourceSuite
         .arg("input", "inputFile")
         .arg("table", uri)
         .source(TextLine("inputFile"), mapTypeInput)
-
         .sink(KijiOutput.builder
             .withTableURI(uri)
             .withColumnSpecs('resultCount -> ColumnFamilyOutputSpec.builder
