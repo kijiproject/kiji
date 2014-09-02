@@ -37,7 +37,7 @@
 
   <properties>
     <kiji-schema.version>1.6.0-SNAPSHOT</kiji-schema.version>
-    <kiji-cdh5-platform.version>1.4.0-SNAPSHOT</kiji-cdh5-platform.version>
+    <kiji-platforms.version>1.4.0-SNAPSHOT</kiji-platforms.version>
     <kiji-delegation.version>1.1.2-SNAPSHOT</kiji-delegation.version>
     <kiji-common-flags.version>1.1.1-SNAPSHOT</kiji-common-flags.version>
     <fake-hbase.version>0.3.0-SNAPSHOT</fake-hbase.version>
@@ -45,38 +45,6 @@
 
   <build>
     <plugins>
-      <plugin>
-        <!--
-            Schema shell is built depending on the oldest version of KijiSchema that supports it.
-            To test whether the latest Kiji dependency SNAPSHOTs have introduced a regression:
-
-            Run the following commands in your shell
-
-            mvn versions:update-properties -N # Update the kiji-*.version properties
-                                              # in the top-level pom file; don't recurse.
-            mvn clean verify                  # Uses the new snapshot versions
-            mvn versions:revert               # Revert the pom file to before update-properties.
-                                    # Do not check in new Kiji SNAPSHOT dependencies in the pom.
-        -->
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>versions-maven-plugin</artifactId>
-        <configuration>
-          <includeProperties>kiji-schema.version,kiji-cdh5-platform.version</includeProperties>
-        </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>org.kiji.schema</groupId>
-            <artifactId>kiji-schema</artifactId>
-            <version>${kiji-schema.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.kiji.platforms</groupId>
-            <artifactId>kiji-cdh5-platform</artifactId>
-            <version>${kiji-cdh5-platform.version}</version>
-          </dependency>
-        </dependencies>
-      </plugin>
-
       <plugin>
         <groupId>org.apache.avro</groupId>
         <artifactId>avro-maven-plugin</artifactId>
@@ -143,11 +111,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.kiji.common</groupId>
-      <artifactId>kiji-common-flags</artifactId>
-      <version>${kiji-common-flags.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>jline</artifactId>
     </dependency>
@@ -164,10 +127,6 @@
       <artifactId>avro</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-test</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
     </dependency>
@@ -180,21 +139,13 @@
       <artifactId>specs2_${scala.version}</artifactId>
     </dependency>
 
-
     <!-- Kiji project dependencies -->
 
     <dependency>
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
       <version>${kiji-schema.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.schema</groupId>
-      <artifactId>kiji-schema</artifactId>
-      <type>test-jar</type>
-      <version>${kiji-schema.version}</version>
-      <scope>test</scope>
+      <scope>compile</scope>
     </dependency>
 
     <dependency>
@@ -204,11 +155,17 @@
       <scope>compile</scope>
     </dependency>
 
-    <!-- TODO: Use the multi-profile world of kiji-schema to support multiple backends. -->
+    <dependency>
+      <groupId>org.kiji.common</groupId>
+      <artifactId>kiji-common-flags</artifactId>
+      <version>${kiji-common-flags.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>org.kiji.platforms</groupId>
-      <artifactId>kiji-cdh5-0-3-platform</artifactId>
-      <version>${kiji-cdh5-platform.version}</version>
+      <artifactId>kiji-compile-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
       <scope>provided</scope>
     </dependency>
 
@@ -216,7 +173,25 @@
       <groupId>org.kiji.delegation</groupId>
       <artifactId>kiji-delegation</artifactId>
       <version>${kiji-delegation.version}</version>
-      <scope>provided</scope>
+      <scope>compile</scope>
+    </dependency>
+
+    <!-- Test Dependencies -->
+
+    <dependency>
+      <groupId>org.kiji.schema</groupId>
+      <artifactId>kiji-schema</artifactId>
+      <type>test-jar</type>
+      <version>${kiji-schema.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-test-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
@@ -225,7 +200,6 @@
       <version>${fake-hbase.version}</version>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
 
   <repositories>
@@ -235,5 +209,4 @@
       <url>https://repo.wibidata.com/artifactory/kiji</url>
     </repository>
   </repositories>
-
 </project>
