@@ -40,41 +40,11 @@
     <kiji-mapreduce.version>1.3.0-SNAPSHOT</kiji-mapreduce.version>
     <fake-hbase.version>0.3.0-SNAPSHOT</fake-hbase.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <kiji-platforms.version>1.4.0-SNAPSHOT</kiji-platforms.version>
   </properties>
 
   <build>
     <plugins>
-      <plugin>
-        <!--
-            Scoring depends on the oldest version of KijiSchema / KIJIMR that supports it.
-            To test whether the latest Kiji dependency SNAPSHOTs have introduced a regression:
-
-            Run the following commands in your shell
-
-            mvn versions:update-properties -N # Update the kiji-*.version properties
-                                              # in the top-level pom file; don't recurse.
-            mvn clean verify                  # Uses the new snapshot versions
-            mvn versions:revert               # Revert the pom file to before update-properties.
-                                    # Do not check in new Kiji SNAPSHOT dependencies in the pom.
-        -->
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>versions-maven-plugin</artifactId>
-        <configuration>
-          <includeProperties>kiji-schema.version,kiji-mapreduce.version</includeProperties>
-        </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>org.kiji.schema</groupId>
-            <artifactId>kiji-schema</artifactId>
-            <version>${kiji-schema.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.kiji.mapreduce</groupId>
-            <artifactId>kiji-mapreduce</artifactId>
-            <version>${kiji-mapreduce.version}</version>
-          </dependency>
-        </dependencies>
-      </plugin>
       <plugin>
         <groupId>org.apache.avro</groupId>
         <artifactId>avro-maven-plugin</artifactId>
@@ -155,13 +125,26 @@
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
       <version>${kiji-schema.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.mapreduce</groupId>
+      <artifactId>kiji-mapreduce</artifactId>
+      <version>${kiji-mapreduce.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-compile-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
-      <version>${kiji-schema.version}</version>
       <type>test-jar</type>
+      <version>${kiji-schema.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -173,28 +156,16 @@
     <dependency>
       <groupId>org.kiji.mapreduce</groupId>
       <artifactId>kiji-mapreduce</artifactId>
-      <version>${kiji-mapreduce.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.mapreduce</groupId>
-      <artifactId>kiji-mapreduce</artifactId>
-      <version>${kiji-mapreduce.version}</version>
       <type>test-jar</type>
+      <version>${kiji-mapreduce.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-mapreduce-client-jobclient</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-test</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-client</artifactId>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-test-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
