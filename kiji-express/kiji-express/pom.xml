@@ -94,18 +94,13 @@
       <groupId>org.apache.avro</groupId>
       <artifactId>avro</artifactId>
     </dependency>
+
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-mapreduce-client-jobclient</artifactId>
-      <version>${hadoop.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-common</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-server</artifactId>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-compile-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
@@ -141,43 +136,27 @@
       <scope>provided</scope>
     </dependency>
 
-    <!-- Test dependencies. -->
     <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-testing-util</artifactId>
-      <scope>test</scope>
-      <type>test-jar</type>
-    </dependency>
-    <!--
-      Keep this dependency in compile scope so that users can depend on the KijiExpress testing
-      framework by only depending on the KijiExpress test jar.
-    -->
-    <dependency>
+      <!-- TODO(EXP-469): Make this test scope.  -->
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
       <type>test-jar</type>
       <scope>compile</scope>
     </dependency>
-    <!--
-      Keep this dependency in compile scope so that users can depend on the KijiExpress testing
-      framework by only depending on the KijiExpress test jar.
-    -->
+
     <dependency>
+      <!-- TODO(EXP-469): Make this test scope.  -->
       <groupId>org.kiji.testing</groupId>
       <artifactId>fake-hbase</artifactId>
       <scope>compile</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-minicluster</artifactId>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-test-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
       <scope>test</scope>
-      <optional>true</optional>
-      <version>${hadoop.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-test</artifactId>
     </dependency>
 
     <dependency>

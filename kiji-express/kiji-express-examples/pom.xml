@@ -39,6 +39,13 @@
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-compile-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
+      <scope>provided</scope>
+    </dependency>
 
     <!-- Normal dependencies. -->
     <dependency>
@@ -61,10 +68,6 @@
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
       <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-mapreduce-client-jobclient</artifactId>
     </dependency>
 
     <!-- Testing -->
