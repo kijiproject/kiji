@@ -28,26 +28,19 @@ To start, `AddEntry.java` loads an HBase configuration.
 setConf(HBaseConfiguration.addHbaseResources(getConf()));
 {% endhighlight %}
 
+(Loading the HBase configuration is necessary for running on top of HBase, but not on top of
+Cassandra.)
+
 The code then connects to Kiji and opens the phonebook table for writing. A [`Kiji`]({{site.api_schema_devel}}/Kiji.html)
-instance is specified by a [`KijiURI`]({{site.api_schema_devel}}/KijiURI.html). A Kiji URI specifies an HBase cluster to
-connect to (identified by its Zookeeper quorum) and a Kiji instance name.
-The value of `KConstants.DEFAULT_INSTANCE_NAME` is `"default"`.
-For example, if ZooKeeper is running on `zkhost:2181`, the name of the default
-Kiji instance on the cluster would be `kiji://zkhost:2181/default`.
-
-Rather than specify a ZooKeeper cluster yourself, you can rely on the quorum
-specified in your `hbase-site.xml` file by using the "hostname" of `.env`, like
-this: `kiji://.env/default`.
-
+instance is specified by a [`KijiURI`]({{site.api_schema_devel}}/KijiURI.html).
 To create a [`KijiURI`]({{site.api_schema_devel}}/KijiURI.html), you use a
 [`KijiURI.KijiURIBuilder`]({{site.api_schema_devel}}/KijiURI.KijiURIBuilder.html)
-instance. By default, this will use the `".env"` pseudo-host so that you connect
-to your normal HBase cluster.
+instance.  We have written the `AddEntry` class such that the user can specify a Kiji instance URI
+on the command line; this user-specified URI is stored as a string in `mKijiUri`, which we use to
+produce a `KijiURI` object:
 
 {% highlight java %}
-kiji = Kiji.Factory.open(
-    KijiURI.newBuilder().withInstanceName(KConstants.DEFAULT_INSTANCE_NAME).build(),
-    getConf());
+kiji = Kiji.Factory.open(KijiURI.newBuilder(mKijiUri).build(), getConf());
 table = kiji.openTable(TABLE_NAME); // TABLE_NAME is "phonebook"
 writer = table.openTableWriter();
 {% endhighlight %}
@@ -109,7 +102,8 @@ You run the class `AddEntry` with the `kiji` command-line tool as follows:
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
     $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-{{site.phonebook_devel_version}}.jar \
-    org.kiji.examples.phonebook.AddEntry
+    org.kiji.examples.phonebook.AddEntry \
+    --kiji=${KIJI}
 {% endhighlight %}
 </div>
 
@@ -134,11 +128,13 @@ Zip: 94110
 </div>
 
 #### Verify
-Now we can verify that our entry got into the phonebook table.
+Now we can verify that our entry got into the phonebook table using the command `kiji-scan`, which
+will scan rows from our Kiji table, or `kiji-get`, to read back a single row.  Note that the
+`kiji-scan` command does not currently work in Cassandra-backed Kiji instances.
 
-Beforehand, you must tell `kiji scan` where the `org.kiji.examples.phonebook.Address`
-Avro record class (mentioned in the DDL and used by `AddEntry`) is.
-If you have not already done so, put the phonebook jar file on your Kiji classpath:
+Before running either command, we must ensure that the `org.kiji.examples.phonebook.Address` Avro
+record class (mentioned in the DDL and used by `AddEntry`) is on our classpath.  If you have not
+already done so, put the phonebook jar file on your Kiji classpath:
 
 <div class="userinput">
 {% highlight bash %}
@@ -150,11 +146,11 @@ Now use `kiji scan`:
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji scan kiji://.env/default/phonebook
+$KIJI_HOME/bin/kiji scan ${KIJI}/phonebook
 {% endhighlight %}
 </div>
 
-    Scanning kiji table: kiji://localhost:2181/default/phonebook/
+    Scanning kiji table: kiji://localhost:2181/phonebook/phonebook/
     entity-id=['Renuka,Apte'] [1384235579766] info:firstname
                                      Renuka
     entity-id=['Renuka,Apte'] [1384235579766] info:lastname
@@ -165,6 +161,28 @@ $KIJI_HOME/bin/kiji scan kiji://.env/default/phonebook
                                      415-111-2222
     entity-id=['Renuka,Apte'] [1384235579766] info:address
                                      {"addr1": "375 Alabama St", "apt": null, "addr2": null, "city": "SF", "state": "CA", "zip": 94110}
+
+
+Or run `kiji get`:
+
+<div class="userinput">
+{% highlight bash %}
+$KIJI_HOME/bin/kiji get ${KIJI}/phonebook --entity-id="['Renuka,Apte']"
+{% endhighlight %}
+</div>
+
+    Looking up entity: ['Renuka,Apte'] from kiji table: kiji-cassandra://localhost:2181/localhost:9042/phonebook/phonebook/
+    entity-id=['Renuka,Apte'] [1384235579766] info:firstname
+                                     Renuka
+    entity-id=['Renuka,Apte'] [1384235579766] info:lastname
+                                     Apte
+    entity-id=['Renuka,Apte'] [1384235579766] info:email
+                                     ra@wibidata.com
+    entity-id=['Renuka,Apte'] [1384235579766] info:telephone
+                                     415-111-2222
+    entity-id=['Renuka,Apte'] [1384235579766] info:address
+                                     {"addr1": "375 Alabama St", "apt": null, "addr2": null, "city": "SF", "state": "CA", "zip": 94110}
+
 
 ## Reading From a Table
 Now that we've added a contact to your phonebook, we should be able to read this
@@ -178,9 +196,7 @@ We connect to Kiji and our phonebook table in the same way we did above.
 
 {% highlight java %}
 setConf(HBaseConfiguration.create(getConf()));
-kiji = Kiji.Factory.open(
-    KijiURI.newBuilder().withInstanceName(KConstants.DEFAULT_INSTANCE_NAME).build(),
-    getConf());
+kiji = Kiji.Factory.open(KijiURI.newBuilder(mKijiUri).build(), getConf());
 table = kiji.openTable(TABLE_NAME); // TABLE_NAME is "phonebook"
 {% endhighlight %}
 
@@ -225,7 +241,9 @@ You can run the following command to perform a lookup using the `Lookup.java` ex
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
     $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-{{site.phonebook_devel_version}}.jar \
-    org.kiji.examples.phonebook.Lookup --first=Renuka --last=Apte
+    org.kiji.examples.phonebook.Lookup \
+    --kiji=${KIJI} \
+    --first=Renuka --last=Apte
 {% endhighlight %}
 </div>
 
