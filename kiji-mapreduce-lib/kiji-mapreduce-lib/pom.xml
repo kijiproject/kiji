@@ -106,28 +106,16 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.kiji.schema</groupId>
-      <artifactId>kiji-schema</artifactId>
-      <version>${kiji-schema.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.mapreduce</groupId>
-      <artifactId>kiji-mapreduce</artifactId>
-      <version>${kiji-mapreduce.version}</version>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-compile-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.mapreduce</groupId>
       <artifactId>kiji-mapreduce</artifactId>
       <version>${kiji-mapreduce.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-mapreduce-client-jobclient</artifactId>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -136,10 +124,11 @@
       <version>1.0.3-SNAPSHOT</version>
     </dependency>
     <dependency>
-      <groupId>org.kiji.testing</groupId>
-      <artifactId>fake-hbase</artifactId>
-      <version>${fake-hbase.version}</version>
-      <scope>test</scope>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-compile-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -149,28 +138,6 @@
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
       <artifactId>jsr305</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-yarn-server-tests</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-testing-util</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.mrunit</groupId>
-      <artifactId>mrunit</artifactId>
-      <classifier>hadoop2</classifier>
-      <!-- I do not know if this version number is correct-->
-      <version>0.9.0-incubating</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-test</artifactId>
     </dependency>
     <dependency>
       <groupId>commons-lang</groupId>
@@ -189,6 +156,43 @@
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
+    </dependency>
+
+    <!-- Test Dependencies -->
+
+    <dependency>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-test-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.schema</groupId>
+      <artifactId>kiji-schema</artifactId>
+      <type>test-jar</type>
+      <version>${kiji-schema.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.mapreduce</groupId>
+      <artifactId>kiji-mapreduce</artifactId>
+      <type>test-jar</type>
+      <version>${kiji-mapreduce.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.testing</groupId>
+      <artifactId>fake-hbase</artifactId>
+      <version>${fake-hbase.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.mrunit</groupId>
+      <artifactId>mrunit</artifactId>
+      <classifier>hadoop2</classifier>
+      <version>1.1.0</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>

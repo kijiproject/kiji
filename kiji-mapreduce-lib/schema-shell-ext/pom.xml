@@ -103,52 +103,38 @@
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
       <version>${kiji-schema.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.schema</groupId>
-      <artifactId>kiji-schema</artifactId>
-      <version>${kiji-schema.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.mapreduce</groupId>
       <artifactId>kiji-mapreduce</artifactId>
       <version>${kiji-mapreduce.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.mapreduce</groupId>
-      <artifactId>kiji-mapreduce</artifactId>
-      <version>${kiji-mapreduce.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.mapreduce.lib</groupId>
       <artifactId>kiji-mapreduce-lib</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.mapreduce.lib</groupId>
-      <artifactId>kiji-mapreduce-lib</artifactId>
-      <version>${project.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.schema-shell</groupId>
       <artifactId>kiji-schema-shell</artifactId>
       <version>${kiji-schema-shell.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-compile-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.kiji.schema-shell</groupId>
-      <artifactId>kiji-schema-shell</artifactId>
-      <version>${kiji-schema-shell.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-compile-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
@@ -156,44 +142,56 @@
       <artifactId>scala-library</artifactId>
       <scope>provided</scope>
     </dependency>
-    <dependency>
-      <groupId>org.scalatest</groupId>
-      <artifactId>scalatest_${scala.version}</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.specs2</groupId>
-      <artifactId>specs2_${scala.version}</artifactId>
-    </dependency>
 
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-mapreduce-client-jobclient</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-yarn-server-tests</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-client</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-testing-util</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
     </dependency>
+
+    <!-- Test Dependencies -->
+
+    <dependency>
+      <groupId>org.kiji.schema-shell</groupId>
+      <artifactId>kiji-schema-shell</artifactId>
+      <type>test-jar</type>
+      <version>${kiji-schema-shell.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.schema</groupId>
+      <artifactId>kiji-schema</artifactId>
+      <type>test-jar</type>
+      <version>${kiji-schema.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.mapreduce</groupId>
+      <artifactId>kiji-mapreduce</artifactId>
+      <type>test-jar</type>
+      <version>${kiji-mapreduce.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.mapreduce.lib</groupId>
+      <artifactId>kiji-mapreduce-lib</artifactId>
+      <type>test-jar</type>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.easymock</groupId>
       <artifactId>easymock</artifactId>
+      <scope>test</scope>
     </dependency>
-
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_${scala.version}</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.specs2</groupId>
+      <artifactId>specs2_${scala.version}</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>
