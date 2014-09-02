@@ -45,6 +45,11 @@
       <version>${kiji-schema.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.kiji.schema</groupId>
+      <artifactId>kiji-schema-cassandra</artifactId>
+      <version>${kiji-schema.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.kiji.schema-shell</groupId>
       <artifactId>kiji-schema-shell</artifactId>
       <version>${kiji-schema-shell.version}</version>
@@ -58,6 +63,12 @@
     <dependency>
       <groupId>org.kiji.mapreduce</groupId>
       <artifactId>kiji-mapreduce</artifactId>
+      <version>${kiji-mapreduce.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.mapreduce</groupId>
+      <artifactId>kiji-mapreduce-cassandra</artifactId>
       <version>${kiji-mapreduce.version}</version>
       <scope>provided</scope>
     </dependency>
