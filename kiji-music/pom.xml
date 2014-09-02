@@ -100,7 +100,8 @@
     </dependency>
     <dependency>
       <groupId>org.kiji.platforms</groupId>
-      <artifactId>kiji-cdh5-0-3-platform</artifactId>
+      <artifactId>kiji-compile-platform</artifactId>
+      <type>pom</type>
       <version>${kiji-platform.version}</version>
       <scope>provided</scope>
     </dependency>
@@ -131,16 +132,18 @@
       <version>${kiji-schema.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-test-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platform.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.kiji.testing</groupId>
       <artifactId>fake-hbase</artifactId>
       <scope>test</scope>
       <version>${fake-hbase.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-test</artifactId>
-    </dependency>
-
   </dependencies>
 
   <repositories>
