@@ -29,13 +29,8 @@
     <relativePath>..</relativePath>
   </parent>
 
-  <name>KijiMR Hadoop 2.x HBase 0.96 Platform Bridge</name>
-  <description>Bridge API provider for Hadoop 2.x / HBase 0.96</description>
-
-  <properties>
-    <hadoop2.version>2.3.0-cdh5.0.3</hadoop2.version>
-    <hbase.version>0.96.1.1-cdh5.0.3</hbase.version>
-  </properties>
+  <name>CDH5.0 Platform Bridge (Hadoop 2.x and HBase 0.96)</name>
+  <description>Bridge API provider for CDH5.0</description>
 
   <build>
     <plugins>
@@ -68,33 +63,20 @@
   </build>
 
   <dependencies>
-     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-common</artifactId>
-      <version>${hadoop2.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-mapreduce-client-core</artifactId>
-      <version>${hadoop2.version}</version>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-cdh5-0-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
       <scope>provided</scope>
     </dependency>
-
     <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-common</artifactId>
-      <version>${hbase.version}</version>
-      <scope>provided</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-core</artifactId>
-        </exclusion>
-      </exclusions>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-cdh5-0-test-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
+      <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>org.kiji.mapreduce</groupId>
       <artifactId>kiji-mapreduce-platform-api</artifactId>

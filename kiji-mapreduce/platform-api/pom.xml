@@ -63,9 +63,9 @@
 
   <dependencies>
     <dependency>
-      <!-- Compile against the CDH4 platform for the reference class names, etc. -->
       <groupId>org.kiji.platforms</groupId>
-      <artifactId>kiji-cdh4-platform</artifactId>
+      <artifactId>kiji-compile-platform</artifactId>
+      <type>pom</type>
       <version>${kiji-platforms.version}</version>
       <scope>provided</scope>
     </dependency>

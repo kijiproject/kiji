@@ -57,39 +57,6 @@
   <build>
     <plugins>
       <plugin>
-        <!--
-            KijiMR is built depending on the oldest version of KijiSchema that supports it.
-            To test whether the latest Kiji dependency SNAPSHOTs have introduced a regression:
-
-            Run the following commands in your shell
-
-            mvn versions:update-properties -N # Update the kiji-*.version properties
-                                              # in the top-level pom file; don't recurse.
-            mvn clean verify                  # Uses the new snapshot versions
-            mvn versions:revert               # Revert the pom file to before update-properties.
-
-            # Do not check in new Kiji SNAPSHOT dependencies in the pom.
-            # Call mvn versions:revert first to undo those changes.
-        -->
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>versions-maven-plugin</artifactId>
-        <configuration>
-          <includeProperties>kiji-schema.version,kiji-platforms.version</includeProperties>
-        </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>org.kiji.schema</groupId>
-            <artifactId>kiji-schema</artifactId>
-            <version>${kiji-schema.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.kiji.platforms</groupId>
-            <artifactId>kiji-cdh4-platform</artifactId>
-            <version>${kiji-platforms.version}</version>
-          </dependency>
-        </dependencies>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
       </plugin>

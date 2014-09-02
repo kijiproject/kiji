@@ -37,7 +37,6 @@
 
   <properties>
     <hadoop-configurator.version>1.0.3-SNAPSHOT</hadoop-configurator.version>
-    <kiji-schema.classifier />
     <aspectj-maven-plugin.version>1.4</aspectj-maven-plugin.version>
     <aspectjrt.version>1.7.2</aspectjrt.version>
   </properties>
@@ -141,26 +140,36 @@
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
       <version>${kiji-schema.version}</version>
-      <classifier>${kiji-schema.classifier}</classifier>
-      <scope>provided</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema-extras</artifactId>
       <version>${kiji-schema.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.schema</groupId>
-      <artifactId>kiji-schema</artifactId>
-      <version>${kiji-schema.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.hadoop</groupId>
       <artifactId>hadoop-configurator</artifactId>
       <version>${hadoop-configurator.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-compile-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Test Dependencies -->
+
+    <dependency>
+      <groupId>org.kiji.schema</groupId>
+      <artifactId>kiji-schema</artifactId>
+      <type>test-jar</type>
+      <version>${kiji-schema.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.testing</groupId>
@@ -169,36 +178,18 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-test</artifactId>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-test-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.easymock</groupId>
       <artifactId>easymock</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-mapreduce-client-jobclient</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-common</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-client</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-testing-util</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
+      <!-- TODO(POM-50): Move this dependency to test kiji platform -->
       <groupId>org.apache.mrunit</groupId>
       <artifactId>mrunit</artifactId>
       <classifier>hadoop2</classifier>
@@ -216,9 +207,7 @@
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
-      <version>1.6</version>
     </dependency>
-
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
@@ -237,71 +226,5 @@
       <version>${project.version}</version>
       <scope>runtime</scope>
     </dependency>
-
   </dependencies>
-
-  <profiles>
-    <profile>
-      <!--
-         Active by default: cdh5 build.
-      -->
-
-      <id>cdh5</id>
-      <activation>
-        <property>
-          <name>!platform</name>
-        </property>
-      </activation>
-
-      <build>
-        <plugins>
-          <!-- Activate integration tests for Hadoop 2 / CDH 5 -->
-
-          <!--<plugin>
-            <groupId>org.kiji.maven.plugins</groupId>
-            <artifactId>hbase-maven-plugin</artifactId>
-          </plugin>-->
-
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-failsafe-plugin</artifactId>
-            <configuration>
-              <additionalClasspathElements>
-                <additionalClasspathElement>
-                  ${project.build.directory}/${project.artifactId}-${project.version}.jar
-                </additionalClasspathElement>
-                <additionalClasspathElement>
-                  ${project.build.directory}/${project.artifactId}-${project.version}-tests.jar
-                </additionalClasspathElement>
-              </additionalClasspathElements>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-
-      <dependencies>
-        <!-- Default Hadoop/HBase versions in kiji-root-pom provide these dependencies. -->
-        <!-- Marked as 'optional' to prevent propagation to transitive projects. -->
-        <dependency>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-common</artifactId>
-          <scope>compile</scope>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.hbase</groupId>
-          <artifactId>hbase-client</artifactId>
-          <scope>compile</scope>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.hbase</groupId>
-          <artifactId>hbase-server</artifactId>
-          <scope>compile</scope>
-          <optional>true</optional>
-        </dependency>
-      </dependencies>
-    </profile>
-  </profiles>
-
 </project>
