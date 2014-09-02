@@ -29,12 +29,14 @@
 
   <properties>
     <!-- Kiji versions -->
+    <fake-hbase.version>0.3.0-SNAPSHOT</fake-hbase.version>
     <kiji-annotations.version>1.1.2-SNAPSHOT</kiji-annotations.version>
     <kiji-common-flags.version>1.1.1-SNAPSHOT</kiji-common-flags.version>
     <kiji-express.version>2.1.0-SNAPSHOT</kiji-express.version>
     <kiji-mapreduce.version>1.3.0-SNAPSHOT</kiji-mapreduce.version>
-    <kiji-schema.version>1.6.0-SNAPSHOT</kiji-schema.version>
+    <kiji-platforms.version>1.4.0-SNAPSHOT</kiji-platforms.version>
     <kiji-schema-shell.version>1.4.0-SNAPSHOT</kiji-schema-shell.version>
+    <kiji-schema.version>1.6.0-SNAPSHOT</kiji-schema.version>
 
     <!-- Dependency versions -->
     <algebird-core.version>0.4.0</algebird-core.version>
@@ -44,9 +46,8 @@
 
   <dependencyManagement>
     <dependencies>
-    <!--
-      Dependencies, alphabetized by groupId:artifactId:type:version
-    -->
+      <!-- Dependencies, alphabetized by groupId:artifactId:type:version -->
+
       <dependency>
         <groupId>com.twitter</groupId>
         <artifactId>scalding-core_${scala.version}</artifactId>
@@ -75,22 +76,25 @@
         <groupId>org.kiji.annotations</groupId>
         <artifactId>annotations</artifactId>
         <version>${kiji-annotations.version}</version>
+        <scope>compile</scope>
       </dependency>
       <dependency>
         <groupId>org.kiji.common</groupId>
         <artifactId>kiji-common-flags</artifactId>
         <version>${kiji-common-flags.version}</version>
+        <scope>compile</scope>
       </dependency>
       <dependency>
         <groupId>org.kiji.mapreduce</groupId>
         <artifactId>kiji-mapreduce</artifactId>
         <version>${kiji-mapreduce.version}</version>
-        <scope>provided</scope>
+        <scope>compile</scope>
       </dependency>
       <dependency>
-        <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-mapreduce-client-job-client</artifactId>
-        <version>${hadoop.version}</version>
+        <groupId>org.kiji.platforms</groupId>
+        <artifactId>kiji-compile-platform</artifactId>
+        <type>pom</type>
+        <version>${kiji-platforms.version}</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
@@ -103,19 +107,19 @@
         <groupId>org.kiji.express</groupId>
         <artifactId>kiji-express</artifactId>
         <version>${kiji-express.version}</version>
-        <scope>provided</scope>
+        <scope>compile</scope>
       </dependency>
       <dependency>
         <groupId>org.kiji.express</groupId>
         <artifactId>kiji-express-tools</artifactId>
         <version>${kiji-express.version}</version>
-        <scope>provided</scope>
+        <scope>compile</scope>
       </dependency>
       <dependency>
         <groupId>org.kiji.schema-shell</groupId>
         <artifactId>kiji-schema-shell</artifactId>
         <version>${kiji-schema-shell.version}</version>
-        <scope>provided</scope>
+        <scope>compile</scope>
       </dependency>
       <dependency>
         <groupId>cascading</groupId>
@@ -126,22 +130,29 @@
       <dependency>
         <groupId>org.kiji.schema-shell</groupId>
         <artifactId>kiji-schema-shell</artifactId>
+        <type>test-jar</type>
         <version>${kiji-schema-shell.version}</version>
         <scope>test</scope>
-        <type>test-jar</type>
       </dependency>
       <dependency>
         <groupId>org.kiji.schema</groupId>
         <artifactId>kiji-schema</artifactId>
-        <version>${kiji-schema.version}</version>
         <type>test-jar</type>
+        <version>${kiji-schema.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.kiji.express</groupId>
         <artifactId>kiji-express</artifactId>
-        <version>${kiji-express.version}</version>
         <type>test-jar</type>
+        <version>${kiji-express.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.kiji.platforms</groupId>
+        <artifactId>kiji-test-platform</artifactId>
+        <type>pom</type>
+        <version>${kiji-platforms.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>

@@ -37,14 +37,6 @@
       <artifactId>scalding-args_${scala.version}</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-test</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.easymock</groupId>
       <artifactId>easymock</artifactId>
     </dependency>
@@ -59,6 +51,13 @@
     <dependency>
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-compile-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.express</groupId>
@@ -77,8 +76,8 @@
       <artifactId>scala-library</artifactId>
     </dependency>
     <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-api</artifactId>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.kiji.common</groupId>
@@ -87,10 +86,6 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-mapreduce-client-jobclient</artifactId>
     </dependency>
     <dependency>
       <groupId>cascading</groupId>
@@ -106,24 +101,37 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.kiji.schema-shell</groupId>
-      <artifactId>kiji-schema-shell</artifactId>
-      <version>${kiji-schema-shell.version}</version>
-      <scope>test</scope>
+      <groupId>org.kiji.express</groupId>
+      <artifactId>kiji-express</artifactId>
       <type>test-jar</type>
+      <version>${kiji-express.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-test-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
-      <version>${kiji-schema.version}</version>
       <type>test-jar</type>
+      <version>${kiji-schema.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.kiji.express</groupId>
-      <artifactId>kiji-express</artifactId>
-      <version>${kiji-express.version}</version>
+      <groupId>org.kiji.schema-shell</groupId>
+      <artifactId>kiji-schema-shell</artifactId>
       <type>test-jar</type>
+      <version>${kiji-schema-shell.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.testing</groupId>
+      <artifactId>fake-hbase</artifactId>
+      <version>${fake-hbase.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
