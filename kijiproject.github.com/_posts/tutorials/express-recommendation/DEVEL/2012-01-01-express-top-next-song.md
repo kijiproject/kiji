@@ -179,13 +179,13 @@ Finally, we create entity IDs using the `first_song` field and put it in the `en
 
 ### Running TopNextSongs ###
 
-* To run the TopNextSongs job:
+To run the TopNextSongs job:
 
 <div class="userinput">
 {% highlight bash %}
-express.py job --libjars="${MUSIC_EXPRESS_HOME}/lib/*" \
-    --user-jar=${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
-    --job-name=org.kiji.express.music.TopNextSongs --mode=hdfs \
+express.py job --jars="${MUSIC_EXPRESS_HOME}/lib/*" \
+    --class=org.kiji.express.music.TopNextSongs \
+    --mode=hdfs \
     --users-table ${KIJI}/users \
     --songs-table ${KIJI}/songs
 {% endhighlight %}
@@ -193,7 +193,7 @@ express.py job --libjars="${MUSIC_EXPRESS_HOME}/lib/*" \
 
 ### Verify the Output ###
 
-*  To see the output from the job:
+To see the output from the job, run the following command if using an HBase-backed Kiji instance:
 
 <div class="userinput">
 {% highlight bash %}
@@ -212,6 +212,22 @@ You should see:
         {"song_name": "song name-49", "artist_name": "artist-3", "album_name": "album-1", "genre": "genre4.0", "tempo": 150, "duration": 180}
     entity-id=['song-49'] [1365550613461] info:top_next_songs
         {"top_songs": [{"song_id": "song-38", "count": 1}, {"song_id": "song-8", "count": 1}, {"song_id": "song-31", "count": 1}, {"song_id": "song-10", "count": 1}, {"song_id": "song-6", "count": 1}]}
+
+And if using a Cassandra-backed Kiji instance, run:
+
+<div class="userinput">
+{% highlight bash %}
+kiji get ${KIJI}/songs --entity-id="['song-32']"
+{% endhighlight %}
+</div>
+
+You should see:
+
+    Looking up entity: ['song-32'] from kiji table: kiji-cassandra://localhost:2181/localhost:9042/kiji_express_music/songs/
+    entity-id=['song-32'] [1409629972596] info:metadata
+        {"song_name": "song name-32", "album_name": "album-0", "artist_name": "artist-2", "genre": "genre1.0", "tempo": 120, "duration": 180}
+    entity-id=['song-32'] [1409630981893] info:top_next_songs
+        {"top_songs": [{"song_id": "song-30", "count": 20}, {"song_id": "song-31", "count": 16}, {"song_id": "song-38", "count": 10}, {"song_id": "song-32", "count": 8}, {"song_id": "song-39", "count": 7}, {"song_id": "song-33", "count": 6}, {"song_id": "song-37", "count": 5}, {"song_id": "song-34", "count": 3}, {"song_id": "song-36", "count": 3}, {"song_id": "song-45", "count": 2}, {"song_id": "song-28", "count": 2}, {"song_id": "song-41", "count": 2}, {"song_id": "song-8", "count": 2}, {"song_id": "song-11", "count": 2}, {"song_id": "song-40", "count": 1}, {"song_id": "song-42", "count": 1}, {"song_id": "song-6", "count": 1}, {"song_id": "song-29", "count": 1}, {"song_id": "song-24", "count": 1}, {"song_id": "song-23", "count": 1}, {"song_id": "song-21", "count": 1}, {"song_id": "song-18", "count": 1}, {"song_id": "song-17", "count": 1}, {"song_id": "song-12", "count": 1}, {"song_id": "song-10", "count": 1}, {"song_id": "song-1", "count": 1}, {"song_id": "song-0", "count": 1}]}
 
 Notice that for each of these songs, there is now a info:top_next_songs column, which contains
 a record “top_songs”, the list of top songs played after each of these, in order of popularity.

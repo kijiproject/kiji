@@ -24,25 +24,28 @@ The source code for one of the importers is included at the [bottom of this page
 #### Importing Tutorial Data
 For this example, we use command-line options specific to this job to specify the input JSON file
 and the target Kiji table.
-*  Run the the song metadata importer as a precompiled job contained in a JAR file:
+
+Run the the song metadata importer as a precompiled job contained in a JAR file:
 
 <div class="userinput">
 {% highlight bash %}
-express.py job -libjars="${MUSIC_EXPRESS_HOME}/lib/*" \
-    --user_jar=${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
-    --job-name=org.kiji.express.music.SongMetadataImporter --mode=hdfs \
+express.py job --jars="${MUSIC_EXPRESS_HOME}/lib/*" \
+    --class=org.kiji.express.music.SongMetadataImporter \
+    --mode=hdfs \
     --input express-tutorial/song-metadata.json \
     --table-uri ${KIJI}/songs
 {% endhighlight %}
 </div>
 
-*  Use a similar command to import the user data:
+**Note that the job-specific flags ("input" and "table-uri") do not have a "=" between the flag names and their values.**
+
+Use a similar command to import the user data:
 
 <div class="userinput">
 {% highlight bash %}
-express.py job -libjars="${MUSIC_EXPRESS_HOME}/lib/*" \
-    --user-jar=${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
-    --job-name=org.kiji.express.music.SongPlaysImporter --mode=hdfs \
+express.py job --jars="${MUSIC_EXPRESS_HOME}/lib/*" \
+    --class=org.kiji.express.music.SongPlaysImporter \
+    --mode=hdfs \
     --input express-tutorial/song-plays.json \
     --table-uri ${KIJI}/users
 {% endhighlight %}
@@ -51,8 +54,8 @@ express.py job -libjars="${MUSIC_EXPRESS_HOME}/lib/*" \
 
 ### Verify Output
 
-*  After running the importers, verify that the Kiji table `songs` contains the imported data
-using the `kiji scan` command:
+After running the importers, verify that the Kiji table `songs` contains the imported data.  If you
+are using an HBase-backed Kiji instance, run the `kiji scan` command:
 
 <div class="userinput">
 {% highlight bash %}
@@ -77,8 +80,6 @@ You should see something like:
 
     entity-id=['song-8'] [1365548282382] info:metadata
         {"song_name": "song name-8", "artist_name": "artist-1", "album_name": "album-1", "genre": "genre5.0", "tempo": 140, "duration": 180}
-
-*  Use the `kiji scan` command to verify that the import of the `users` table was successful:
 
 <div class="userinput">
 {% highlight bash %}
@@ -107,6 +108,31 @@ You should see something like:
                                      song-28
     entity-id=['user-2'] [1325735520000] info:track_plays
                                      song-0
+
+
+Users of Cassandra-backed Kiji instances can use the `kiji get` command instead to validate
+individual records are present:
+
+<div class="userinput">
+{% highlight bash %}
+kiji get ${KIJI}/songs --entity-id="['song-49']"
+{% endhighlight %}
+</div>
+
+    Looking up entity: ['song-49'] from kiji table: kiji-cassandra://localhost:2181/localhost:9042/kiji_express_music/songs/
+    entity-id=['song-49'] [1365548285203] info:metadata
+        {"song_name": "song name-49", "artist_name": "artist-3", "album_name": "album-1", "genre": "genre4.0", "tempo": 150, "duration": 180}
+
+<div class="userinput">
+{% highlight bash %}
+kiji get ${KIJI}/users --entity-id="['user-2']"
+{% endhighlight %}
+</div>
+
+    Looking up entity: ['user-2'] from kiji table: kiji-cassandra://localhost:2181/localhost:9042/kiji_express_music/users/
+    entity-id=['user-2'] [1325749260000] info:track_plays
+                                     song-8
+
 
 Now that you've imported your data, we are ready to start analyzing it!  The source code for the
 song metadata importer is included below in case you are curious.  We will go over the syntax of

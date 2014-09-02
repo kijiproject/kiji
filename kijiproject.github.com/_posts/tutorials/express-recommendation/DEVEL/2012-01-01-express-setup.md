@@ -14,14 +14,24 @@ steps!](http://www.kiji.org/#tryit)
 
 ### Start a Kiji Cluster
 
-*  If you plan to use a BentoBox, run the following command to set BentoBox-related environment
-   variables and start the Bento cluster:
+If you plan to use a BentoBox, run the following command to set BentoBox-related environment
+variables and start the Bento cluster.  To start a BentoBox with HBase:
 
 <div class="userinput">
 {% highlight bash %}
 cd <path/to/bento>
 source bin/kiji-env.sh
 bento start
+{% endhighlight %}
+</div>
+
+To start a BentoBox with Cassandra:
+
+<div class="userinput">
+{% highlight bash %}
+cd <path/to/bento>
+source bin/kiji-env.sh
+cassandra-bento start
 {% endhighlight %}
 </div>
 
@@ -41,8 +51,9 @@ useful for this tutorial.
 <li>Make sure HDFS is installed and started.</li>
 <li>Make sure MapReduce is installed, that <code>HADOOP_HOME</code> is set to your
 	<code>MR</code> distribution, and that MapReduce is started.</li>
-<li>Make sure HBase is installed, that <code>HBASE_HOME</code> is set to your <code>hbase</code>
-	distribution, and that HBase is started.</li>
+<li>If you are planning to use HBase with Kiji, make sure HBase is installed, that
+  <code>HBASE_HOME</code> is set to your <code>hbase</code> distribution, and that HBase is
+  started.</li>
 <li>Export <code>KIJI_HOME</code> to the root of your <code>kiji</code> distribution.</li>
 <li>Export <code>PATH=${PATH}:${KIJI_HOME}/bin</code>.</li>
 <li>Export <code>EXPRESS_HOME</code> to the root of your <code>kiji-express</code> distribution.</li>
@@ -56,8 +67,8 @@ Kiji cluster appropriately.
 
 ### Set Tutorial-Specific Environment Variables
 
-*  Define an environment variable named `KIJI` that holds a Kiji URI to the Kiji
-instance we'll use during this tutorial:
+Define an environment variable named `KIJI` that holds a Kiji URI to the Kiji
+instance we'll use during this tutorial.  For an HBase-backed Kiji instance:
 
 <div class="userinput">
 {% highlight bash %}
@@ -65,10 +76,18 @@ export KIJI=kiji://.env/kiji_express_music
 {% endhighlight %}
 </div>
 
+And for a Cassandra-backed Kiji instance:
+
+<div class="userinput">
+{% highlight bash %}
+export KIJI=kiji-cassandra://localhost:2181/localhost:9042/kiji_express_music
+{% endhighlight %}
+</div>
+
 The code for this tutorial is located in the `${KIJI_HOME}/examples/express-music/` directory.
 Commands in this tutorial will depend on this location.
 
-*  Set a variable for the tutorial location:
+Next, set a variable for the tutorial location:
 
 <div class="userinput">
 {% highlight bash %}
@@ -78,7 +97,7 @@ export MUSIC_EXPRESS_HOME=${KIJI_HOME}/examples/express-music
 
 ### Install Kiji
 
-*  Install your Kiji instance:
+Install your Kiji instance:
 
 <div class="userinput">
 {% highlight bash %}
@@ -96,7 +115,7 @@ The file `music-schema.ddl` defines table layouts that are used in this tutorial
   </div>
 </div>
 
-*  Create the Kiji music tables that have layouts described in `music-schema.ddl`.
+Create the Kiji music tables that have layouts described in `music-schema.ddl`.
 
 <div class="userinput">
 {% highlight bash %}
@@ -109,7 +128,7 @@ to create the tables using the KijiSchema DDL, which makes specifying table layo
 See [the KijiSchema DDL Shell reference]({{site.userguide_schema_devel}}/schema-shell-ddl-ref)
 for more information on the KijiSchema DDL.
 
-*  Verify the Kiji music tables were correctly created:
+Verify the Kiji music tables were correctly created:
 
 <div class="userinput">
 {% highlight bash %}
@@ -117,10 +136,16 @@ kiji ls ${KIJI}
 {% endhighlight %}
 </div>
 
-You should see the newly-created `songs` and `users` tables:
+You should see the newly-created `songs` and `users` tables.  If you are using an HBase-backed Kiji
+instance:
 
     kiji://localhost:2181/express_music/songs
     kiji://localhost:2181/express_music/users
+
+And for a Cassandra-backed Kiji instance:
+
+    kiji-cassandra://localhost:2181/localhost:9042/express_music/songs
+    kiji-cassandra://localhost:2181/localhost:9042/express_music/users
 
 ### Upload Data to HDFS
 
@@ -144,7 +169,9 @@ You're now ready for the next step, [Importing Data](../express-importing-data).
 
 Here are some of the Kiji commands introduced on this page and a few more useful ones:
 
-+ **Start a BentoBox Cluster**:
+**Start a BentoBox Cluster**
+
+To start an HBase-backed BentoBox:
 
 {% highlight bash %}
 cd <path/to/bento>
@@ -152,60 +179,90 @@ source bin/kiji-env.sh
 bento start
 {% endhighlight %}
 
-+ **Stop your BentoBox Cluster**:
+To start a Cassandra-backed BentoBox:
+
+{% highlight bash %}
+cd <path/to/bento>
+source bin/kiji-env.sh
+cassandra-bento start
+{% endhighlight %}
+
+**Stop your BentoBox Cluster**
+
+If using an HBase-backed BentoBox:
 
 {% highlight bash %}
 bento stop
 {% endhighlight %}
 
-+ **Default location of the MapReduce JobTracker web app**:
+For a Cassandra-backed BentoBox:
+
+{% highlight bash %}
+cassandra-bento stop
+{% endhighlight %}
+
+**Default location of the MapReduce JobTracker web app**:
 [http://localhost:50030](http://localhost:50030)
 
-+ **Install a Kiji instance**:
+**Install a Kiji instance**:
 
 {% highlight bash %}
 kiji install --kiji=<URI/of/instance>
 {% endhighlight %}
 
-The URI takes the form:
+URIs for HBase-backed Kiji instances use the scheme `kiji-hbase` and take the form:
 
 {% highlight bash %}
-kiji://.env/<instance name>
+kiji-hbase://<zookeeper host>:<zookeeper port>/<instance name>
 {% endhighlight %}
 
-+ **Running compiled KijiExpress jobs**
+URIs for Cassandra-backed Kiji instances use the scheme `kiji-cassandra` and take the form:
+
+{% highlight bash %}
+kiji-cassandra://<zookeeper host>:<zookeeper port>/<cassandra host>:<cassandra native transport port>/<instance name>
+{% endhighlight %}
+
+URIs with the default scheme, `kiji`, use HBase as well:
+
+{% highlight bash %}
+kiji://<zookeeper host>:<zookeeper port>/<instance name>
+{% endhighlight %}
+
+For more information about Kiji URIs, see the API documentation for `KijiURI`.
+
+**Running compiled KijiExpress jobs**
 
 To run a KijiExpress job, you invoke a command of the following form:
 
 {% highlight bash %}
 express.py job \
-    --user-jar=path/to/jar/containing/job \
-    --job-name=org.MyKijiApp.MyJob \
-    [--libjars=<list of JAR files, separated by colon>] \
+    --jars=<list of JAR files, separated by colon> \
+    --class=org.MyKijiApp.MyJob \
     [--mode=local|hdfs] \
     [job-specific options]
 {% endhighlight %}
 
 The `mode=hdfs` flag indicates that KijiExpress should run the job against the Hadoop cluster
-versus in Cascading's local environment.  The `-libjars` flag indicates additional JAR files needed
+versus in Cascading's local environment.  The `--jars` flag indicates JAR files needed
 to run the command.
 
-+ **Launching the KijiExpress shell**
+**Launching the KijiExpress shell**
 
 KijiExpress includes an interactive shell that can be used to execute KijiExpress flows. To launch
 the shell, you invoke a command of the following form:
 
 {% highlight bash %}
 express.py shell \
-    [--libjars=<list of JAR files, separated by colon>] \
+    --jars=<list of JAR files, separated by colon> \
     [--mode=local|hdfs]
 {% endhighlight %}
 
 If the mode flag is set to 'hdfs', `mode=hdfs`, the shell will run jobs using Scalding's Hadoop
 mode. For normal usage against a hadoop cluster, this option should be used.
 
-If the `-libjars` flag is nonempty, the jar files specified will be placed on the classpath.
-This is helpful if you are using external libraries or have compiled avro classes.
+If the `--jars` flag is nonempty, the jar files specified will be placed on the classpath.  You
+typically use this flag to point to a JAR containing your Express jobs, as well as JARs with
+external libraries or compiled avro classes.
 
 To execute multi-line statements in the shell, use paste mode. This can be used to execute existing
 KijiExpress code. To start paste mode, enter the following command into a running KijiExpress shell:

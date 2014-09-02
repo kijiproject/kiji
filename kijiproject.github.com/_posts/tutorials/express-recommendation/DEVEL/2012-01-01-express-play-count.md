@@ -145,13 +145,13 @@ This code shows the entire pipeline put together:
 
 ### Running the Job<a id="run-job"> </a>
 
-*  Run the SongPlayCounter job:
+Run the SongPlayCounter job:
 
 <div class="userinput">
 {% highlight bash %}
-express.py job --libjars="${MUSIC_EXPRESS_HOME}/lib/*" \
-    --user-jar=${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
-    --job-name=org.kiji.express.music.SongPlayCounter --mode=hdfs \
+express.py job --jars="${MUSIC_EXPRESS_HOME}/lib/*" \
+    --class=org.kiji.express.music.SongPlayCounter \
+    --mode=hdfs \
     --table-uri ${KIJI}/users \
     --output express-tutorial/songcount-output
 {% endhighlight %}
@@ -159,7 +159,7 @@ express.py job --libjars="${MUSIC_EXPRESS_HOME}/lib/*" \
 
 ### Verify Output
 
-*  Run the following command to see the output of the job:
+Run the following command to see the output of the job:
 
 <div class="userinput">
 {% highlight bash %}

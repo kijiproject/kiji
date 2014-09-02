@@ -124,8 +124,9 @@ Finally we create a flow that does the following:
 <div class="userinput">
 {% highlight bash %}
 express.py job \
-    --user-jar=${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
-    --job-name=org.kiji.express.music.SongRecommender --mode=hdfs \
+    --jars=${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
+    --class=org.kiji.express.music.SongRecommender \
+    --mode=hdfs \
     --songs-table ${KIJI}/songs \
     --users-table ${KIJI}/users
 {% endhighlight %}
@@ -133,7 +134,7 @@ express.py job \
 
 ### Verify Output
 
-You can verify the output by scanning the `users-table`.
+You can verify the output in an HBase-backed Kiji instance by scanning the `users-table`.
 
 <div class="userinput">
 {% highlight bash %}
@@ -154,11 +155,26 @@ You should see something like:
     entity-id=['user-3'] [1379354034880] info:next_song_rec
                                  song-0
 
+And if using Cassandra:
+
+{% highlight bash %}
+kiji get ${KIJI}/users --entity-id="['user-41']"
+{% endhighlight %}
+
+And you should see:
+
+    Looking up entity: ['user-41'] from kiji table: kiji-cassandra://localhost:2181/localhost:9042/kiji_express_music/users/
+    entity-id=['user-41'] [1325762580000] info:track_plays
+                                    song-41
+    entity-id=['user-41'] [1409631207364] info:next_song_rec
+                                    song-41
+
+
 ### Shut down the cluster
 
 That's the end of the Express tutorial!
 
-*  Now is a good time to shut down the BentoBox cluster:
+Now is a good time to shut down the BentoBox cluster.  If you have been using HBase, run:
 
 <div class="userinput">
 {% highlight bash %}
@@ -166,6 +182,14 @@ That's the end of the Express tutorial!
 {% endhighlight %}
 </div>
 
+And if you have been using Cassandra, run:
+
+<div class="userinput">
+{% highlight bash %}
+    cassandra-bento stop
+{% endhighlight %}
+
+</div>
 ### Top Next Songs Job Content<a id="recommend-full-code"> </a>
 
 Here's the entire SongRecommender job:
