@@ -82,17 +82,23 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
     </dependency>
 
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-mapreduce-client-jobclient</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-common</artifactId>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-client</artifactId>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-compile-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
+      <scope>provided</scope>
+      <exclusions>
+        <!-- Dropwizard works with the internals of logback which conflict
+        with these excluded packages -->
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>log4j-over-slf4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
@@ -117,8 +123,8 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
     <dependency>
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
-      <version>${kiji-schema.version}</version>
       <type>test-jar</type>
+      <version>${kiji-schema.version}</version>
       <scope>test</scope>
       <exclusions>
         <!-- Dropwizard works with the internals of logback which conflict
@@ -134,8 +140,23 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-test</artifactId>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-test-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <!-- Dropwizard works with the internals of logback which conflict
+        with these excluded packages -->
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>log4j-over-slf4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.yammer.dropwizard</groupId>

@@ -69,45 +69,52 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-client</artifactId>
-      <version>${hadoop.version}</version>
-      <scope>compile</scope>
-      <exclusions>
-        <!-- Dropwizard works with the internals of logback which conflict
-          with these excluded packages -->
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>javax.servlet</groupId>
-          <artifactId>servlet-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>javax.servlet.jsp</groupId>
-          <artifactId>jsp-api</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
+      <dependency>
+        <groupId>org.kiji.platforms</groupId>
+        <artifactId>kiji-compile-platform</artifactId>
+        <type>pom</type>
+        <version>${kiji-platforms.version}</version>
+        <scope>provided</scope>
 
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-core</artifactId>
-      <version>${hadoop.version}</version>
-      <scope>compile</scope>
+        <!-- Dropwizard works with the internals of logback which conflict
+             with these excluded packages -->
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>log4j-over-slf4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <!--  These conflict with the servlet package in DropWizard -->
+          <exclusion>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.servlet.jsp</groupId>
+            <artifactId>jsp-api</artifactId>
+          </exclusion>
+          <!-- These were for some reason forcing out the newer org.codehaus.jackson
+               which is needed for JSON serialization in kiji-schema -->
+          <exclusion>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-core-asl</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
       <exclusions>
         <!-- Dropwizard works with the internals of logback which conflict
           with these excluded packages -->
         <exclusion>
           <groupId>org.slf4j</groupId>
-          <artifactId>log4j-over-slf4j</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
           <artifactId>slf4j-log4j12</artifactId>
         </exclusion>
-        <!--  These conflict with the servlet package in DropWizard -->
         <exclusion>
           <groupId>javax.servlet</groupId>
           <artifactId>servlet-api</artifactId>
@@ -115,53 +122,6 @@
         <exclusion>
           <groupId>javax.servlet.jsp</groupId>
           <artifactId>jsp-api</artifactId>
-        </exclusion>
-        <!-- These were for some reason forcing out the newer org.codehaus.jackson which
-        is needed for JSON serialization in kiji-schema -->
-        <exclusion>
-          <groupId>org.codehaus.jackson</groupId>
-          <artifactId>jackson-mapper-asl</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.jackson</groupId>
-          <artifactId>jackson-core-asl</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase</artifactId>
-      <version>${hbase.version}</version>
-      <scope>compile</scope>
-      <exclusions>
-        <!-- Dropwizard works with the internals of logback which conflict
-          with these excluded packages -->
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>log4j-over-slf4j</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
-        </exclusion>
-        <!-- Just to save some space in the final package -->
-        <exclusion>
-          <groupId>org.jruby</groupId>
-          <artifactId>jruby-complete</artifactId>
-        </exclusion>
-        <!--  These conflict with the servlet package in DropWizard -->
-        <exclusion>
-          <groupId>javax.servlet</groupId>
-          <artifactId>servlet-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>javax.servlet.jsp</groupId>
-          <artifactId>jsp-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <artifactId>servlet-api-2.5</artifactId>
-          <groupId>org.mortbay.jetty</groupId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -187,7 +147,6 @@
       <version>${fake-hbase.version}</version>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
 
   <build>
