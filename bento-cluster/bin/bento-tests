@@ -19,11 +19,13 @@ def main(args):
     scripts_dir = os.path.join(root_dir, 'src', 'main', 'python')
     assert os.path.exists(scripts_dir), ('Cannot find directory: %r' % scripts_dir)
 
+    tests_dir = os.path.join(root_dir, 'src', 'test', 'python')
+    assert os.path.exists(tests_dir), ('Cannot find directory: %r' % tests_dir)
+
     # Add the bento packages to PYTHONPATH.
+    sys.path.insert(0, tests_dir)
     sys.path.insert(0, scripts_dir)
 
-    # Command-line arguments initially look like:
-    #     [launchpad_python_launcher, module_name, args...]
     # Remove the launcher program name from the command-line to look like:
     #     [module_name, args...]
     args = args[1:]
@@ -36,5 +38,6 @@ def main(args):
 if __name__ == '__main__':
     launcher_args = list(sys.argv)
     # Python module to launch.
-    launcher_args.insert(1, 'bento.cli')
+    launcher_args.insert(1, 'test_bento')
+    launcher_args.insert(1, 'unittest')
     main(launcher_args)

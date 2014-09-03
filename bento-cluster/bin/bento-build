@@ -19,6 +19,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Builds a bento docker image.
+#
+# USAGE
+#
+#   bento-build [-v platform-version]
+#
+# platform-version (-v) defaults to cdh5.0.3
+
+# ------------------------------------------------------------------------------
+
+set -o nounset   # Fail when referencing undefined variables
+set -o errexit   # Script exits on the first error
+set -o pipefail  # Pipeline status failure if any command fails
+if [[ ! -z "${DEBUG:-}" ]]; then
+  source=$(basename "${BASH_SOURCE}")
+  PS4="# ${source}":'${LINENO}: '
+  set -x
+fi
+
 # ------------------------------------------------------------------------------
 
 # Canonicalize a path into an absolute, symlink free path.
@@ -63,24 +82,44 @@ function resolve_symlink() {
 
 # ------------------------------------------------------------------------------
 
-bento_env_path="${BASH_SOURCE:-$0}"
-bento_env_path=$(resolve_symlink "${bento_env_path}")
+bento_bin_path="${BASH_SOURCE:-$0}"
+bento_bin_path=$(resolve_symlink "${bento_bin_path}")
 
-bento_cluster_home=$(dirname "$(dirname "${bento_env_path}")")
-bento_cluster_home=$(cd "${bento_cluster_home}"; pwd -P)
+BENTO_CLUSTER_HOME=$(dirname "$(dirname "${bento_bin_path}")")
+BENTO_CLUSTER_HOME=$(cd "${BENTO_CLUSTER_HOME}"; pwd -P)
 
-# Linux environments obey the HOSTALIASES environment variable:
-if [[ "$(uname)" == "Linux" ]]; then
-  if [[ -z "$HOSTALIASES" ]]; then
-    echo "WARNING: The HOSTALIASES environment variable is not set." 1>&2
-    echo "WARNING: This may prevent applications from resolving the Bento host name." 1>&2
-    echo "WARNING: Please update your bash configuration and add: " 1>&2
-    echo "WARNING:     export HOSTALIASES=${HOME}/.hosts" 1>&2
+# ------------------------------------------------------------------------------
+# Script main begins here:
 
-    # Make sure the file exists
-    touch "${HOME}/.hosts"
-    export HOSTALIASES="${HOME}/.hosts"
-  fi
+# Locate the Docker binary:
+# Ubuntu installs the docker binary as docker.io to avoid a conflict with another package:
+if docker=$(which "docker.io"); then :
+elif docker=$(which "docker"); then :
+else
+  echo "Docker command-line tool not found : please install Docker."
+  exit 1
 fi
 
-export PATH="${bento_cluster_home}/bin:${PATH}"
+# Ensure that Docker version is not less than 1.0.0.
+docker_version=$($docker version | head -1 | cut -f 3 -d " ")
+if [[ ${docker_version} < 1.0.0 ]] ; then
+  echo "Docker version should be 1.0.0 or above. Found version $docker_version." 1>&2
+  exit 1
+fi
+
+platform_version="cdh5.0.3"
+
+while getopts ":v:" opt; do
+  case $opt in
+    v)
+      platform_version="${OPTARG}"
+      ;;
+    \?)
+      echo "Unknown option: -${OPTARG}" >&2
+      ;;
+  esac
+done
+shift $((OPTIND-1))
+
+$docker build -t "kijiproject/bento-cluster-base:cdh5" ${BENTO_CLUSTER_HOME}/docker-cdh5-base
+$docker build -t "kijiproject/bento-cluster:${platform_version}" ${BENTO_CLUSTER_HOME}/docker-${platform_version}
