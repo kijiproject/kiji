@@ -37,6 +37,11 @@
   </description>
   <url>http://www.kiji.org</url>
 
+  <properties>
+    <hadoop.version>2.3.0-cdh5.0.3</hadoop.version>
+    <hbase.version>0.96.1.1-cdh5.0.3</hbase.version>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
@@ -58,23 +63,25 @@
       <scope>compile</scope>
     </dependency>
 
-    <!-- HBase -->
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-client</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-server</artifactId>
-      <scope>compile</scope>
-    </dependency>
-
-    <!-- Hadoop -->
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
-      <scope>compile</scope>
+      <version>${hadoop.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase-client</artifactId>
+      <version>${hbase.version}</version>
+      <scope>provided</scope>
+      <exclusions>
+        <!-- Exclude mr1 dependencies. -->
+        <exclusion>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- Bring EasyMock ability to proxy concrete classes -->
