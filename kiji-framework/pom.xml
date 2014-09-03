@@ -26,7 +26,7 @@
   <packaging>pom</packaging>
 
   <name>Kiji framework dependency definitions</name>
-  <description>Dependency management for projects requiring Kiji</description>
+  <description>Dependency management for applications requiring Kiji</description>
   <inceptionYear>2013</inceptionYear>
 
   <modules>
@@ -43,7 +43,6 @@
 
     <!-- Versions for program dependencies -->
     <fake-hbase.version>0.3.0-SNAPSHOT</fake-hbase.version>
-    <kiji-platforms.version>1.4.0-SNAPSHOT</kiji-platforms.version>
     <kiji-schema.version>1.6.0-SNAPSHOT</kiji-schema.version>
     <kiji-schema-shell.version>1.4.0-SNAPSHOT</kiji-schema-shell.version>
     <kiji-mapreduce.version>1.3.0-SNAPSHOT</kiji-mapreduce.version>
@@ -93,8 +92,8 @@
       <dependency>
         <groupId>org.kiji.schema</groupId>
         <artifactId>kiji-schema</artifactId>
-        <version>${kiji-schema.version}</version>
         <type>test-jar</type>
+        <version>${kiji-schema.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -115,35 +114,8 @@
         <version>${kiji-mapreduce-lib.version}</version>
         <scope>compile</scope>
       </dependency>
-
-      <!-- kiji-platforms definitions. You must pick one of these. -->
-      <dependency>
-        <groupId>org.kiji.platforms</groupId>
-        <artifactId>kiji-cdh4-1-platform</artifactId>
-        <version>${kiji-platforms.version}</version>
-        <scope>compile</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.kiji.platforms</groupId>
-        <artifactId>kiji-cdh4-platform</artifactId>
-        <version>${kiji-platforms.version}</version>
-        <scope>compile</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.kiji.platforms</groupId>
-        <artifactId>kiji-hadoop1-hbase92-platform</artifactId>
-        <version>${kiji-platforms.version}</version>
-        <scope>compile</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.kiji.platforms</groupId>
-        <artifactId>kiji-hadoop1-hbase94-platform</artifactId>
-        <version>${kiji-platforms.version}</version>
-        <scope>compile</scope>
-      </dependency>
     </dependencies>
   </dependencyManagement>
-
 
   <!-- Kiji artifacts can be retrieved from the following repositories -->
   <repositories>
@@ -189,16 +161,16 @@
     <profile>
       <id>kiji-nightly</id>
       <distributionManagement>
-      <repository>
-        <id>kiji-nightly</id>
-        <name>kiji-nightly-releases</name>
-        <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-      </repository>
-      <snapshotRepository>
-        <id>kiji-nightly</id>
-        <name>kiji-nightly-snapshots</name>
-        <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-      </snapshotRepository>
+        <repository>
+          <id>kiji-nightly</id>
+          <name>kiji-nightly-releases</name>
+          <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
+        </repository>
+        <snapshotRepository>
+          <id>kiji-nightly</id>
+          <name>kiji-nightly-snapshots</name>
+          <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
+        </snapshotRepository>
       </distributionManagement>
     </profile>
   </profiles>

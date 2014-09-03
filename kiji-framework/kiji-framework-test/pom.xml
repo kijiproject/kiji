@@ -20,7 +20,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>kiji-framework-test</artifactId>
-  <packaging>jar</packaging>
+  <packaging>pom</packaging>
 
   <parent>
     <groupId>org.kiji.framework</groupId>
@@ -39,8 +39,16 @@
       <dependency>
         <groupId>org.kiji.framework</groupId>
         <artifactId>kiji-framework-test</artifactId>
-        <version>1.1.2</version>
+        <version>2.2.0</version>
         <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.kiji.platforms</groupId>
+        <artifactId>kiji-cdh5-1-platform</artifactId>
+        <type>pom</type>
+        <version>1.4.0</version>
+        <scope>test</compile>
       </dependency>
 
     ... which will transitively include all Kiji framework test components
