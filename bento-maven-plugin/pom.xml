@@ -22,13 +22,13 @@
 
   <groupId>org.kiji.maven.plugins</groupId>
   <artifactId>bento-maven-plugin-root</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1-SNAPSHOT</version>
   </parent>
 
   <name>Bento Maven Plugin top-level project</name>
@@ -39,6 +39,8 @@
     <!-- use UTF-8 for everything -->
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+    <kiji-platforms.version>1.4.0-SNAPSHOT</kiji-platforms.version>
   </properties>
 
   <modules>
@@ -46,6 +48,25 @@
     <module>bento-maven-plugin</module>
     <module>bento-maven-plugin-test</module>
   </modules>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.kiji.platforms</groupId>
+        <artifactId>kiji-cdh5-0-platform</artifactId>
+        <version>${kiji-platforms.version}</version>
+        <type>pom</type>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.kiji.platforms</groupId>
+        <artifactId>kiji-cdh5-0-test-platform</artifactId>
+        <version>${kiji-platforms.version}</version>
+        <type>pom</type>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <build>
     <plugins>
@@ -57,14 +78,6 @@
 
     <pluginManagement>
       <plugins>
-        <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
-        </configuration>
-        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-plugin-plugin</artifactId>

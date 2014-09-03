@@ -19,41 +19,16 @@
 
 package org.kiji.maven.plugins;
 
-import java.io.BufferedWriter;
-import java.io.OutputStreamWriter;
-import java.util.Set;
-
-import static junit.framework.Assert.assertTrue;
-
-import com.google.common.collect.Sets;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.SequenceFile;
 import org.junit.Test;
-
-import static org.apache.hadoop.io.SequenceFile.*;
 
 /**
  * Run this integration test against the bento-maven-plugin to demonstrate that the plugin works.
- * // TODO: Test access HDFS, HBase, etc.
+ * // TODO: Test access HBase, etc.
  */
 public class IntegrationTestSimple {
   @Test
   public void testHDFS() throws Exception {
-    Configuration conf = new Configuration(); // takes default conf
-    FileSystem fs = FileSystem.get(conf);
-    FileStatus[] files = fs.listStatus(new Path("/"));
-    // Collect directory names.
-    Set<String> directoryNames = Sets.newHashSet();
-    for (FileStatus file : files) {
-      directoryNames.add(file.getPath().getName());
-    }
-    assertTrue("Remote HDFS must have /hbase/", directoryNames.contains("hbase"));
-    assertTrue("Remote HDFS must have /user/", directoryNames.contains("user"));
-    assertTrue("Remote HDFS must have /var/", directoryNames.contains("var"));
-    assertTrue("Remote HDFS must have /tmp", directoryNames.contains("tmp"));
+    BentoTestUtils.validateHdfs(new Configuration());
   }
 }

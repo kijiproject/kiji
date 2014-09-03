@@ -19,13 +19,12 @@
     limitations under the License.
   -->
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.kiji.maven.plugins</groupId>
   <artifactId>bento-maven-plugin-test</artifactId>
 
   <parent>
     <groupId>org.kiji.maven.plugins</groupId>
     <artifactId>bento-maven-plugin-root</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 
@@ -33,36 +32,35 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.11</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>15.0</version>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-      <version>2.4</version>
+      <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-client</artifactId>
-      <version>2.3.0-mr1-cdh5.0.3</version>
-      <scope>provided</scope>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-cdh5-0-platform</artifactId>
+      <type>pom</type>
     </dependency>
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-core</artifactId>
-      <version>2.3.0-mr1-cdh5.0.3</version>
-      <scope>provided</scope>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-cdh5-0-test-platform</artifactId>
+      <type>pom</type>
     </dependency>
+
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-common</artifactId>
-      <version>2.3.0-cdh5.0.3</version>
-      <scope>provided</scope>
+      <groupId>org.kiji.maven.plugins</groupId>
+      <artifactId>bento-maven-plugin</artifactId>
+      <version>${project.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
@@ -70,7 +68,6 @@
     <plugins>
       <plugin>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>2.17</version>
         <executions>
           <execution>
             <goals>
@@ -83,6 +80,7 @@
       <plugin>
         <groupId>org.kiji.maven.plugins</groupId>
         <artifactId>bento-maven-plugin</artifactId>
+        <version>${project.version}</version>
         <executions>
           <execution>
             <goals>
@@ -91,6 +89,10 @@
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <bento.pypi.repository>http://pypi.wibidata.net/simple</bento.pypi.repository>
+          <bento.platform>cdh5.0.3</bento.platform>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -101,14 +103,5 @@
         <artifactId>findbugs-maven-plugin</artifactId>
       </plugin>
     </plugins>
-    <testResources>
-      <testResource>
-        <directory>src/test/resources</directory>
-        <filtering>true</filtering>
-        <includes>
-          <include>**/*.properties</include>
-        </includes>
-      </testResource>
-    </testResources>
   </build>
 </project>
