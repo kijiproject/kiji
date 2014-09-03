@@ -1,6 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <!--
-    (c) Copyright 2012 WibiData, Inc.
+    (c) Copyright 2014 WibiData, Inc.
 
     See the NOTICE file distributed with this work for additional
     information regarding copyright ownership.
@@ -19,8 +20,8 @@
   -->
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>kiji-cdh4-platform</artifactId>
-  <packaging>jar</packaging>
+  <artifactId>kiji-cdh5-0-test-platform</artifactId>
+  <packaging>pom</packaging>
 
   <parent>
     <groupId>org.kiji.platforms</groupId>
@@ -29,13 +30,13 @@
     <relativePath>..</relativePath>
   </parent>
 
-  <name>kiji-cdh4-platform</name>
-  <description>Dependency on the latest update of CDH4</description>
-  <inceptionYear>2012</inceptionYear>
+  <name>kiji-cdh5-0-test-platform</name>
+  <description>Dependency on the latest patch release of CDH5.0 test</description>
+  <inceptionYear>2014</inceptionYear>
 
   <properties>
-    <hadoop.version>2.0.0-mr1-cdh4.4.0</hadoop.version>
-    <hbase.version>0.94.6-cdh4.4.0</hbase.version>
+    <hadoop.version>2.3.0-cdh5.0.3</hadoop.version>
+    <hbase.version>0.96.1.1-cdh5.0.3</hbase.version>
   </properties>
 
   <build>
@@ -44,28 +45,44 @@
   <dependencies>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-client</artifactId>
-      <version>${hadoop.version}</version>
-      <scope>compile</scope>
-    </dependency>
-     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-core</artifactId>
-      <version>${hadoop.version}</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-minicluster</artifactId>
+      <artifactId>hadoop-yarn-server-tests</artifactId>
+      <type>test-jar</type>
+      <classifier>tests</classifier>
       <version>${hadoop.version}</version>
       <scope>compile</scope>
     </dependency>
 
     <dependency>
       <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase</artifactId>
+      <artifactId>hbase-testing-util</artifactId>
+      <type>test-jar</type>
       <version>${hbase.version}</version>
       <scope>compile</scope>
+      <exclusions>
+        <!-- Exclude mr1 dependencies. -->
+        <exclusion>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-minicluster</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.curator</groupId>
+      <artifactId>curator-test</artifactId>
+      <version>${curator.version}</version>
+      <scope>compile</scope>
+      <exclusions>
+        <!-- Use the CDH ZooKeeper version. -->
+        <exclusion>
+          <groupId>org.apache.zookeeper</groupId>
+          <artifactId>zookeeper</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
 </project>

@@ -20,7 +20,7 @@
   -->
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>kiji-cdh5-1-test-platform</artifactId>
+  <artifactId>kiji-cdh4-4-test-platform</artifactId>
   <packaging>pom</packaging>
 
   <parent>
@@ -30,13 +30,12 @@
     <relativePath>..</relativePath>
   </parent>
 
-  <name>kiji-cdh5-1-test-platform</name>
-  <description>Dependency on the latest patch release of CDH5.1 test</description>
+  <name>kiji-cdh4-4-test-platform</name>
+  <description>Dependency on the latest patch release of CDH4.4 test</description>
   <inceptionYear>2014</inceptionYear>
 
   <properties>
-    <hadoop.version>2.3.0-cdh5.1.0</hadoop.version>
-    <hbase.version>0.98.1-cdh5.1.0</hbase.version>
+    <hadoop.version>2.0.0-mr1-cdh4.4.0</hadoop.version>
   </properties>
 
   <build>
@@ -45,30 +44,9 @@
   <dependencies>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-yarn-server-tests</artifactId>
-      <type>test-jar</type>
-      <classifier>tests</classifier>
+      <artifactId>hadoop-minicluster</artifactId>
       <version>${hadoop.version}</version>
       <scope>compile</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-testing-util</artifactId>
-      <type>test-jar</type>
-      <version>${hbase.version}</version>
-      <scope>compile</scope>
-      <exclusions>
-        <!-- Exclude mr1 dependencies. -->
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-minicluster</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
     <dependency>

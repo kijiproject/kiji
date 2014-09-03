@@ -1,6 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <!--
-    (c) Copyright 2012 WibiData, Inc.
+    (c) Copyright 2014 WibiData, Inc.
 
     See the NOTICE file distributed with this work for additional
     information regarding copyright ownership.
@@ -20,16 +20,15 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.kiji.foo</groupId>
-  <artifactId>foo</artifactId>
+  <groupId>org.kiji.example</groupId>
+  <artifactId>example-library</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>Platform Dependency Example</name>
+  <name>Library Platform Dependency Example</name>
 
   <properties>
-    <kiji-schema.version>1.0.0</kiji-schema.version>
-    <kiji-platform.version>1.2.0</kiji-platform.version>
+    <kiji-platform.version>1.4.0</kiji-platform.version>
   </properties>
 
   <build>
@@ -38,22 +37,25 @@
   <dependencies>
     <dependency>
       <groupId>org.kiji.platforms</groupId>
-      <artifactId>kiji-cdh4-platform</artifactId>
-      <version>${kiji-schema.version}</version>
+      <artifactId>kiji-compile-platform</artifactId>
+      <version>${kiji-platform.version}</version>
+      <type>pom</type>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-test-platform</artifactId>
+      <version>${kiji-platform.version}</version>
+      <type>pom</type>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
   <repositories>
     <repository>
-      <id>kiji-repos</id>
-      <name>kiji-repos</name>
-      <url>https://repo.wibidata.com/artifactory/kiji</url>
-    </repository>
-    <repository>
-      <id>kiji-nightly</id>
-      <name>kiji-nightly</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
+      <id>kiji-releases</id>
+      <name>kiji-releases</name>
+      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
     </repository>
   </repositories>
 </project>

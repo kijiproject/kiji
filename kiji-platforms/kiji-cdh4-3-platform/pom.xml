@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <!--
     (c) Copyright 2012 WibiData, Inc.
@@ -20,7 +21,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>kiji-cdh4-3-platform</artifactId>
-  <packaging>jar</packaging>
+  <packaging>pom</packaging>
 
   <parent>
     <groupId>org.kiji.platforms</groupId>
@@ -30,12 +31,13 @@
   </parent>
 
   <name>kiji-cdh4-3-platform</name>
-  <description>Dependency on the latest revision of CDH4.3</description>
+  <description>Dependency on the latest patch release of CDH4.3</description>
   <inceptionYear>2012</inceptionYear>
 
   <properties>
-    <hadoop.version>2.0.0-mr1-cdh4.3.0</hadoop.version>
-    <hbase.version>0.94.6-cdh4.3.0</hbase.version>
+    <hadoop.version>2.0.0-mr1-cdh4.3.2</hadoop.version>
+    <hbase.version>0.94.6-cdh4.3.2</hbase.version>
+    <zookeeper.version>3.4.5-cdh4.3.2</zookeeper.version>
   </properties>
 
   <build>
@@ -54,18 +56,33 @@
       <version>${hadoop.version}</version>
       <scope>compile</scope>
     </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-minicluster</artifactId>
-      <version>${hadoop.version}</version>
-      <scope>compile</scope>
-    </dependency>
 
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase</artifactId>
       <version>${hbase.version}</version>
       <scope>compile</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.zookeeper</groupId>
+      <artifactId>zookeeper</artifactId>
+      <version>${zookeeper.version}</version>
+      <scope>compile</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.curator</groupId>
+      <artifactId>curator-recipes</artifactId>
+      <version>${curator.version}</version>
+      <scope>compile</scope>
+      <exclusions>
+        <!-- Use the CDH ZooKeeper version. -->
+        <exclusion>
+          <groupId>org.apache.zookeeper</groupId>
+          <artifactId>zookeeper</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
 </project>

@@ -20,8 +20,8 @@
   -->
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>kiji-cdh5-0-3-test-platform</artifactId>
-  <packaging>jar</packaging>
+  <artifactId>kiji-cassandra-platform</artifactId>
+  <packaging>pom</packaging>
 
   <parent>
     <groupId>org.kiji.platforms</groupId>
@@ -30,48 +30,28 @@
     <relativePath>..</relativePath>
   </parent>
 
-  <name>kiji-cdh5-0-3-test-platform</name>
-  <description>Test Dependencies on CDH5.0.3</description>
+  <name>kiji-cassandra-platform</name>
+  <description>Kiji cassandra platform dependency for libraries and applications</description>
   <inceptionYear>2014</inceptionYear>
-
-  <properties>
-    <hadoop.version>2.3.0-cdh5.0.3</hadoop.version>
-    <hbase.version>0.96.1.1-cdh5.0.3</hbase.version>
-  </properties>
 
   <build>
   </build>
 
   <dependencies>
-    <!-- Depend on the non-test cdh5.0.3 platform as well. -->
     <dependency>
+      <!-- TODO(SCHEMA-956): Exclude hbase dependency -->
       <groupId>org.kiji.platforms</groupId>
-      <artifactId>kiji-cdh5-0-3-platform</artifactId>
+      <artifactId>kiji-cdh5-1-platform</artifactId>
+      <type>pom</type>
       <version>${project.version}</version>
-      <type>jar</type>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-yarn-server-tests</artifactId>
-      <version>${hadoop.version}</version>
-      <type>test-jar</type>
       <scope>compile</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-testing-util</artifactId>
-      <version>${hbase.version}</version>
-      <type>test-jar</type>
-      <scope>compile</scope>
-      <exclusions>
-        <!-- Exclude mr1 dependencies. -->
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-core</artifactId>
-        </exclusion>
-      </exclusions>
+        <groupId>com.datastax.cassandra</groupId>
+        <artifactId>cassandra-driver-core</artifactId>
+        <version>2.0.5</version>
+        <scope>compile</scope>
     </dependency>
   </dependencies>
 </project>
