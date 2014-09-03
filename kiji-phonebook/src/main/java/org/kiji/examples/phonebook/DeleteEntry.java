@@ -20,15 +20,17 @@
 package org.kiji.examples.phonebook;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import org.kiji.common.flags.Flag;
+import org.kiji.common.flags.FlagParser;
 import org.kiji.examples.phonebook.util.ConsolePrompt;
 import org.kiji.schema.EntityId;
-import org.kiji.schema.KConstants;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableNotFoundException;
@@ -43,6 +45,13 @@ public class DeleteEntry extends Configured implements Tool {
   /** Name of the table to read for phonebook entries. */
   public static final String TABLE_NAME = "phonebook";
 
+  /** URI of Kiji instance to use (need to support Cassandra and HBase Kiji. */
+  @Flag(
+      name="kiji",
+      usage="Specify the Kiji instance containing the 'phonebook' table."
+  )
+  private String mKijiUri = "kiji://.env/default";
+
   /**
    * Deletes an entry from the Kiji table.
    *
@@ -53,6 +62,12 @@ public class DeleteEntry extends Configured implements Tool {
    */
   @Override
   public int run(String[] args) throws IOException, InterruptedException {
+    // Parse command-line arguments, populating KijiURI.
+    List<String> nonFlagArgs = FlagParser.init(this, args);
+    if (null == nonFlagArgs) {
+      // There was a problem parsing the flags.
+      return 1;
+    }
     final ConsolePrompt console = new ConsolePrompt();
 
     // Interactively prompt the user from the console.
@@ -74,9 +89,7 @@ public class DeleteEntry extends Configured implements Tool {
       setConf(HBaseConfiguration.addHbaseResources(getConf()));
 
       // Connect to the Kiji table and open a writer.
-      kiji = Kiji.Factory.open(
-          KijiURI.newBuilder().withInstanceName(KConstants.DEFAULT_INSTANCE_NAME).build(),
-          getConf());
+      kiji = Kiji.Factory.open(KijiURI.newBuilder(mKijiUri).build(), getConf());
       table = kiji.openTable(TABLE_NAME);
       writer = table.openTableWriter();
 

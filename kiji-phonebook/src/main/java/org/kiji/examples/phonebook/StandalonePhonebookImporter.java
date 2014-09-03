@@ -22,6 +22,7 @@ package org.kiji.examples.phonebook;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.JsonDecoder;
@@ -31,8 +32,9 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import org.kiji.common.flags.Flag;
+import org.kiji.common.flags.FlagParser;
 import org.kiji.schema.EntityId;
-import org.kiji.schema.KConstants;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableWriter;
@@ -50,15 +52,15 @@ public class StandalonePhonebookImporter extends Configured implements Tool {
   /** Kiji instance to connect to. */
   private KijiURI mKijiURI;
 
-  /**
-   * Default constructor for StandalonePhonebookImporter instances.
-   *
-   * @throws IOException if there's an error building the target Kiji URI.
-   */
-  public StandalonePhonebookImporter() throws IOException {
-    mKijiURI = KijiURI.newBuilder().withInstanceName(
-        KConstants.DEFAULT_INSTANCE_NAME).build();
-  }
+  /** URI of Kiji instance to use (need to support Cassandra and HBase Kiji. */
+  @Flag(
+      name="kiji",
+      usage="Specify the Kiji instance containing the 'phonebook' table."
+  )
+  private String mKijiUriName = "kiji://.env/default";
+
+  @Flag(name="input-data", usage="Text file with records to import", required=true)
+  private String mInputData;
 
   /**
    * Sets the Kiji URI to connect to. This is used in integration tests.
@@ -79,6 +81,15 @@ public class StandalonePhonebookImporter extends Configured implements Tool {
    */
   @Override
   public int run(String[] args) throws IOException {
+    // Parse command-line arguments, populating mKijiURIName and mInputData.
+    List<String> nonFlagArgs = FlagParser.init(this, args);
+    if (null == nonFlagArgs) {
+      // There was a problem parsing the flags.
+      return 1;
+    }
+
+    mKijiURI = KijiURI.newBuilder(mKijiUriName).build();
+
     // Load HBase configuration before connecting to Kiji.
     setConf(HBaseConfiguration.create(getConf()));
 
@@ -93,7 +104,7 @@ public class StandalonePhonebookImporter extends Configured implements Tool {
       writer = table.openTableWriter();
 
       // Read in the input file
-      reader = new BufferedReader(new FileReader(args[0]));
+      reader = new BufferedReader(new FileReader(mInputData));
 
       String line;
       while ((line = reader.readLine()) != null) {

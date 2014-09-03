@@ -20,6 +20,7 @@
 package org.kiji.examples.phonebook;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.JsonDecoder;
@@ -34,6 +35,8 @@ import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.common.flags.Flag;
+import org.kiji.common.flags.FlagParser;
 import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
@@ -50,6 +53,16 @@ import org.kiji.schema.KijiURI;
 public class PhonebookImporter extends Configured implements Tool {
   /** Name of the table to insert phonebook entries into. */
   public static final String TABLE_NAME = "phonebook";
+
+  /** URI of Kiji instance to use (need to support Cassandra and HBase Kiji. */
+  @Flag(
+      name="kiji",
+      usage="Specify the Kiji instance containing the 'phonebook' table."
+  )
+  private String mKijiUri = "kiji://.env/default";
+
+  @Flag(name="input-data", usage="Text file with records to import", required=true)
+  private String mInputData;
 
   /**
    * Map task that will parse user records from a text file and insert the records
@@ -131,17 +144,23 @@ public class PhonebookImporter extends Configured implements Tool {
    */
   @Override
   public int run(String[] args) throws Exception {
+    // Parse command-line arguments, populating mKijiUri.
+    List<String> nonFlagArgs = FlagParser.init(this, args);
+    if (null == nonFlagArgs) {
+      // There was a problem parsing the flags.
+      return 1;
+    }
+
     // Load HBase configuration before connecting to Kiji.
     setConf(HBaseConfiguration.addHbaseResources(getConf()));
 
     // Direct the job output to the phonebook table. Due to the size of this data set,
     // we can write directly to the table rather than use HFileMapReduceJobOutput.
     // small amount of output
-    final KijiURI tableUri =
-        KijiURI.newBuilder(String.format("kiji://.env/default/%s", TABLE_NAME)).build();
+    final KijiURI tableUri = KijiURI.newBuilder(mKijiUri + "/" + TABLE_NAME).build();
 
     // Configure a map-only job that imports phonebook entries from a file into the table.
-    final KijiMapReduceJob job = configureJob(new Path(args[0]), tableUri);
+    final KijiMapReduceJob job = configureJob(new Path(mInputData), tableUri);
 
     // Run the job.
     final boolean isSuccessful = job.run();

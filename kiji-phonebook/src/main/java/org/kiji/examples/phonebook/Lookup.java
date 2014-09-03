@@ -30,7 +30,6 @@ import org.apache.hadoop.util.ToolRunner;
 import org.kiji.common.flags.Flag;
 import org.kiji.common.flags.FlagParser;
 import org.kiji.schema.EntityId;
-import org.kiji.schema.KConstants;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
@@ -56,6 +55,12 @@ public class Lookup extends Configured implements Tool {
   @Flag(name="last", usage="Last name")
   private String mLast = "";
 
+  @Flag(
+      name="kiji",
+      usage="Specify the Kiji instance containing the 'phonebook' table."
+  )
+  private String mKijiUri = "kiji://.env/default";
+
   /**
    * Run a lookup from the command line.
    *
@@ -65,7 +70,7 @@ public class Lookup extends Configured implements Tool {
    */
   @Override
   public int run(String[] args) throws IOException {
-    // Use odiago-common-flags to parse arguments, populating mFirst and mLast.
+    // Use kiji-common-flags to parse arguments, populating mFirst, mLast, mKijiUri.
     List<String> nonFlagArgs = FlagParser.init(this, args);
     if (null == nonFlagArgs) {
       // There was a problem parsing the flags.
@@ -80,9 +85,7 @@ public class Lookup extends Configured implements Tool {
       setConf(HBaseConfiguration.create(getConf()));
 
       // Connect to Kiji, open the table and reader.
-      kiji = Kiji.Factory.open(
-          KijiURI.newBuilder().withInstanceName(KConstants.DEFAULT_INSTANCE_NAME).build(),
-          getConf());
+      kiji = Kiji.Factory.open(KijiURI.newBuilder(mKijiUri).build(), getConf());
       table = kiji.openTable(TABLE_NAME);
       reader = table.openTableReader();
 
