@@ -127,11 +127,6 @@
             <version>${kiji-schema-shell.version}</version>
           </dependency>
           <dependency>
-            <groupId>org.kiji.bento</groupId>
-            <artifactId>bento-cluster</artifactId>
-            <version>${bento-cluster.version}</version>
-          </dependency>
-          <dependency>
             <groupId>org.kiji.mapreduce</groupId>
             <artifactId>kiji-mapreduce</artifactId>
             <version>${kiji-mapreduce.version}</version>

@@ -41,24 +41,8 @@
 #                       $KIJI_HOME/schema-shell/bin, and $EXPRESS_HOME/bin
 #                       are on it.
 #
-#   If HADOOP_HOME and HBASE_HOME are not set, then the environment will additionally
-#   be modified with the following bento-cluster environment variables:
-
-#   BENTO_CLUSTER_HOME  Set to the $KIJI_HOME/cluster directory, which should contain a
-#                       bento-cluster distribution.
-#
-#   HADOOP_HOME         Set to the directory of the Hadoop distribution included with
-#                       bento-cluster. This distribution should be located in
-#                       $BENTO_CLUSTER_HOME/lib.
-#
-#   HBASE_HOME          Set to the directory of the HBase distribution included with
-#                       bento-cluster. This distribution should be located in
-#                       $BENTO_CLUSTER_HOME/lib.
-#
-#   PATH                The $PATH is modified so that $BENTO_CLUSTER_HOME/bin,
-#                       $HADOOP_HOME/bin, $HBASE_HOME/bin are on it.
-#
-# If you want to override the bento-cluster environment variables anyway, use --override.
+#   If using a bento cluster, source the bento-env.sh script for the bento instance
+#   currently in use.
 
 # Get the directory this script is located in, no matter how the script is being
 # run.
@@ -89,11 +73,4 @@ PATH="${KIJI_HOME}/bin:${KIJI_HOME}/schema-shell/bin:${EXPRESS_HOME}/bin:${PATH}
 export PATH
 echo "Added kiji, kiji-mr, kiji-schema-shell, and kiji-express binaries to PATH."
 
-# Source the bento-env.sh script to configure the rest of the environment.
-if [[ "$1" == "--override" ]] || [[ -z "$HADOOP_HOME" && -z "$HBASE_HOME" ]]; then
-  source "${KIJI_HOME}/cluster/bin/bento-env.sh"
-else
-  echo "HADOOP_HOME or HBASE_HOME already set, not overriding with Bento cluster configuration. " \
-  "To override anyway, use --override."
-fi
-
+echo "If you are using a bento cluster, don't forget to source its bento-env.sh script."

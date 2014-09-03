@@ -221,30 +221,6 @@
       <fileMode>0644</fileMode>
     </fileSet>
     <fileSet>
-      <!-- bento-cluster -->
-      <useDefaultExcludes>false</useDefaultExcludes>
-      <outputDirectory>cluster</outputDirectory>
-      <directory>target/prereqs-dir/bento-cluster-${bento-cluster.version}</directory>
-      <filtered>false</filtered>
-      <fileMode>0644</fileMode>
-      <!-- exclude several bin directories (e.g., hadoop's) at once. They are all
-           bulk copied in the next section. -->
-      <excludes>
-        <exclude>**/bin/**</exclude>
-      </excludes>
-    </fileSet>
-    <fileSet>
-      <!-- bento-cluster binaries -->
-      <useDefaultExcludes>false</useDefaultExcludes>
-      <outputDirectory>cluster</outputDirectory>
-      <directory>target/prereqs-dir/bento-cluster-${bento-cluster.version}/</directory>
-      <includes>
-        <include>**/bin/**</include>
-      </includes>
-      <filtered>false</filtered>
-      <fileMode>0755</fileMode>
-    </fileSet>
-    <fileSet>
       <!-- kiji-mapreduce -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>.</outputDirectory>
@@ -396,13 +372,6 @@
       <source>target/prereqs-dir/kiji-schema-${kiji-schema.version}/RELEASE_NOTES.txt</source>
       <outputDirectory>release-notes</outputDirectory>
       <destName>SCHEMA_RELEASE_NOTES.txt</destName>
-      <fileMode>0644</fileMode>
-    </file>
-    <file>
-      <!-- bento-cluster release notes -->
-      <source>target/prereqs-dir/bento-cluster-${bento-cluster.version}/RELEASE_NOTES.txt</source>
-      <outputDirectory>release-notes</outputDirectory>
-      <destName>CLUSTER_RELEASE_NOTES.txt</destName>
       <fileMode>0644</fileMode>
     </file>
     <file>
