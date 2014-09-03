@@ -167,8 +167,12 @@ HBASE_SITE_TEMPLATE = """\
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <configuration>
   <property>
+    <name>hbase.zookeeper.property.clientPort</name>
+    <value>2181</value>
+  </property>
+  <property>
     <name>hbase.zookeeper.quorum</name>
-    <value>%(bento_host)s:2181</value>
+    <value>%(bento_host)s</value>
   </property>
 </configuration>
 """
