@@ -28,6 +28,8 @@
     <kiji-schema.version>1.6.0-SNAPSHOT</kiji-schema.version>
     <kiji-mapreduce.version>1.3.0-SNAPSHOT</kiji-mapreduce.version>
     <kiji-schema-shell.version>1.4.0-SNAPSHOT</kiji-schema-shell.version>
+    <kiji-platforms.version>1.4.0-SNAPSHOT</kiji-platforms.version>
+    <fake-hbase.version>0.3.0-SNAPSHOT</fake-hbase.version>
   </properties>
 
   <dependencies>
@@ -73,9 +75,10 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-mapreduce-client-jobclient</artifactId>
-      <version>${hadoop.version}</version>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-compile-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -91,8 +94,11 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-test</artifactId>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-test-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
@@ -100,6 +106,14 @@
       <artifactId>kiji-express</artifactId>
       <version>${kiji-express.version}</version>
       <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <!-- TODO(POM-51): remove dependency on fake hbase -->
+      <groupId>org.kiji.testing</groupId>
+      <artifactId>fake-hbase</artifactId>
+      <version>${fake-hbase.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
