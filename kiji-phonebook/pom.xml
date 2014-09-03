@@ -39,7 +39,7 @@
   <properties>
     <kiji-schema.version>1.6.0-SNAPSHOT</kiji-schema.version>
     <kiji-schema-shell.version>1.4.0-SNAPSHOT</kiji-schema-shell.version>
-    <kiji-cdh5-0-3-platform.version>1.4.0-SNAPSHOT</kiji-cdh5-0-3-platform.version>
+    <kiji-platforms.version>1.4.0-SNAPSHOT</kiji-platforms.version>
     <kiji-mapreduce.version>1.3.0-SNAPSHOT</kiji-mapreduce.version>
     <kiji-common-flags.version>1.1.1-SNAPSHOT</kiji-common-flags.version>
     <fake-hbase.version>0.3.0-SNAPSHOT</fake-hbase.version>
@@ -97,19 +97,19 @@
       <groupId>org.kiji.common</groupId>
       <artifactId>kiji-common-flags</artifactId>
       <version>${kiji-common-flags.version}</version>
-      <scope>provided</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
       <version>${kiji-schema.version}</version>
-      <scope>provided</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema-cassandra</artifactId>
       <version>${kiji-schema.version}</version>
-      <scope>provided</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.schema</groupId>
@@ -122,18 +122,18 @@
       <groupId>org.kiji.mapreduce</groupId>
       <artifactId>kiji-mapreduce</artifactId>
       <version>${kiji-mapreduce.version}</version>
-      <scope>provided</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.mapreduce</groupId>
       <artifactId>kiji-mapreduce-cassandra</artifactId>
       <version>${kiji-mapreduce.version}</version>
-      <scope>provided</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-      <scope>test</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.schema-shell</groupId>
@@ -143,9 +143,10 @@
     </dependency>
     <dependency>
       <groupId>org.kiji.platforms</groupId>
-      <artifactId>kiji-cdh5-0-3-platform</artifactId>
-      <version>${kiji-cdh5-0-3-platform.version}</version>
-      <scope>provided</scope>
+      <artifactId>kiji-compile-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.testing</groupId>
@@ -154,14 +155,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-testing-util</artifactId>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-test-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
       <scope>test</scope>
-      <type>test-jar</type>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-test</artifactId>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
