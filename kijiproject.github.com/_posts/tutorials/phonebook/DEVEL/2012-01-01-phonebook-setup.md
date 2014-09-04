@@ -17,15 +17,11 @@ Standalone Bento box in [three quick steps!](http://www.kiji.org/#tryit).
 Kiji can create Kiji tables in HBase or Cassandra tables.  You can indicate to Kiji which you would
 like to use in your Kiji URI.  The URI for an HBase Kiji table looks like:
 
-```
-kiji://zookeeper-host:zookeeper-port/kiji-instance-name
-```
+    kiji://zookeeper-host:zookeeper-port/kiji-instance-name
 
 The URI for a Cassandra Kiji, on the other hand, looks like:
 
-```
-kiji-cassandra://zookeeper-host:zookeeper-port/cassandra-host:cassandra-port/kiji-instance-name
-```
+    kiji-cassandra://zookeeper-host:zookeeper-port/cassandra-host:cassandra-port/kiji-instance-name
 
 For more details, please see the Javadocs in the source for `org.kiji.schema.KijiURI` and
 `org.kji.schema.cassandra.CassandraKijiURI`.
@@ -99,16 +95,12 @@ define a Kiji URI for a new Kiji instance that we shall use for the rest of this
 want to use HBase (and you started your BentoBox with the `bento start` command), define an
 environment variable to contain a URI for an HBase-backed KIJI instance:
 
-```
-export KIJI=kiji://localhost:2181/phonebook
-```
+    export KIJI=kiji://localhost:2181/phonebook
 
 If you want to use Cassandra (and you started your BentoBox with `cassandra-bento start`), instead
 define your URI as follows:
 
-```
-export KIJI=kiji-cassandra://localhost:2181/localhost:9042/phonebook
-```
+    export KIJI=kiji-cassandra://localhost:2181/localhost:9042/phonebook
 
 ### Install Kiji Instance
 <a name="ref.install_kiji_instance" id="ref.install_kiji_instance"> </a>
