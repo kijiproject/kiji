@@ -151,31 +151,31 @@ another time using JSON. Use the following command to delete the table:
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji delete --target=${KIJI}/phonebook
+$KIJI_HOME/bin/kiji delete --target=kiji://.env/default/phonebook
 {% endhighlight %}
 </div>
 
-    Are you sure you want to delete Kiji table 'kiji://localhost:2181/phonebook/phonebook/'?
+    Are you sure you want to delete Kiji table 'kiji://localhost:2181/default/phonebook/'?
     Type 'phonebook' without the quotes to confirm(or nothing to cancel):
     phonebook
-    13/03/13 19:19:28 INFO org.apache.hadoop.hbase.client.HBaseAdmin: Started disable of kiji.phonebook.table.phonebook
-    13/03/13 19:19:29 INFO org.apache.hadoop.hbase.client.HBaseAdmin: Disabled kiji.phonebook.table.phonebook
-    13/03/13 19:19:29 INFO org.apache.hadoop.hbase.client.HBaseAdmin: Deleted kiji.phonebook.table.phonebook
-    Kiji table 'kiji://localhost:2181/phonebook/phonebook/' deleted.
+    13/03/13 19:19:28 INFO org.apache.hadoop.hbase.client.HBaseAdmin: Started disable of kiji.default.table.phonebook
+    13/03/13 19:19:29 INFO org.apache.hadoop.hbase.client.HBaseAdmin: Disabled kiji.default.table.phonebook
+    13/03/13 19:19:29 INFO org.apache.hadoop.hbase.client.HBaseAdmin: Deleted kiji.default.table.phonebook
+    Kiji table 'kiji://localhost:2181/default/phonebook/' deleted.
 
 The command below creates the same phonebook table with the layout specified in the `layout.json` file in your
 `$KIJI_HOME/examples/phonebook` directory.
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji create-table --table=${KIJI}/phonebook \
+$KIJI_HOME/bin/kiji create-table --table=kiji://.env/default/phonebook \
     --layout=$KIJI_HOME/examples/phonebook/layout.json
 {% endhighlight %}
 </div>
 
 {% highlight bash %}
 Parsing table layout: $KIJI_HOME/examples/phonebook/layout.json
-Creating Kiji table: kiji://localhost:2181/phonebook/phonebook/
+Creating Kiji table: kiji://localhost:2181/default/phonebook/
 {% endhighlight %}
 
 
@@ -186,7 +186,7 @@ tables in your Kiji instance.
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji ls ${KIJI}
+$KIJI_HOME/bin/kiji ls kiji://.env/default
 {% endhighlight %}
 </div>
 

@@ -21,7 +21,7 @@ for every user, but is still suboptimal because you are using one machine to per
 First, let's take a closer look at the data we want to import.  In
 `$KIJI_HOME/examples/phonebook/input-data.txt` you will see records like:
 
-    John|Doe|johndoe@gmail.com|202-555-9876|{"addr1":"1600 Pennsylvania Ave","apt":null,"addr2":null,"city":"Washington","state":"DC","zip":99999}
+> John|Doe|johndoe@gmail.com|202-555-9876|{"addr1":"1600 Pennsylvania Ave","apt":null,"addr2":null,"city":"Washington","state":"DC","zip":99999}
 
 The fields in each record are delimited by a `|` character. The last field is actually
 a complete JSON Avro record representing an address.
@@ -77,31 +77,21 @@ example - using the `kiji jar` command.
 
 <div class="userinput">
 {% highlight bash %}
-${KIJI_HOME}/bin/kiji jar \
-    ${KIJI_HOME}/examples/phonebook/lib/kiji-phonebook-{{site.phonebook_devel_version}}.jar \
+$KIJI_HOME/bin/kiji jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-{{site.phonebook_devel_version}}.jar \
     org.kiji.examples.phonebook.StandalonePhonebookImporter \
-    --kiji=${KIJI} \
-    --input-data=${KIJI_HOME}/examples/phonebook/input-data.txt
+    $KIJI_HOME/examples/phonebook/input-data.txt
 {% endhighlight %}
 </div>
 
 You now have data in your phonebook table!
 
 #### Verify
-If you are using an HBase-backed Kiji instance, you can verify that the user records were added
-properly by running `kiji scan`:
+Verify that the user records were added properly by executing:
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji scan ${KIJI}/phonebook
-{% endhighlight %}
-</div>
-
-Or, for a Cassandra-backed Kiji instance, use `kiji get`:
-
-<div class="userinput">
-{% highlight bash %}
-$KIJI_HOME/bin/kiji get ${KIJI}/phonebook --entity-id="['John,Doe']"
+$KIJI_HOME/bin/kiji scan kiji://.env/default/phonebook
 {% endhighlight %}
 </div>
 
@@ -174,7 +164,8 @@ A [`KijiURI`]({{site.api_schema_devel}}/KijiURI.html) is constructed that specif
 {% highlight java %}
 public int run(String[] args) throws Exception {
   setConf(HBaseConfiguration.addHbaseResources(getConf()));
-  final KijiURI tableUri = KijiURI.newBuilder(mKijiUri + "/" + TABLE_NAME).build();
+  final KijiURI tableUri =
+      KijiURI.newBuilder(String.format("kiji://.env/default/%s", TABLE_NAME)).build();
   final KijiMapReduceJob job = configureJob(new Path(args[0]), tableUri);
 
   final boolean isSuccessful = job.run();
@@ -214,8 +205,7 @@ path to the `input-data.txt` file in HDFS.
 $KIJI_HOME/bin/kiji jar \
     $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-{{site.phonebook_devel_version}}.jar \
     org.kiji.examples.phonebook.PhonebookImporter \
-    --kiji=${KIJI} \
-    --input-data=/tmp/input-data.txt
+    /tmp/input-data.txt
 {% endhighlight %}
 </div>
 
@@ -234,7 +224,7 @@ run the same bulk import job without requiring that you write a "`main()`" metho
 $KIJI_HOME/bin/kiji bulk-import \
     --importer='org.kiji.examples.phonebook.PhonebookImporter$PhonebookBulkImporter' \
     --input="format=text file=/tmp/input-data.txt" \
-    --output="format=kiji nsplits=1 table=${KIJI}/phonebook" \
+    --output="format=kiji nsplits=1 table=kiji://.env/default/phonebook" \
     --lib=$KIJI_HOME/examples/phonebook/lib
 {% endhighlight %}
 </div>
@@ -245,17 +235,17 @@ The `--input` and `--output` arguments specify in text form the same
 objects as are created programmatically in this example.
 
 #### Verify
-Verify that the user records were added properly by running `kiji get`:
+Verify that the user records were added properly by executing:
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji get ${KIJI}/phonebook --entity-id="['John,Doe']"
+$KIJI_HOME/bin/kiji scan kiji://.env/default/phonebook
 {% endhighlight %}
 </div>
 
 Here's what one of the first entries should look like:
 
-    Scanning kiji table: kiji://localhost:2181/phonebook/phonebook/
+    Scanning kiji table: kiji://localhost:2181/default/phonebook/
     entity-id=['John,Doe'] [1384235805181] info:firstname
                                      John
     entity-id=['John,Doe'] [1384235805181] info:lastname
