@@ -30,7 +30,7 @@ import org.scalatest.junit.JUnitRunner
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.KijiJob
 import org.kiji.express.flow.KijiOutput
-import org.kiji.express.flow.util.ResourceUtil._
+import org.kiji.express.flow.util.TestingResourceUtil
 import org.kiji.schema.KijiClientTest
 import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
@@ -46,7 +46,7 @@ class FlowStepModificationSuite extends KijiClientTest with KijiSuite {
   // run when using ScalaTest.
   setupKijiTest()
 
-  val avroLayout: KijiTableLayout = layout("layout/avro-types-complete.json")
+  val avroLayout: KijiTableLayout = TestingResourceUtil.layout("layout/avro-types-complete.json")
   val uri = {
     val instanceUri = new InstanceBuilder(getKiji)
         .withTable(avroLayout.getName, avroLayout)

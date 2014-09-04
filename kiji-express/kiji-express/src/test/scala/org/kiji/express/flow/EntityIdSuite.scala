@@ -1,5 +1,5 @@
 /**
- * (c) Copyright 2013 WibiData, Inc.
+ * (c) Copyright 2014 WibiData, Inc.
  *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
@@ -34,6 +34,7 @@ import org.scalatest.junit.JUnitRunner
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.EntityId.HashedEntityId
 import org.kiji.express.flow.util.ResourceUtil
+import org.kiji.express.flow.util.TestingResourceUtil
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
@@ -49,7 +50,8 @@ class EntityIdSuite extends KijiSuite {
   import org.kiji.express.flow.EntityIdSuite._
 
   /** Table layout with formatted entity IDs to use for tests. */
-  val formattedEntityIdLayout: KijiTableLayout = ResourceUtil.layout(KijiTableLayouts.FORMATTED_RKF)
+  val formattedEntityIdLayout: KijiTableLayout =
+      TestingResourceUtil.layout(KijiTableLayouts.FORMATTED_RKF)
   // Create a table to use for testing
   val formattedTableUri: KijiURI =
       ResourceUtil.doAndRelease(makeTestKijiTable(formattedEntityIdLayout)) { table: KijiTable =>
@@ -58,7 +60,7 @@ class EntityIdSuite extends KijiSuite {
 
   /** Table layout with hashed entity IDs to use for tests. */
   val hashedEntityIdLayout: KijiTableLayout =
-      ResourceUtil.layout(KijiTableLayouts.HASHED_FORMATTED_RKF)
+      TestingResourceUtil.layout(KijiTableLayouts.HASHED_FORMATTED_RKF)
   // Create a table to use for testing
   val hashedTableUri: KijiURI =
       ResourceUtil.doAndRelease(makeTestKijiTable(hashedEntityIdLayout)) { table: KijiTable =>
@@ -146,10 +148,10 @@ class EntityIdSuite extends KijiSuite {
 
   // ------- "integration tests" for joins. -------
   /** Simple table layout to use for tests. The row keys are hashed. */
-  val simpleLayout: KijiTableLayout = ResourceUtil.layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
+  val simpleLayout: KijiTableLayout = TestingResourceUtil.layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
 
   /** Table layout using Avro schemas to use for tests. The row keys are formatted. */
-  val avroLayout: KijiTableLayout = ResourceUtil.layout("layout/avro-types.json")
+  val avroLayout: KijiTableLayout = TestingResourceUtil.layout("layout/avro-types.json")
 
   test("Runs a job that joins two pipes, on user-created EntityIds.") {
     // Create main input.

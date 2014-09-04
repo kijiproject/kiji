@@ -35,7 +35,6 @@ import org.kiji.schema.KijiTableReader
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
-import org.kiji.schema.layout.KijiTableLayouts
 import org.kiji.schema.shell.api.Client
 
 /**
@@ -260,19 +259,6 @@ object ResourceUtil {
     doAndClose(Source.fromInputStream(inputStream)) { source =>
       source.mkString
     }
-  }
-
-  /**
-   * Loads a [[org.kiji.schema.layout.KijiTableLayout]] from the classpath. See
-   * [[org.kiji.schema.layout.KijiTableLayouts]] for some layouts that get put on the classpath
-   * by KijiSchema.
-   *
-   * @param resourcePath Path to the layout definition file.
-   * @return The layout contained within the provided resource.
-   */
-  def layout(resourcePath: String): KijiTableLayout = {
-    val tableLayoutDef = KijiTableLayouts.getLayout(resourcePath)
-    KijiTableLayout.newLayout(tableLayoutDef)
   }
 
   /**

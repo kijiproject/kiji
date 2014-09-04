@@ -99,8 +99,6 @@
       <groupId>org.kiji.platforms</groupId>
       <artifactId>kiji-compile-platform</artifactId>
       <type>pom</type>
-      <version>${kiji-platforms.version}</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
@@ -123,46 +121,37 @@
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
-      <!-- TODO(EXP-469): Make this test scope.  -->
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
       <type>test-jar</type>
-      <scope>compile</scope>
     </dependency>
-
     <dependency>
-      <!-- TODO(EXP-469): Make this test scope.  -->
       <groupId>org.kiji.testing</groupId>
       <artifactId>fake-hbase</artifactId>
-      <scope>compile</scope>
     </dependency>
 
     <dependency>
       <groupId>org.kiji.platforms</groupId>
       <artifactId>kiji-test-platform</artifactId>
       <type>pom</type>
-      <version>${kiji-platforms.version}</version>
-      <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_${scala.version}</artifactId>

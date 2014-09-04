@@ -37,6 +37,7 @@ import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.KijiInput
 import org.kiji.express.flow.KijiOutput
 import org.kiji.express.flow.util.ResourceUtil
+import org.kiji.express.flow.util.TestingResourceUtil
 import org.kiji.express.KijiSuite
 import org.kiji.schema.KijiClientTest
 import org.kiji.schema.KijiURI
@@ -53,7 +54,7 @@ class KijiPipeToolSuite extends KijiClientTest with KijiSuite {
   // Create test Kiji table.
   val uri: String = {
     /** Table layout to use for tests. */
-    val layout: KijiTableLayout = ResourceUtil.layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
+    val layout: KijiTableLayout = TestingResourceUtil.layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
 
     val instanceUri = new InstanceBuilder(getKiji)
         .withTable(layout.getName, layout)

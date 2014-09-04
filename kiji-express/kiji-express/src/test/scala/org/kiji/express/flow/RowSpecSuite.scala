@@ -30,6 +30,7 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.util.ResourceUtil
+import org.kiji.express.flow.util.TestingResourceUtil
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.KijiTableLayout
@@ -38,7 +39,8 @@ import org.kiji.schema.layout.KijiTableLayouts
 @RunWith(classOf[JUnitRunner])
 class RowSpecSuite extends KijiSuite {
   /** Simple table layout to use for tests. The row keys are hashed. */
-  val simpleLayout: KijiTableLayout = ResourceUtil.layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
+  val simpleLayout: KijiTableLayout =
+      TestingResourceUtil.layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
 
   /** Sample row keys. */
   val eidFactory = EntityIdFactory.getFactory(simpleLayout)

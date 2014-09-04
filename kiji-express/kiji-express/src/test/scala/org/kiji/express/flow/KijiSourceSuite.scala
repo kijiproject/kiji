@@ -34,6 +34,7 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.avro.SimpleRecord
 import org.kiji.express.flow.util.ResourceUtil
+import org.kiji.express.flow.util.TestingResourceUtil
 import org.kiji.express.KijiSuite
 import org.kiji.schema.KijiClientTest
 import org.kiji.schema.KijiTable
@@ -58,7 +59,7 @@ class KijiSourceSuite
   setupKijiTest()
 
   /** Table layout using Avro schemas to use for tests. The row keys are formatted. */
-  val avroLayout: KijiTableLayout = ResourceUtil.layout("layout/avro-types.json")
+  val avroLayout: KijiTableLayout = TestingResourceUtil.layout("layout/avro-types.json")
 
   // TODO: Tests below this line still use JobTest and should be rewritten.
   test("A job that writes using the generic API is run.") {

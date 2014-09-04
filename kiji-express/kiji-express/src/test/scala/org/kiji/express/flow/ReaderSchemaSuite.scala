@@ -19,20 +19,22 @@
 
 package org.kiji.express.flow
 
-import com.twitter.scalding.{Hdfs, Args, Mode}
+import com.twitter.scalding.Args
+import com.twitter.scalding.Hdfs
+import com.twitter.scalding.Mode
 import org.apache.avro.generic.GenericEnumSymbol
 import org.apache.avro.generic.GenericFixed
 import org.apache.avro.generic.GenericRecord
 import org.apache.hadoop.conf.Configuration
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-
 import org.kiji.express.KijiSuite
 import org.kiji.express.avro.SimpleRecord
 import org.kiji.express.flow.SchemaSpec.Generic
 import org.kiji.express.flow.SchemaSpec.Specific
 import org.kiji.express.flow.SchemaSpec.Writer
 import org.kiji.express.flow.util.ResourceUtil
+import org.kiji.express.flow.util.TestingResourceUtil
 import org.kiji.schema.{ EntityId => JEntityId }
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiClientTest
@@ -41,13 +43,14 @@ import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableReader
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.layout.KijiTableLayout
+import org.kiji.express.flow.util.TestingResourceUtil
 
 @RunWith(classOf[JUnitRunner])
 class ReaderSchemaSuite extends KijiClientTest with KijiSuite {
   import org.kiji.express.flow.util.AvroTypesComplete._
   setupKijiTest()
   val kiji: Kiji = createTestKiji()
-  val layout: KijiTableLayout = ResourceUtil.layout("layout/avro-types-complete.json")
+  val layout: KijiTableLayout = TestingResourceUtil.layout("layout/avro-types-complete.json")
   val table: KijiTable = {
     kiji.createTable(layout.getDesc)
     kiji.openTable(layout.getName)

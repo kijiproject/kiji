@@ -29,6 +29,7 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.util.ResourceUtil
+import org.kiji.express.flow.util.TestingResourceUtil
 import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
@@ -93,7 +94,8 @@ class WordCountFlatMapJob(args: Args) extends KijiJob(args) {
 @RunWith(classOf[JUnitRunner])
 class PagedCellsSuite extends KijiSuite {
   /** Simple table layout to use for tests. The row keys are hashed. */
-  val simpleLayout: KijiTableLayout = ResourceUtil.layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
+  val simpleLayout: KijiTableLayout =
+      TestingResourceUtil.layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
 
   test("a word-concat job that reads from a Kiji table is run using Scalding's local mode") {
     // Create test Kiji table.

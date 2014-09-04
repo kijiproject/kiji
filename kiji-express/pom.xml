@@ -41,7 +41,7 @@
     <!-- Dependency versions. -->
     <elephant-bird.version>4.4</elephant-bird.version>
     <kryo.version>2.21</kryo.version>
-    <scala-reflect.version>2.10.3</scala-reflect.version>
+    <scala-reflect.version>2.10.4</scala-reflect.version>
     <scalding.version>0.9.1</scalding.version>
     <cascading.version>2.5.2</cascading.version>
     <cascading-kryo.version>0.4.7</cascading-kryo.version>
@@ -51,8 +51,8 @@
 
     <!-- Plugin versions. -->
     <!--
-      Version 1.7.6 of the avro-maven-plugin includes a fix for stringTypes + alias usage.
-      See AVRO-1433 for more information.
+        Version 1.7.6 of the avro-maven-plugin includes a fix for stringTypes + alias usage.
+        See AVRO-1433 for more information.
     -->
     <avro-maven-plugin.version>1.7.6</avro-maven-plugin.version>
   </properties>
@@ -85,9 +85,19 @@
       </dependency>
 
       <!-- Normal dependencies. -->
+
+      <dependency>
+        <groupId>log4j</groupId>
+        <artifactId>log4j</artifactId>
+
+        <version>1.2.17</version>
+        <scope>provided</scope>
+      </dependency>
+
       <dependency>
         <groupId>com.twitter.elephantbird</groupId>
         <artifactId>elephant-bird-core</artifactId>
+
         <version>${elephant-bird.version}</version>
         <scope>compile</scope>
         <exclusions>
@@ -163,30 +173,49 @@
         <scope>compile</scope>
       </dependency>
 
+      <dependency>
+        <groupId>org.kiji.platforms</groupId>
+        <artifactId>kiji-compile-platform</artifactId>
+        <type>pom</type>
+
+        <version>${kiji-platforms.version}</version>
+        <scope>compile</scope>
+      </dependency>
+
       <!-- Test dependencies. -->
       <dependency>
         <groupId>org.kiji.schema-shell</groupId>
         <artifactId>kiji-schema-shell</artifactId>
+        <type>test-jar</type>
+
         <version>${kiji-schema-shell.version}</version>
         <scope>test</scope>
-        <type>test-jar</type>
       </dependency>
-      <!--
-        Keep these dependencies in compile scope so that users can depend on the KijiExpress testing
-        framework by only depending on the KijiExpress test jar.
-      -->
+
       <dependency>
         <groupId>org.kiji.schema</groupId>
         <artifactId>kiji-schema</artifactId>
-        <version>${kiji-schema.version}</version>
         <type>test-jar</type>
-        <scope>compile</scope>
+
+        <version>${kiji-schema.version}</version>
+        <scope>test</scope>
       </dependency>
+
       <dependency>
         <groupId>org.kiji.testing</groupId>
         <artifactId>fake-hbase</artifactId>
+
         <version>${fake-hbase.version}</version>
-        <scope>compile</scope>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.kiji.platforms</groupId>
+        <artifactId>kiji-test-platform</artifactId>
+        <type>pom</type>
+
+        <version>${kiji-platforms.version}</version>
+        <scope>test</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -299,23 +328,40 @@
   </build>
 
   <repositories>
-    <!-- Kiji repositories -->
     <repository>
-      <id>kiji-repos</id>
-      <name>kiji-repos</name>
-      <url>https://repo.wibidata.com/artifactory/kiji</url>
+      <id>kiji-releases</id>
+      <name>Kiji releases</name>
+      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
     </repository>
 
     <!-- ScalaTest -->
     <repository>
       <id>Sonatype OSS Repository</id>
       <url>https://oss.sonatype.org/content/groups/public</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
     </repository>
 
     <!-- Cascading -->
     <repository>
       <id>conjars.org</id>
       <url>http://conjars.org/repo</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
     </repository>
   </repositories>
 

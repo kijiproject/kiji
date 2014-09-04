@@ -32,6 +32,7 @@ import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 import org.kiji.express.flow.util.ResourceUtil
+import org.kiji.express.flow.util.TestingResourceUtil
 
 
 class AnagramCountJob(args: Args) extends KijiJob(args) {
@@ -58,7 +59,7 @@ class AnagramCountJob(args: Args) extends KijiJob(args) {
 @RunWith(classOf[JUnitRunner])
 class SimpleTypedJobSuite extends KijiSuite {
 
-  val tableLayout: KijiTableLayout = ResourceUtil.layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
+  val tableLayout: KijiTableLayout = TestingResourceUtil.layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
   val kijiTable: KijiTable = makeTestKijiTable(tableLayout)
 
   test("A simple type safe kiji express job that counts the number of anagrams from a given " +

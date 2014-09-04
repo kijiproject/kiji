@@ -21,7 +21,7 @@ package org.kiji.express
 
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.express.avro.SimpleRecord
-import org.kiji.express.flow.util.ResourceUtil
+import org.kiji.express.flow.util.TestingResourceUtil
 import org.kiji.express.flow.EntityId
 
 import org.apache.avro.generic.GenericRecordBuilder
@@ -31,7 +31,7 @@ import org.apache.avro.generic.GenericRecord
  * Static values used across multiple tests.  Contains example layouts, example inputs, etc.
  */
 object KijiJobSuiteSampleData {
-  val avroLayout: KijiTableLayout = ResourceUtil.layout("layout/avro-types.json")
+  val avroLayout: KijiTableLayout = TestingResourceUtil.layout("layout/avro-types.json")
 
   val rawInputs: List[(Long, String)] = List(
     (1, "input 1"),

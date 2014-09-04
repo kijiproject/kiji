@@ -21,20 +21,19 @@
   </parent>
 
   <dependencies>
-    <!-- Scala -->
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <scope>provided</scope>
     </dependency>
 
     <!-- Kiji -->
     <dependency>
       <groupId>org.kiji.express</groupId>
       <artifactId>kiji-express</artifactId>
+
       <version>${project.version}</version>
-      <scope>compile</scope>
     </dependency>
+
     <dependency>
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
@@ -43,6 +42,7 @@
       <groupId>org.kiji.platforms</groupId>
       <artifactId>kiji-compile-platform</artifactId>
       <type>pom</type>
+
       <version>${kiji-platforms.version}</version>
       <scope>provided</scope>
     </dependency>
@@ -52,18 +52,22 @@
       <groupId>org.apache.avro</groupId>
       <artifactId>avro</artifactId>
     </dependency>
+
     <dependency>
       <groupId>cascading</groupId>
       <artifactId>cascading-core</artifactId>
     </dependency>
+
     <dependency>
       <groupId>com.twitter</groupId>
       <artifactId>scalding-core_${scala.version}</artifactId>
     </dependency>
+
     <dependency>
       <groupId>com.twitter</groupId>
       <artifactId>scalding-args_${scala.version}</artifactId>
     </dependency>
+
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
@@ -74,20 +78,25 @@
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_${scala.version}</artifactId>
+
       <version>${scalatest.version}</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
       <type>test-jar</type>
+
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.kiji.express</groupId>
       <artifactId>kiji-express</artifactId>
-      <version>${project.version}</version>
       <type>test-jar</type>
+
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

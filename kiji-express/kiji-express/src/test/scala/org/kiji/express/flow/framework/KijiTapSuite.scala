@@ -31,13 +31,14 @@ import org.kiji.express.flow.RowFilterSpec
 import org.kiji.express.flow.RowRangeSpec
 import org.kiji.express.flow.TimeRangeSpec
 import org.kiji.express.flow.util.ResourceUtil
+import org.kiji.express.flow.util.TestingResourceUtil
 import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
 
 @RunWith(classOf[JUnitRunner])
 class KijiTapSuite extends KijiSuite {
   val instanceName: String = "test_KijiTap_instance"
-  val testKijiTableLayout: KijiTableLayout = ResourceUtil.layout("layout/avro-types.json")
+  val testKijiTableLayout: KijiTableLayout = TestingResourceUtil.layout("layout/avro-types.json")
   val config: JobConf = new JobConf(HBaseConfiguration.create())
 
   test("KijiTap validates a valid instance/table/column.") {
