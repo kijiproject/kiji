@@ -46,7 +46,11 @@
   <modules>
     <module>build-resources</module>
     <module>bento-maven-plugin</module>
-    <module>bento-maven-plugin-test</module>
+    <!--
+      Disabled for now for as kiji-build does not support inter-module dependencies within the same
+      maven plugin project.
+    -->
+    <!--<module>bento-maven-plugin-test</module>-->
   </modules>
 
   <dependencyManagement>
