@@ -188,8 +188,8 @@ And if you have been using Cassandra, run:
 {% highlight bash %}
     cassandra-bento stop
 {% endhighlight %}
-
 </div>
+
 ### Top Next Songs Job Content<a id="recommend-full-code"> </a>
 
 Here's the entire SongRecommender job:
