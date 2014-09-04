@@ -1,0 +1,2087 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Import Data</title>
+    <meta name="description" content="How to import data into the phonebook table.">
+    <meta name="author" content="WibiData">
+    <link href="/assets/themes/twitter/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/assets/themes/twitter/css/style.css" rel="stylesheet" type="text/css" media="all">
+    <link href="/assets/themes/twitter/css/github.css" rel="stylesheet" type="text/css" media="all">
+    <script src="http://code.jquery.com/jquery-latest.js" type="text/javascript"></script>
+    <script src="/assets/themes/twitter/vallenato/vallenato.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="/assets/themes/twitter/css/vallenato.css" type="text/css" media="screen">
+
+  </head>
+
+  <body>
+    <div class="navbar navbar-fixed-top">
+           
+      <div class="navbar-inner">
+                     
+        <div class="container-fluid">
+         <a class="brand" href="http://www.kiji.org">
+           <img src="http://www.kiji.org/wp-content/themes/spark/timthumb/timthumb.php?src=http%3A%2F%2Fwww.kiji.org%2Fwp-content%2Fuploads%2F2014%2F03%2FKiji-Logo2.png&h=160&w=0&q=90" style="height: 50px;" alt="Kiji Project">
+         </a>
+          <ul class="nav pull-right">
+
+            <li class="dropdown">
+              <a href="http://www.kiji.org">Home</a>
+            </li>
+            <li>
+              <a href="http://www.kiji.org/#about">About</a>
+            </li>
+            <li>
+              <a href="http://www.kiji.org/#community">Community</a>
+            </li>
+            <li class="dropdown">
+              <a href="/">Download</a>
+              <ul class="dropdown-menu">
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/#download">Bento Box</a>
+                </li>
+                <li class="menu-item">
+                  <a href="https://github.com/kijiproject">Github Source</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+            <li class="dropdown">
+              <a href="/">Learn</a>
+              <ul class="dropdown-menu">
+                <li class="menu-item">
+                  <a href="http://docs.kiji.org/">Documentation</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://docs.kiji.org/apidocs/">Java Docs</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/category/presentation/">Presentations</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/category/video/">Videos</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="http://www.kiji.org/blog/">Blog</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid">
+      <div class="content">
+        
+<div class="row-fluid">
+  <div class="span9">
+    <div class="page-header">
+      <h1>Import Data</h1>
+    </div>
+
+    <div class="pagination">
+      <ul>
+    
+      
+      
+    
+      
+
+      
+        
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+            
+            
+              <li class="prev">
+                <a href="/tutorials/phonebook-tutorial/1.1.5/phonebook-point-add" title="Read and Write in Kiji">
+                &larr; Previous
+                </a>
+              </li>
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+      
+
+      
+      
+        
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+              <li class="next">
+                <a href="/tutorials/phonebook-tutorial/1.1.5/phonebook-derived-columns" title="Derive Data">
+                Next &rarr;
+                </a>
+              </li>
+            
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+      
+      </ul>
+    </div>
+
+    <p>At this point, you should be worried about wearing out your keyboard
+by manually running an add command for each of your (incredibly large set of)
+friends. First, we will discuss and give examples of the naive way of extending <code>AddEntry</code>
+to load a table, and then present the recommended MapReduce approach.</p>
+
+<h3>StandalonePhonebookImporter.java</h3>
+
+<p>An example of writing puts in order to load a table is given in
+<code>StandalonePhonebookImporter</code>. This approach is easier than running the add command
+for every user, but is still suboptimal because you are using one machine to perform every put.</p>
+
+<h4>Parsing the Delimited Phonebook Entries</h4>
+
+<p>First, let's take a closer look at the data we want to import.  In
+<code>$KIJI_HOME/examples/phonebook/input-data.txt</code> you will see records like:</p>
+
+<blockquote><p>John|Doe|johndoe@gmail.com|202-555-9876|{"addr1":"1600 Pennsylvania Ave","apt":null,"addr2":null,"city":"Washington","state":"DC","zip":99999}</p></blockquote>
+
+<p>The fields in each record are delimited by a <code>|</code> character. The last field is actually
+a complete JSON Avro record representing an address.</p>
+
+<p>At the top of the <code>importLine(...)</code> method in <code>StandalonePhonebookImporter</code>,  you'll
+see we're using a delimiter to split up the record into its specific fields:</p>
+
+<div class="highlight"><pre><code class="java"><span class="n">String</span><span class="o">[]</span> <span class="n">fields</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="na">toString</span><span class="o">().</span><span class="na">split</span><span class="o">(</span><span class="s">&quot;\\|&quot;</span><span class="o">);</span>
+<span class="c1">//...</span>
+
+<span class="n">String</span> <span class="n">firstName</span> <span class="o">=</span> <span class="n">fields</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
+<span class="n">String</span> <span class="n">lastName</span> <span class="o">=</span> <span class="n">fields</span><span class="o">[</span><span class="mi">1</span><span class="o">];</span>
+<span class="n">String</span> <span class="n">email</span> <span class="o">=</span> <span class="n">fields</span><span class="o">[</span><span class="mi">2</span><span class="o">];</span>
+<span class="n">String</span> <span class="n">telephone</span> <span class="o">=</span> <span class="n">fields</span><span class="o">[</span><span class="mi">3</span><span class="o">];</span>
+<span class="n">String</span> <span class="n">addressJson</span> <span class="o">=</span> <span class="n">fields</span><span class="o">[</span><span class="mi">4</span><span class="o">];</span>
+</code></pre></div>
+
+
+<p>Since our last field is a complex Avro type represented in JSON, we use a JSON decoder
+with an Avro schema (in this case <code>Address</code>), to decode the field into a complete Avro Address
+object.</p>
+
+<div class="highlight"><pre><code class="java"><span class="c1">// addressJson contains a JSON-encoded Avro &quot;Address&quot; record. Parse this into</span>
+<span class="c1">// an object and write it to the person&#39;s record.</span>
+<span class="c1">// The Address record type is generated from src/main/avro/Address.avsc as part</span>
+<span class="c1">// of the build process (see avro-maven-plugin in pom.xml).</span>
+<span class="kd">final</span> <span class="n">SpecificDatumReader</span><span class="o">&lt;</span><span class="n">Address</span><span class="o">&gt;</span> <span class="n">datumReader</span> <span class="o">=</span>
+    <span class="k">new</span> <span class="n">SpecificDatumReader</span><span class="o">&lt;</span><span class="n">Address</span><span class="o">&gt;(</span><span class="n">Address</span><span class="o">.</span><span class="na">SCHEMA</span><span class="n">$</span><span class="o">);</span>
+<span class="kd">final</span> <span class="n">JsonDecoder</span> <span class="n">decoder</span> <span class="o">=</span>
+    <span class="n">DecoderFactory</span><span class="o">.</span><span class="na">get</span><span class="o">().</span><span class="na">jsonDecoder</span><span class="o">(</span><span class="n">Address</span><span class="o">.</span><span class="na">SCHEMA</span><span class="n">$</span><span class="o">,</span> <span class="n">addressJson</span><span class="o">);</span>
+<span class="kd">final</span> <span class="n">Address</span> <span class="n">streetAddr</span> <span class="o">=</span> <span class="n">datumReader</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="kc">null</span><span class="o">,</span> <span class="n">decoder</span><span class="o">);</span>
+</code></pre></div>
+
+
+<p>Next we create a unique <a href="http://api-docs.kiji.org/kiji-schema/1.4.1/org/kiji/schema/EntityId.html"><code>EntityId</code></a> that will be used to reference this row.  As before, we will use
+the combination of first and last name as a unique reference to this row:</p>
+
+<div class="highlight"><pre><code class="java"><span class="kd">final</span> <span class="n">EntityId</span> <span class="n">user</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="na">getEntityId</span><span class="o">(</span><span class="n">firstName</span> <span class="o">+</span> <span class="s">&quot;,&quot;</span> <span class="o">+</span> <span class="n">lastName</span><span class="o">);</span>
+</code></pre></div>
+
+
+<p>Finally we just retrieve the current system timestamp and write these record fields.</p>
+
+<div class="highlight"><pre><code class="java"><span class="kd">final</span> <span class="kt">long</span> <span class="n">timestamp</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span>
+<span class="n">writer</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">user</span><span class="o">,</span> <span class="n">Fields</span><span class="o">.</span><span class="na">INFO_FAMILY</span><span class="o">,</span> <span class="n">Fields</span><span class="o">.</span><span class="na">FIRST_NAME</span><span class="o">,</span> <span class="n">timestamp</span><span class="o">,</span> <span class="n">firstName</span><span class="o">);</span>
+<span class="n">writer</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">user</span><span class="o">,</span> <span class="n">Fields</span><span class="o">.</span><span class="na">INFO_FAMILY</span><span class="o">,</span> <span class="n">Fields</span><span class="o">.</span><span class="na">LAST_NAME</span><span class="o">,</span> <span class="n">timestamp</span><span class="o">,</span> <span class="n">lastName</span><span class="o">);</span>
+<span class="n">writer</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">user</span><span class="o">,</span> <span class="n">Fields</span><span class="o">.</span><span class="na">INFO_FAMILY</span><span class="o">,</span> <span class="n">Fields</span><span class="o">.</span><span class="na">EMAIL</span><span class="o">,</span> <span class="n">timestamp</span><span class="o">,</span> <span class="n">email</span><span class="o">);</span>
+<span class="n">writer</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">user</span><span class="o">,</span> <span class="n">Fields</span><span class="o">.</span><span class="na">INFO_FAMILY</span><span class="o">,</span> <span class="n">Fields</span><span class="o">.</span><span class="na">TELEPHONE</span><span class="o">,</span> <span class="n">timestamp</span><span class="o">,</span> <span class="n">telephone</span><span class="o">);</span>
+<span class="n">writer</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">user</span><span class="o">,</span> <span class="n">Fields</span><span class="o">.</span><span class="na">INFO_FAMILY</span><span class="o">,</span> <span class="n">Fields</span><span class="o">.</span><span class="na">ADDRESS</span><span class="o">,</span> <span class="n">timestamp</span><span class="o">,</span> <span class="n">streetAddr</span><span class="o">);</span>
+</code></pre></div>
+
+
+<h3>Running the Example</h3>
+
+<p>You can execute <code>StandalonePhonebookImporter</code> just like you would the <code>AddEntry</code>
+example - using the <code>kiji jar</code> command.</p>
+
+<div class="userinput">
+
+<div class="highlight"><pre><code class="bash"><span class="nv">$KIJI_HOME</span>/bin/kiji jar <span class="se">\</span>
+    <span class="nv">$KIJI_HOME</span>/examples/phonebook/lib/kiji-phonebook-1.1.5.jar <span class="se">\</span>
+    org.kiji.examples.phonebook.StandalonePhonebookImporter <span class="se">\</span>
+    <span class="nv">$KIJI_HOME</span>/examples/phonebook/input-data.txt
+</code></pre></div>
+
+</div>
+
+
+<p>You now have data in your phonebook table!</p>
+
+<h4>Verify</h4>
+
+<p>Verify that the user records were added properly by executing:</p>
+
+<div class="userinput">
+
+<div class="highlight"><pre><code class="bash"><span class="nv">$KIJI_HOME</span>/bin/kiji scan kiji://.env/default/phonebook
+</code></pre></div>
+
+</div>
+
+
+<h2>Importing Data using MapReduce</h2>
+
+<p>While the above example does import the requisite data, it doesn't scale to large
+data sets, because it doesn't take advantage of the cluster you are writing to.
+Instead of generating all puts locally like we did above, we will write a MapReduce
+job that reads from text file in HDFS and writes to your Kiji table by generating
+puts in a distributed fashion.</p>
+
+<h3>PhonebookImporter.java</h3>
+
+<p>Our example of importing data into a table with MapReduce can be found in the class
+<code>PhonebookImporter</code>. PhonebookImporter defines a special type of MapReduce job called a
+Kiji bulk import job that reads each line of our input file, parses it, and writes it to a table.
+Kiji bulk import jobs are created by implementing a <a href="http://api-docs.kiji.org/kiji-mapreduce/1.2.7/org/kiji/mapreduce/bulkimport/KijiBulkImporter.html"><code>KijiBulkImporter</code></a>,
+not a <code>Mapper</code> and <code>Reducer</code>. This API is provided by KijiMR. The
+<a href="/tutorials/music-recommendation/devel/music-overview/">Music recommendation tutorial</a>
+covers KijiMR in much greater detail, but we will take a look at using the
+<a href="http://api-docs.kiji.org/kiji-mapreduce/1.2.7/org/kiji/mapreduce/bulkimport/KijiBulkImporter.html"><code>KijiBulkImporter</code></a> API below.</p>
+
+<p>Instead of a <code>map()</code> method, we provide a <code>produce()</code> method definition; this method processes
+an input record from a file like an ordinary mapper, except its <code>context</code> argument is
+specifically targeted to output to a row in a Kiji table.</p>
+
+<p>At the top of the <code>produce()</code> method, you'll see that we extract the fields from
+the lines as in the above example.  Then using the
+<a href="http://api-docs.kiji.org/kiji-mapreduce/1.2.7/org/kiji/mapreduce/KijiTableContext.html"><code>KijiTableContext</code></a> context argument,
+we'll write all of the fields to the phonebook table:</p>
+
+<div class="highlight"><pre><code class="java"><span class="nd">@Override</span>
+<span class="kd">public</span> <span class="kt">void</span> <span class="nf">produce</span><span class="o">(</span><span class="n">LongWritable</span> <span class="n">byteOffset</span><span class="o">,</span> <span class="n">Text</span> <span class="n">line</span><span class="o">,</span> <span class="n">KijiTableContext</span> <span class="n">context</span><span class="o">)</span>
+    <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+  <span class="o">...</span>
+  <span class="n">context</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">user</span><span class="o">,</span> <span class="n">Fields</span><span class="o">.</span><span class="na">INFO_FAMILY</span><span class="o">,</span> <span class="n">Fields</span><span class="o">.</span><span class="na">FIRST_NAME</span><span class="o">,</span> <span class="n">firstName</span><span class="o">);</span>
+  <span class="n">context</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">user</span><span class="o">,</span> <span class="n">Fields</span><span class="o">.</span><span class="na">INFO_FAMILY</span><span class="o">,</span> <span class="n">Fields</span><span class="o">.</span><span class="na">LAST_NAME</span><span class="o">,</span> <span class="n">lastName</span><span class="o">);</span>
+  <span class="n">context</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">user</span><span class="o">,</span> <span class="n">Fields</span><span class="o">.</span><span class="na">INFO_FAMILY</span><span class="o">,</span> <span class="n">Fields</span><span class="o">.</span><span class="na">EMAIL</span><span class="o">,</span> <span class="n">email</span><span class="o">);</span>
+  <span class="n">context</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">user</span><span class="o">,</span> <span class="n">Fields</span><span class="o">.</span><span class="na">INFO_FAMILY</span><span class="o">,</span> <span class="n">Fields</span><span class="o">.</span><span class="na">TELEPHONE</span><span class="o">,</span> <span class="n">telephone</span><span class="o">);</span>
+  <span class="n">context</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">user</span><span class="o">,</span> <span class="n">Fields</span><span class="o">.</span><span class="na">INFO_FAMILY</span><span class="o">,</span> <span class="n">Fields</span><span class="o">.</span><span class="na">ADDRESS</span><span class="o">,</span> <span class="n">streetAddr</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div>
+
+
+<p>The <code>context.put()</code> calls are identical in form to using a
+<a href="http://api-docs.kiji.org/kiji-schema/1.4.1/org/kiji/schema/KijiTableWriter.html"><code>KijiTableWriter</code></a>.</p>
+
+<p>If you are writing a custom bulk importer and require specialized setup and teardown steps,
+these can be placed in <code>setup()</code> and <code>cleanup()</code> methods like in a Mapper. We don't need
+any in this example.</p>
+
+<p>The outer <code>PhonebookImporter</code> class contains <code>configureJob(...)</code> and <code>run(...)</code> methods
+that handle the setup and execution
+of the MapReduce job.  Instead of constructing a Hadoop <code>Job</code> object directly, we use a
+<code>KijiBulkImportJobBuilder</code>. This builder object lets us specify Kiji-specific arguments,
+and construct a <a href="http://api-docs.kiji.org/kiji-mapreduce/1.2.7/org/kiji/mapreduce/KijiMapReduceJob.html"><code>KijiMapReduceJob</code></a> (A Kiji-specific wrapper around <code>Job</code>):</p>
+
+<div class="highlight"><pre><code class="java"><span class="n">KijiMapReduceJob</span> <span class="nf">configureJob</span><span class="o">(</span><span class="n">Path</span> <span class="n">inputPath</span><span class="o">,</span> <span class="n">KijiURI</span> <span class="n">tableUri</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+  <span class="k">return</span> <span class="n">KijiBulkImportJobBuilder</span><span class="o">.</span><span class="na">create</span><span class="o">()</span>
+      <span class="o">.</span><span class="na">withConf</span><span class="o">(</span><span class="n">getConf</span><span class="o">())</span>
+      <span class="o">.</span><span class="na">withInput</span><span class="o">(</span><span class="k">new</span> <span class="n">TextMapReduceJobInput</span><span class="o">(</span><span class="n">inputPath</span><span class="o">))</span>
+      <span class="o">.</span><span class="na">withOutput</span><span class="o">(</span><span class="k">new</span> <span class="n">DirectKijiTableMapReduceJobOutput</span><span class="o">(</span><span class="n">tableUri</span><span class="o">))</span>
+      <span class="o">.</span><span class="na">withBulkImporter</span><span class="o">(</span><span class="n">PhonebookBulkImporter</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+      <span class="o">.</span><span class="na">build</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div>
+
+
+<p>The HDFS file path to the sample input data is set to the first command line argument.
+A <a href="http://api-docs.kiji.org/kiji-schema/1.4.1/org/kiji/schema/KijiURI.html"><code>KijiURI</code></a> is constructed that specifies the <code>phonebook</code> table as the target:</p>
+
+<div class="highlight"><pre><code class="java"><span class="kd">public</span> <span class="kt">int</span> <span class="nf">run</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+  <span class="n">setConf</span><span class="o">(</span><span class="n">HBaseConfiguration</span><span class="o">.</span><span class="na">addHbaseResources</span><span class="o">(</span><span class="n">getConf</span><span class="o">()));</span>
+  <span class="kd">final</span> <span class="n">KijiURI</span> <span class="n">tableUri</span> <span class="o">=</span>
+      <span class="n">KijiURI</span><span class="o">.</span><span class="na">newBuilder</span><span class="o">(</span><span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">&quot;kiji://.env/default/%s&quot;</span><span class="o">,</span> <span class="n">TABLE_NAME</span><span class="o">)).</span><span class="na">build</span><span class="o">();</span>
+  <span class="kd">final</span> <span class="n">KijiMapReduceJob</span> <span class="n">job</span> <span class="o">=</span> <span class="n">configureJob</span><span class="o">(</span><span class="k">new</span> <span class="n">Path</span><span class="o">(</span><span class="n">args</span><span class="o">[</span><span class="mi">0</span><span class="o">]),</span> <span class="n">tableUri</span><span class="o">);</span>
+
+  <span class="kd">final</span> <span class="kt">boolean</span> <span class="n">isSuccessful</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="na">run</span><span class="o">();</span>
+  <span class="k">return</span> <span class="n">isSuccessful</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="mi">1</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div>
+
+
+<p>The <a href="http://api-docs.kiji.org/kiji-mapreduce/1.2.7/org/kiji/mapreduce/input/TextMapReduceJobInput.html"><code>TextMapReduceJobInput</code></a> and
+<a href="http://api-docs.kiji.org/kiji-mapreduce/1.2.7/org/kiji/mapreduce/output/DirectKijiTableMapReduceJobOutput.html"><code>DirectKijiTableMapReduceJobOutput</code></a>
+classes are abstractions that, under the hood, configure an <code>InputFormat</code> and <code>OutputFormat</code>
+for the MapReduce job. Different KijiMR job types (bulk importer, producer, or gatherer)
+support different subsets of available formats (files, tables, etc). These classes allow the
+system to ensure that the correct type is used. For example, bulk import jobs require that the
+target is a table. "Regular" MapReduce jobs configured through
+<a href="http://api-docs.kiji.org/kiji-mapreduce/1.2.7/org/kiji/mapreduce/KijiMapReduceJobBuilder.html"><code>KijiMapReduceJobBuilder</code></a> can use
+any <a href="http://api-docs.kiji.org/kiji-mapreduce/1.2.7/org/kiji/mapreduce/MapReduceJobInput.html"><code>MapReduceJobInput</code></a> and
+<a href="http://api-docs.kiji.org/kiji-mapreduce/1.2.7/org/kiji/mapreduce/MapReduceJobOutput.html"><code>MapReduceJobOutput</code></a> that makes sense
+in the context of the application.</p>
+
+<h3>Running the Example</h3>
+
+<p>First you'll need to put the text file containing your friends' contact info into HDFS.
+You can do this by using the HDFS <code>-copyFromLocal</code> command:</p>
+
+<div class="userinput">
+
+<div class="highlight"><pre><code class="bash"><span class="nv">$HADOOP_HOME</span>/bin/hadoop fs -copyFromLocal <span class="se">\</span>
+    <span class="nv">$KIJI_HOME</span>/examples/phonebook/input-data.txt /tmp
+</code></pre></div>
+
+</div>
+
+
+<p>You can then use the <code>kiji jar</code> command to execute the MapReduce job.  To use
+the jar command, specify the jar file the <code>PhonebookImporter</code> class and the
+path to the <code>input-data.txt</code> file in HDFS.</p>
+
+<div class="userinput">
+
+<div class="highlight"><pre><code class="bash"><span class="nv">$KIJI_HOME</span>/bin/kiji jar <span class="se">\</span>
+    <span class="nv">$KIJI_HOME</span>/examples/phonebook/lib/kiji-phonebook-1.1.5.jar <span class="se">\</span>
+    org.kiji.examples.phonebook.PhonebookImporter <span class="se">\</span>
+    /tmp/input-data.txt
+</code></pre></div>
+
+</div>
+
+
+<p>You now have data in your phonebook table!</p>
+
+<h4>Running with the bulkimport Command</h4>
+
+<p>The <code>BulkImportJobBuilder</code> allows you to programmatically configure and launch
+a bulk import MapReduce job. KijiMR extends Kiji with a <code>bulkimport</code> command-line
+tool that can perform substantially the same steps. The following command would
+run the same bulk import job without requiring that you write a "<code>main()</code>" method:</p>
+
+<div class="userinput">
+
+<div class="highlight"><pre><code class="bash"><span class="nv">$KIJI_HOME</span>/bin/kiji bulk-import <span class="se">\</span>
+    --importer<span class="o">=</span><span class="s1">&#39;org.kiji.examples.phonebook.PhonebookImporter$PhonebookBulkImporter&#39;</span> <span class="se">\</span>
+    --input<span class="o">=</span><span class="s2">&quot;format=text file=/tmp/input-data.txt&quot;</span> <span class="se">\</span>
+    --output<span class="o">=</span><span class="s2">&quot;format=kiji nsplits=1 table=kiji://.env/default/phonebook&quot;</span> <span class="se">\</span>
+    --lib<span class="o">=</span><span class="nv">$KIJI_HOME</span>/examples/phonebook/lib
+</code></pre></div>
+
+</div>
+
+
+<p>The <code>--input</code> and <code>--output</code> arguments specify in text form the same
+<a href="http://api-docs.kiji.org/kiji-mapreduce/1.2.7/org/kiji/mapreduce/MapReduceJobInput.html"><code>MapReduceJobInput</code></a> and
+<a href="http://api-docs.kiji.org/kiji-mapreduce/1.2.7/org/kiji/mapreduce/MapReduceJobOutput.html"><code>MapReduceJobOutput</code></a>
+objects as are created programmatically in this example.</p>
+
+<h4>Verify</h4>
+
+<p>Verify that the user records were added properly by executing:</p>
+
+<div class="userinput">
+
+<div class="highlight"><pre><code class="bash"><span class="nv">$KIJI_HOME</span>/bin/kiji scan kiji://.env/default/phonebook
+</code></pre></div>
+
+</div>
+
+
+<p>Here's what one of the first entries should look like:</p>
+
+<pre><code>Scanning kiji table: kiji://localhost:2181/default/phonebook/
+entity-id=['John,Doe'] [1384235805181] info:firstname
+                                 John
+entity-id=['John,Doe'] [1384235805181] info:lastname
+                                 Doe
+entity-id=['John,Doe'] [1384235805181] info:email
+                                 johndoe@gmail.com
+entity-id=['John,Doe'] [1384235805181] info:telephone
+                                 202-555-9876
+entity-id=['John,Doe'] [1384235805181] info:address
+                                 {"addr1": "1600 Pennsylvania Ave", "apt": null, "addr2": null, "city": "Washington", "state": "DC", "zip": 99999}
+</code></pre>
+
+
+    <div class="pagination">
+      <ul>
+    
+      
+      
+    
+      
+
+      
+        
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+            
+            
+              <li class="prev">
+                <a href="/tutorials/phonebook-tutorial/1.1.5/phonebook-point-add" title="Read and Write in Kiji">
+                &larr; Previous
+                </a>
+              </li>
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+      
+
+      
+      
+        
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+              <li class="next">
+                <a href="/tutorials/phonebook-tutorial/1.1.5/phonebook-derived-columns" title="Derive Data">
+                Next &rarr;
+                </a>
+              </li>
+            
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+      
+      </ul>
+    </div>
+  </div>
+
+  <div class="span3">
+    
+      
+      
+    
+    <div class="side-toc">
+    <div class="side-toc-inner">
+      <h3>Phonebook Tutorial</h3>
+      <ul>
+        
+          
+          
+            
+              
+                <li>
+                  
+                    <a href="/tutorials/phonebook-tutorial/1.1.5/phonebook-tutorial">Overview</a>
+                  
+                </li>
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+                <li>
+                  
+                    <a href="/tutorials/phonebook-tutorial/1.1.5/phonebook-setup">Setup</a>
+                  
+                </li>
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+                <li>
+                  
+                    <a href="/tutorials/phonebook-tutorial/1.1.5/phonebook-create">Create a Table</a>
+                  
+                </li>
+              
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+            
+          
+            
+              
+                <li>
+                  
+                    <a href="/tutorials/phonebook-tutorial/1.1.5/phonebook-point-add">Read and Write in Kiji</a>
+                  
+                </li>
+              
+            
+          
+            
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+            
+          
+            
+              
+                <li>
+                  
+                    <b>Import Data</b>
+                  
+                </li>
+              
+            
+          
+            
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+                <li>
+                  
+                    <a href="/tutorials/phonebook-tutorial/1.1.5/phonebook-derived-columns">Derive Data</a>
+                  
+                </li>
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+                <li>
+                  
+                    <a href="/tutorials/phonebook-tutorial/1.1.5/phonebook-increment">Use Counters</a>
+                  
+                </li>
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+                <li>
+                  
+                    <a href="/tutorials/phonebook-tutorial/1.1.5/phonebook-delete">Delete Contacts</a>
+                  
+                </li>
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+      </ul>
+      <h3>Need Help?</h3>
+      <ul>
+        <li>
+      <a class="btn btn-info"  href="https://groups.google.com/a/kiji.org/forum/?fromgroups#!forum/user">User Group Mailing List</a>
+        </li>
+        <li>
+      <a class="btn btn-warning" href="https://jira.kiji.org/secure/CreateIssueDetails!init.jspa?pid=10004&issuetype=1&priority=3&components=10010&summary=Reported%20Docs%20Error:%20Import Data&description=Please%20describe%20the%20issue.%0a%0aurl:%20/tutorials/phonebook-tutorial/1.1.5/phonebook-import"> Report an Error in Docs </a> 
+        </li>
+    </ul>
+    </div>
+</div>
+
+  </div>
+</div>
+
+
+      </div>
+
+      <footer>
+        <hr/>
+        <p>&copy; Kiji Community</p>
+      </footer>
+    </div>
+
+    
+
+
+  <script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-REMOVED-DONT-COMMIT']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+
+
+  </body>
+</html>
+
