@@ -47,7 +47,7 @@
     <junit.version>4.10</junit.version>
     <log4j.version>1.2.16</log4j.version>
     <scala.version>2.10</scala.version>
-    <scala-library.version>2.10.3</scala-library.version>
+    <scala-library.version>2.10.4</scala-library.version>
     <scalatest.version>2.0</scalatest.version>
     <slf4j-api.version>1.7.5</slf4j-api.version>
     <slf4j-log4j12.version>1.7.5</slf4j-log4j12.version>
@@ -71,7 +71,7 @@
     <maven-replacer-plugin.version>1.3.8</maven-replacer-plugin.version>
     <maven-site-plugin.version>3.1</maven-site-plugin.version>
     <maven-surefire-plugin.version>2.16</maven-surefire-plugin.version>
-    <scala-maven-plugin.version>3.1.6</scala-maven-plugin.version>
+    <scala-maven-plugin.version>3.2.0</scala-maven-plugin.version>
     <scalastyle-plugin.version>0.3.2</scalastyle-plugin.version>
     <versions-maven-plugin.version>2.1</versions-maven-plugin.version>
   </properties>
@@ -233,6 +233,9 @@
               </configuration>
             </execution>
           </executions>
+          <configuration>
+            <scalaVersion>${scala-library.version}</scalaVersion>
+          </configuration>
         </plugin>
 
         <plugin>
