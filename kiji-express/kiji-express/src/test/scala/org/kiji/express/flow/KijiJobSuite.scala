@@ -24,10 +24,13 @@ import scala.collection.mutable
 import cascading.tuple.Fields
 import com.twitter.scalding.Args
 import com.twitter.scalding.JobTest
+import com.twitter.scalding.Local
+import com.twitter.scalding.Mode
 import com.twitter.scalding.TextLine
 import com.twitter.scalding.Tsv
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.specific.SpecificRecord
+import org.apache.hadoop.hbase.HBaseConfiguration
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -258,6 +261,77 @@ class KijiJobSuite extends KijiSuite {
 
     assert(localException.getMessage === hadoopException.getMessage)
     assert(localException.getMessage.contains("nonexistent_column"))
+  }
+
+  test("KijiJob adds the classpath to the tmpjars property by default.") {
+    val testingArgs: Args =
+      Mode.putMode(Mode(Args(List("--hdfs")), HBaseConfiguration.create()), Args(List("--hdfs")))
+    val job: KijiJob = new KijiJob(testingArgs)
+    val currentClasspathJars: Seq[String] =
+      KijiJob.classpathJars().map { _.split(",").toSeq }.getOrElse(Seq[String]())
+    val distJars: Seq[String] =
+        job.config.getOrElse(KijiJob.tmpjarsConfigProperty, "")
+            .asInstanceOf[String]
+            .split(",")
+    currentClasspathJars.foreach { jarLocation: String =>
+      assert(distJars.contains(jarLocation), "distJars should contain: %s".format(jarLocation))
+    }
+  }
+
+  test("KijiJob does not add the classpath to the tmpjars property if specified.") {
+    val testingArgs: Args =
+      Mode.putMode(
+        Mode(Args(List("--hdfs")), HBaseConfiguration.create()),
+        Args(List("--" + KijiJob.addClasspathArg, "false")))
+    val job: KijiJob = new KijiJob(testingArgs)
+    val distJars: String =
+      job.config.getOrElse(KijiJob.tmpjarsConfigProperty, "")
+          .asInstanceOf[String]
+    assert(
+      distJars.isEmpty,
+      "There should be nothing in distJars since nothing was specified, but it is %s."
+          .format(distJars))
+  }
+
+  test("KijiJob adds user-specified jars to tmpjars along with the classpath.") {
+    val testFileLocation: String = "file://bogus/file/path"
+    val testingArgs: Args =
+      Mode.putMode(
+        Mode(Args(List("--hdfs")), HBaseConfiguration.create()),
+        Args(List(
+          "--" + KijiJob.addClasspathArg, "true",
+          "--" + KijiJob.tmpjarsArg, testFileLocation)))
+    val currentClasspathJars: Seq[String] =
+      KijiJob.classpathJars().map { _.split(",").toSeq }.getOrElse(Seq[String]())
+    val job: KijiJob = new KijiJob(testingArgs)
+    val distJars: Seq[String] =
+      job.config.getOrElse(KijiJob.tmpjarsConfigProperty, "")
+          .asInstanceOf[String]
+          .split(",")
+    assert(distJars.contains(testFileLocation), "Distjars should contain the user-specified jar.")
+    currentClasspathJars.foreach { jarLocation: String =>
+      assert(distJars.contains(jarLocation), "distJars should contain: %s".format(jarLocation))
+    }
+  }
+
+  test("KijiJob adds user-specified jars to the tmpjars property without the classpath.") {
+    val testFileLocation: String = "file://bogus/file/path"
+    val testingArgs: Args =
+      Mode.putMode(
+        Mode(Args(List("--hdfs")), HBaseConfiguration.create()),
+        Args(List(
+            "--" + KijiJob.addClasspathArg, "false",
+            "--" + KijiJob.tmpjarsArg, testFileLocation)))
+    val job: KijiJob = new KijiJob(testingArgs)
+    val distJars: Seq[String] =
+      job.config.getOrElse(KijiJob.tmpjarsConfigProperty, "")
+          .asInstanceOf[String]
+          .split(",")
+    assert(distJars.contains(testFileLocation), "Distjars should contain the user-specified jar.")
+    assert(
+      1 == distJars.size,
+      ("Distjars should not contain anything besides the user-specified jar, " +
+          "instead was: %s.").format(distJars))
   }
 }
 

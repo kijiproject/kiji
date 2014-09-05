@@ -52,11 +52,12 @@ import org.apache.hadoop.mapred.JobConf
 import org.apache.hadoop.mapred.RunningJob
 import org.apache.hadoop.mapreduce.Counter
 import org.apache.hadoop.security.UserGroupInformation
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.flow.KijiJob.CounterListener
 import org.kiji.express.flow.framework.ExpressJobHistoryKijiTable
 import org.kiji.express.flow.framework.KijiTap
 import org.kiji.express.flow.framework.LocalKijiTap
@@ -86,6 +87,8 @@ class KijiJob(args: Args)
     extends Job(args)
     with PipeConversions
     with AvroTupleConversions {
+  import KijiJob._
+
   /** FlowListener for collecting flowCounters from this Job. */
   private val counterListener: CounterListener = new CounterListener
 
@@ -178,7 +181,8 @@ class KijiJob(args: Args)
     // disable schema validation. This system property is only useful for KijiSchema v1.1. In newer
     // versions of KijiSchema, this property has no effect.
     val disableValidation = " -Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED"
-    val oldJavaOptions = baseConfig.get("mapred.child.java.opts").getOrElse("")
+    val oldJavaOptions: String =
+      baseConfig.getOrElse("mapred.child.java.opts", "").asInstanceOf[String]
 
     // These are ignored if set in mode.config
     val lowPriorityDefaults = Map(
@@ -190,10 +194,30 @@ class KijiJob(args: Args)
     val chillConf = ScalaAnyRefMapConfig(lowPriorityDefaults)
     ConfiguredInstantiator.setReflect(chillConf, classOf[KijiKryoInstantiator])
 
+    val oldTmpJars: Option[String] =
+      baseConfig.get(tmpjarsConfigProperty).asInstanceOf[Option[String]]
+    val userSpecifiedTmpJars: Option[String] = args.optional(tmpjarsArg)
+    // If addClasspathProperty is true, include the classpath in "tmpjars". Default to true.
+    val addClasspath: Boolean =
+      args.optional(addClasspathArg).getOrElse("true").toBoolean
+    val classpathTmpJars: Option[String] = if (addClasspath) {
+      classpathJars
+    } else {
+      None
+    }
+    val newTmpJars: String = (oldTmpJars ++ userSpecifiedTmpJars ++ classpathTmpJars).mkString(",")
+    val tmpJarsMap: Map[String, String] =
+      if (newTmpJars.isEmpty) {
+        Map[String, String]()
+      } else {
+        Map(tmpjarsConfigProperty -> newTmpJars)
+      }
+
     // Append all the new keys.
-    baseConfig
-        .++(chillConf.toMap)
-        .+("mapred.child.java.opts" -> (oldJavaOptions + disableValidation))
+    baseConfig ++
+        chillConf.toMap +
+        ("mapred.child.java.opts" -> (oldJavaOptions + disableValidation)) ++
+        tmpJarsMap
   }
 
   /**
@@ -367,11 +391,23 @@ class KijiJob(args: Args)
 
 /** Companion object to KijiJob. */
 object KijiJob {
+  /** Logger for the KijiJob class. */
+  val logger: Logger = LoggerFactory.getLogger(classOf[KijiJob])
+
   /**
    * Specify a list of 'key:value' pairs to have them recorded into the Job History table entry for
    * this job. Keys may not contain ':'.
    */
   val extendedInfoArgsKey: String = "extendedInfo"
+
+  /** Arg used by KijiExpress to determine whether to add the classpath to the dist. cache. */
+  val addClasspathArg: String = "add-classpath-to-dcache"
+
+  /** Arg used by KijiExpress, whose values are comma-separated jars to add to the dist.cache. */
+  val tmpjarsArg: String = "tmpjars"
+
+  /** Mapreduce configuration property for tmpjars. */
+  val tmpjarsConfigProperty: String = "tmpjars"
 
   private[express] class CounterListener extends FlowListener with Serializable {
 
@@ -432,6 +468,32 @@ object KijiJob {
               }
           }
       }
+    }
+  }
+
+  /**
+   * @return The current jars on the classpath, formatted as file:///path/to/jar,file://path/to/jar2
+   */
+  def classpathJars(): Option[String] = {
+    val classpath: String =
+      if (! System.getenv("CLASSPATH").isEmpty) {
+        System.getenv("CLASSPATH")
+      } else if (! System.getProperty("java.class.path").isEmpty) {
+        System.getProperty("java.class.path")
+      } else {
+        logger.warn(
+          "Cannot find classpath jars using $CLASSPATH or system property java.class.path.")
+        ""
+      }
+    val hdfsFormattedClasspath: String = classpath
+        .split(System.getProperty("path.separator"))
+        .filter{ fileName: String => fileName.endsWith(".jar") }
+        .map{ fileName: String => "file://" + fileName }
+        .mkString(",")
+    if (hdfsFormattedClasspath.isEmpty) {
+      None
+    } else {
+      Some(hdfsFormattedClasspath)
     }
   }
 }
