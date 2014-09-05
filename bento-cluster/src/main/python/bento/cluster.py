@@ -1,4 +1,4 @@
-# !/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # -*- mode: python -*-
 # (c) Copyright 2014 WibiData, Inc.
@@ -37,6 +37,7 @@ import os
 import platform
 import re
 import socket
+import subprocess
 import sys
 import time
 import xmlrpc.client
@@ -372,6 +373,14 @@ class BentoSystem(object):
         ]
 
 
+def _format_hostaliases_entry(hostname, ip):
+    return hostname, ip
+
+
+def _format_hosts_entry(hostname, ip):
+    return ip, hostname
+
+
 class Bento(object):
     """API for interacting with a bento instance."""
 
@@ -416,12 +425,16 @@ class Bento(object):
                         '    export HOSTALIASES=${HOME}/.hosts'
                     )
                     self._hosts_file_path = GLOBAL_HOSTS_FILE_PATH
+                    self._hosts_file_formatter = _format_hosts_entry
                 else:
                     self._hosts_file_path = hostaliases
+                    self._hosts_file_formatter = _format_hostaliases_entry
             else:
                 self._hosts_file_path = GLOBAL_HOSTS_FILE_PATH
+                self._hosts_file_formatter = _format_hosts_entry
         else:
             self._hosts_file_path = hosts_file_path
+            self._hosts_file_formatter = _format_hostaliases_entry
 
     @property
     def docker_client(self):
@@ -520,7 +533,7 @@ class Bento(object):
         if write_client_config:
             self.write_hadoop_config(self.client_config_dir)
         if update_hosts:
-            self.update_hosts(self.hosts_file_path)
+            self.update_hosts()
 
         # Wait until the system is started.
         _wait_for(
@@ -582,33 +595,36 @@ class Bento(object):
         checked_hosts_file_path = \
             self.hosts_file_path if hosts_file_path is None else hosts_file_path
 
-        if not os.path.exists(checked_hosts_file_path):
-            logging.warning('Hosts file %s was not found!', checked_hosts_file_path)
-            original_hostaliases = ''
+        # Get the full path to the update hosts script. If the package was setup correctly, this
+        # script should be on the user's PATH.
+        bento_update_hosts = subprocess \
+            .check_output(args=['which', 'bento-update-hosts']) \
+            .decode('utf-8') \
+            .strip()
+
+        if hosts_file_path == GLOBAL_HOSTS_FILE_PATH:
+            base_args = [
+                bento_update_hosts,
+                self.bento_ip,
+                self.bento_hostname,
+                checked_hosts_file_path
+            ]
         else:
-            with open(checked_hosts_file_path, 'rt', encoding='utf-8') as hosts_file:
-                original_hostaliases = hosts_file.read()
+            base_args = [
+                bento_update_hosts,
+                self.bento_hostname,
+                self.bento_ip,
+                checked_hosts_file_path
+            ]
 
-        # Write the hostaliases to a backup file.
-        with open('%s.backup' % checked_hosts_file_path, 'wt', encoding='utf-8') as backup_file:
-            backup_file.write(original_hostaliases)
-
-        # Replace lines.
-        hostname = self.bento_hostname
-        ip = self.bento_ip
-        hostname_line_pattern = re.compile('^\s*%s\s+' % hostname)
-        ip_line_pattern = re.compile('\s*[A-Za-z0-9-_]+\s+%s\s*$' % ip)
-        filtered_hostaliases = [
-            line
-            for line in original_hostaliases.splitlines()
-            if re.match(hostname_line_pattern, line) is None
-            and re.match(ip_line_pattern, line) is None
-        ]
-        filtered_hostaliases.append('%s %s' % (hostname, ip))
-
-        # Write new hosts file.
-        with open(checked_hosts_file_path, 'wt', encoding='utf-8') as hosts_file:
-            hosts_file.write(os.linesep.join(filtered_hostaliases) + os.linesep)
+        # Check if the hosts file to update is not writable from the current user.
+        if os.access(checked_hosts_file_path, os.W_OK):
+            # Run the script as the current user if we can write to the file.
+            subprocess.check_call(args=base_args)
+        else:
+            # Run the script as root if we can't write to the file.
+            base_args.insert(0, 'sudo')
+            subprocess.check_call(args=base_args)
 
     def write_hadoop_config(self, config_dir=None):
         """Writes hadoop and hbase configuration files for usage with hadoop/hbase/kiji clients.

@@ -24,6 +24,7 @@ def main(args):
         # Scripts to install in the bin/ folder and made available on the PATH:
         scripts=[
             "src/main/scripts/bento",
+            "src/main/scripts/bento-update-hosts",
             "src/main/scripts/create-hadoop-user",
         ],
 
