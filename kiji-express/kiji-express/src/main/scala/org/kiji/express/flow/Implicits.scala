@@ -1,5 +1,5 @@
 /**
- * (c) Copyright 2013 WibiData, Inc.
+ * (c) Copyright 2014 WibiData, Inc.
  *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
@@ -17,10 +17,15 @@
  * limitations under the License.
  */
 
-package org.kiji.express.repl
+package org.kiji.express
 
-import cascading.flow.FlowDef
-import cascading.pipe.Pipe
+import org.apache.hadoop.hbase.HBaseConfiguration
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
+import org.kiji.express.flow.framework.ExpressConversions
+import org.kiji.express.flow.util.PipeConversions
+
 import com.twitter.scalding.Hdfs
 import com.twitter.scalding.IterableSource
 import com.twitter.scalding.Mode
@@ -28,15 +33,13 @@ import com.twitter.scalding.RichPipe
 import com.twitter.scalding.Source
 import com.twitter.scalding.TupleConverter
 import com.twitter.scalding.TupleSetter
-import org.apache.hadoop.hbase.HBaseConfiguration
 
-import org.kiji.annotations.ApiAudience
-import org.kiji.annotations.ApiStability
-import org.kiji.express.flow.framework.ExpressConversions
-import org.kiji.express.flow.util.PipeConversions
+import cascading.flow.FlowDef
+import cascading.pipe.Pipe
 
 /**
- * Object containing various implicit conversions required to create Scalding flows in the REPL.
+ * Object containing various implicit conversions required to create Scalding flows in the REPL
+ * and in other Pipe extensions.
  * Most of these conversions come from Scalding's Job class.
  */
 @ApiAudience.Framework
@@ -135,22 +138,4 @@ object Implicits
    * @return a Pipe that is the result of reading the specified Source.
    */
   implicit def sourceToPipe(source: Source): Pipe = source.read(flowDef, mode)
-
-  /**
-   * Converts a Pipe to a KijiPipeTool. This method permits implicit conversions from Pipe to
-   * KijiPipeTool.
-   *
-   * @param pipe to convert to a KijiPipeTool.
-   * @return a KijiPipeTool created from the specified Pipe.
-   */
-  implicit def pipeToKijiPipeTool(pipe: Pipe): KijiPipeTool = new KijiPipeTool(pipe)
-
-  /**
-   * Converts a KijiPipeTool to a Pipe. This method permits implicit conversions from
-   * KijiPipeTool to Pipe.
-   *
-   * @param kijiPipeTool to convert to a Pipe.
-   * @return the Pipe wrapped by the specified KijiPipeTool.
-   */
-  implicit def kijiPipeToolToPipe(kijiPipeTool: KijiPipeTool): Pipe = kijiPipeTool.pipe
 }

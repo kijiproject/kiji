@@ -187,6 +187,7 @@
         <groupId>org.kiji.schema-shell</groupId>
         <artifactId>kiji-schema-shell</artifactId>
         <type>test-jar</type>
+        <classifier>tests</classifier>
 
         <version>${kiji-schema-shell.version}</version>
         <scope>test</scope>
@@ -196,6 +197,7 @@
         <groupId>org.kiji.schema</groupId>
         <artifactId>kiji-schema</artifactId>
         <type>test-jar</type>
+        <classifier>tests</classifier>
 
         <version>${kiji-schema.version}</version>
         <scope>test</scope>
@@ -217,6 +219,17 @@
         <version>${kiji-platforms.version}</version>
         <scope>test</scope>
       </dependency>
+
+      <dependency>
+        <groupId>org.kiji.express</groupId>
+        <artifactId>kiji-express</artifactId>
+        <type>test-jar</type>
+        <classifier>tests</classifier>
+
+        <version>${project.version}</version>
+        <scope>test</scope>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 

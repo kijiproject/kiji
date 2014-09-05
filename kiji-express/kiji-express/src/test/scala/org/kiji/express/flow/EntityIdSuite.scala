@@ -149,7 +149,7 @@ class EntityIdSuite extends KijiSuite {
   // ------- "integration tests" for joins. -------
   /** Simple table layout to use for tests. The row keys are hashed. */
   val simpleLayout: KijiTableLayout =
-    TestingResourceUtil.layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
+      TestingResourceUtil.layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
 
   /** Table layout using Avro schemas to use for tests. The row keys are formatted. */
   val avroLayout: KijiTableLayout = TestingResourceUtil.layout("layout/avro-types.json")

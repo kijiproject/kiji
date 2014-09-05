@@ -31,6 +31,7 @@ import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
+import org.kiji.express.Implicits
 import org.kiji.express.avro.SimpleRecord
 import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.FlowCell
@@ -89,6 +90,7 @@ class KijiPipeToolSuite extends KijiClientTest with KijiSuite {
 
     {
       import Implicits._
+      import ReplImplicits._
 
       // Implicitly create a KijiPipe, then call KijiPipeTool's run() method on it.
       Tsv(inputFile.getAbsolutePath, fields = ('l, 's)).read
@@ -105,6 +107,7 @@ object KijiPipeToolSuite {
   // a Scalding Job from the pipe.
   def jobToRun(args: Args, uri: String): Job = {
     import Implicits._
+    import ReplImplicits._
 
     // Setup input to bind values from the "family:column1" column to the symbol 'word.
     KijiInput.builder

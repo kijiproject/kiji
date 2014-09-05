@@ -20,6 +20,7 @@
 package org.kiji.express.repl
 
 import cascading.flow.Flow
+import cascading.flow.FlowDef
 import cascading.pipe.Pipe
 import com.twitter.scalding.Args
 import com.twitter.scalding.Job
@@ -29,6 +30,7 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.KijiJob
+import org.kiji.express.Implicits
 
 /**
  * Adds extra repl-specific functionality to KijiPipe, allowing the user to build
@@ -52,7 +54,7 @@ class KijiPipeTool(private[express] val pipe: Pipe) {
      *  The flow definition used by this job, which should be the same as that used by the user
      *  when creating their pipe.
      */
-    override implicit val flowDef = Implicits.flowDef
+    override implicit val flowDef: FlowDef = Implicits.flowDef
 
     /**
      * Obtains a configuration used when running the job.

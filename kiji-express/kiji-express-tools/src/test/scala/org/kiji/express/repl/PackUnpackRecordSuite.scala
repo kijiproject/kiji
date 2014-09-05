@@ -50,7 +50,7 @@ class PackUnpackRecordSuite extends KijiSuite {
   }
 
   // Import implicits to simulate REPL environment
-  import org.kiji.express.repl.Implicits._
+  import org.kiji.express.Implicits._
 
   test("Avro tuple converters should be in implicit scope of express REPL.") {
     assert(implicitly[TupleUnpacker[GenericRecord]].getClass ===

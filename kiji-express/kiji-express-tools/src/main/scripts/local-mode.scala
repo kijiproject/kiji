@@ -16,5 +16,5 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-org.kiji.express.repl.Implicits.mode = com.twitter.scalding.Local(false)
+org.kiji.express.Implicits.mode = com.twitter.scalding.Local(false)
 

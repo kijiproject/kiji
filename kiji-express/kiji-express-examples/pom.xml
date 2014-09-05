@@ -87,8 +87,7 @@
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
       <type>test-jar</type>
-
-      <scope>test</scope>
+      <classifier>tests</classifier>
     </dependency>
 
     <dependency>
