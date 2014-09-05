@@ -110,12 +110,6 @@
         <scope>compile</scope>
       </dependency>
       <dependency>
-        <groupId>org.kiji.express</groupId>
-        <artifactId>kiji-express-tools</artifactId>
-        <version>${kiji-express.version}</version>
-        <scope>compile</scope>
-      </dependency>
-      <dependency>
         <groupId>org.kiji.schema-shell</groupId>
         <artifactId>kiji-schema-shell</artifactId>
         <version>${kiji-schema-shell.version}</version>

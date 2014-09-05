@@ -64,10 +64,6 @@
       <artifactId>kiji-express</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.kiji.express</groupId>
-      <artifactId>kiji-express-tools</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.kiji.schema-shell</groupId>
       <artifactId>kiji-schema-shell</artifactId>
     </dependency>

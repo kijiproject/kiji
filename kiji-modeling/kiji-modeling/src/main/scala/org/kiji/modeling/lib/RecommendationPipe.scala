@@ -30,7 +30,7 @@ import com.twitter.scalding.GroupBuilder
 import com.twitter.scalding.mathematics.Matrix
 import com.twitter.scalding.mathematics.RowVector
 
-import org.kiji.express.repl.Implicits.pipeToRichPipe
+import org.kiji.express.Implicits.pipeToRichPipe
 import org.kiji.modeling.framework.ModelPipeConversions
 
 
