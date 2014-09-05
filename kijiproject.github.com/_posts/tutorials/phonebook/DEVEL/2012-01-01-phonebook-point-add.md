@@ -101,7 +101,7 @@ You run the class `AddEntry` with the `kiji` command-line tool as follows:
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-{{site.phonebook_devel_version}}.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-*.jar \
     org.kiji.examples.phonebook.AddEntry \
     --kiji=${KIJI}
 {% endhighlight %}
@@ -240,7 +240,7 @@ You can run the following command to perform a lookup using the `Lookup.java` ex
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-{{site.phonebook_devel_version}}.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-*.jar \
     org.kiji.examples.phonebook.Lookup \
     --kiji=${KIJI} \
     --first=Renuka --last=Apte

@@ -54,6 +54,48 @@ After the BentoBox starts, it displays a list of useful ports for cluster webapp
 MapReduce JobTracker webapp ([http://localhost:50030](http://localhost:50030) in particular will be
 useful for this tutorial.
 
+### Note for Cassandra users
+
+When you run Kiji commands that interact with a Cassandra-backed Kiji instance, you may see warnings
+like the following:
+
+```
+java.lang.reflect.InvocationTargetException
+        at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+        at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+        at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+        at java.lang.reflect.Method.invoke(Method.java:606)
+        at org.xerial.snappy.SnappyLoader.loadNativeLibrary(SnappyLoader.java:327)
+        at org.xerial.snappy.SnappyLoader.load(SnappyLoader.java:229)
+        at org.xerial.snappy.Snappy.<clinit>(Snappy.java:48)
+        at com.datastax.driver.core.FrameCompressor$SnappyCompressor.<init>(FrameCompressor.java:55)
+        at com.datastax.driver.core.FrameCompressor$SnappyCompressor.<clinit>(FrameCompressor.java:41)
+        at com.datastax.driver.core.ProtocolOptions$Compression.<clinit>(ProtocolOptions.java:35)
+        at com.datastax.driver.core.Cluster$Builder.<init>(Cluster.java:542)
+        at com.datastax.driver.core.Cluster.builder(Cluster.java:180)
+        at org.kiji.schema.impl.cassandra.DefaultCassandraAdmin.makeFromKijiURI(DefaultCassandraAdmin.java:61)
+        at org.kiji.schema.impl.cassandra.DefaultCassandraAdminFactory.create(DefaultCassandraAdminFactory.java:45)
+        at org.kiji.schema.impl.cassandra.CassandraKijiFactory.open(CassandraKijiFactory.java:57)
+        at org.kiji.schema.impl.cassandra.CassandraKijiFactory.open(CassandraKijiFactory.java:64)
+        at org.kiji.schema.Kiji$Factory.open(Kiji.java:147)
+        at org.kiji.mapreduce.tools.KijiBulkImport.setup(KijiBulkImport.java:130)
+        at org.kiji.schema.tools.BaseTool.toolMain(BaseTool.java:310)
+        at org.kiji.schema.tools.KijiToolLauncher.run(KijiToolLauncher.java:137)
+        at org.kiji.schema.tools.KijiToolLauncher.run(KijiToolLauncher.java:83)
+        at org.kiji.schema.tools.KijiToolLauncher.main(KijiToolLauncher.java:148)
+Caused by: java.lang.UnsatisfiedLinkError: no snappyjava in java.library.path
+        at java.lang.ClassLoader.loadLibrary(ClassLoader.java:1886)
+        at java.lang.Runtime.loadLibrary0(Runtime.java:849)
+        at java.lang.System.loadLibrary(System.java:1088)
+        at org.xerial.snappy.SnappyNativeLoader.loadLibrary(SnappyNativeLoader.java:52)
+        ... 22 more
+```
+
+These indicate that you do not have snappy installed on your machine.  Snappy
+is not required for running the commands in any of the Kiji tutorials and it is
+safe to ignore these warnings.
+
+
 ### Compiling
 
 If you have downloaded the Kiji Standalone BentoBox, the code for this tutorial

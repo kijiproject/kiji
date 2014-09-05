@@ -25,7 +25,8 @@ For more information about how to create this file, see the
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/schema-shell/bin/kiji-schema-shell \
-    --file=$KIJI_HOME/examples/phonebook/layout.ddl
+    --kiji=${KIJI} \
+    --file=${KIJI_HOME}/examples/phonebook/layout.ddl
 {% endhighlight %}
 </div>
 

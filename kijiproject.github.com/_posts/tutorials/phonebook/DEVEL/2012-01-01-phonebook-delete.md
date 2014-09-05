@@ -70,7 +70,7 @@ Next, to perform the deletion of this contact using DeleteEntry:
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-{{site.phonebook_devel_version}}.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-*.jar \
     org.kiji.examples.phonebook.DeleteEntry
 {% endhighlight %}
 </div>

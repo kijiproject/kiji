@@ -124,7 +124,7 @@ Finally we create a flow that does the following:
 <div class="userinput">
 {% highlight bash %}
 express.py job \
-    --jars=${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
+    --jars="${MUSIC_EXPRESS_HOME}/lib/*" \
     --class=org.kiji.express.music.SongRecommender \
     --mode=hdfs \
     --songs-table ${KIJI}/songs \
@@ -157,9 +157,11 @@ You should see something like:
 
 And if using Cassandra:
 
+<div class="userinput">
 {% highlight bash %}
 kiji get ${KIJI}/users --entity-id="['user-41']"
 {% endhighlight %}
+</div>
 
 And you should see:
 
