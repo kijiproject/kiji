@@ -246,7 +246,11 @@ class BentoSystem(object):
         """
         # Avoid using a mutable default argument.
         if docker_client is None:
-            self._docker_client = docker.Client()
+            docker_host = os.environ.get('DOCKER_HOST')
+            if docker_host is None:
+                self._docker_client = docker.Client()
+            else:
+                self._docker_client = docker.Client(docker_host)
         else:
             self._docker_client = docker_client
         self._bento_image = bento_image

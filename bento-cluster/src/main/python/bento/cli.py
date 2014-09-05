@@ -20,7 +20,10 @@ from bento import cluster
 
 
 def _get_docker_client(args):
-    return docker.Client(base_url=args.docker_address, version='1.10')
+    if args.docker_address is None:
+        return None
+    else:
+        return docker.Client(base_url=args.docker_address, version='1.10')
 
 
 def _get_bento_system(args):
