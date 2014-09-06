@@ -476,17 +476,17 @@ object KijiJob {
    */
   def classpathJars(): Option[String] = {
     val classpath: String =
-      if (!System.getenv().containsKey("CLASSPATH")) {
-        System.getenv("CLASSPATH")
-      } else if (!System.getProperties.containsKey("java.class.path")) {
-        System.getProperty("java.class.path")
-      } else {
-        logger.warn(
-          "Cannot find classpath jars using $CLASSPATH or system property java.class.path.")
-        ""
+      sys.env.get("CLASSPATH") match {
+        case Some(classpath) => classpath
+        case None => sys.props.get("java.class.path").getOrElse {
+          logger.warn(
+            "Cannot find classpath jars using $CLASSPATH or system property java.class.path.")
+          ""
+        }
       }
     val hdfsFormattedClasspath: String = classpath
-        .split(System.getProperty("path.separator"))
+        .split(sys.props.get("path.separator").get)
+        // TODO (EXP-493): Tar up directories so they can also go on the dist cache.
         .filter{ fileName: String => fileName.endsWith(".jar") }
         .map{ fileName: String => "file://" + fileName }
         .mkString(",")
