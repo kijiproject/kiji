@@ -201,7 +201,7 @@ class KijiJob(args: Args)
     val addClasspath: Boolean =
       args.optional(addClasspathArg).getOrElse("true").toBoolean
     val classpathTmpJars: Option[String] = if (addClasspath) {
-      classpathJars
+      classpathJars()
     } else {
       None
     }
@@ -476,9 +476,9 @@ object KijiJob {
    */
   def classpathJars(): Option[String] = {
     val classpath: String =
-      if (! System.getenv("CLASSPATH").isEmpty) {
+      if (!System.getenv().containsKey("CLASSPATH")) {
         System.getenv("CLASSPATH")
-      } else if (! System.getProperty("java.class.path").isEmpty) {
+      } else if (!System.getProperties.containsKey("java.class.path")) {
         System.getProperty("java.class.path")
       } else {
         logger.warn(
