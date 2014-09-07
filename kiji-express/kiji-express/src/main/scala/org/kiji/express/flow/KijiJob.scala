@@ -487,7 +487,9 @@ object KijiJob {
     val hdfsFormattedClasspath: String = classpath
         .split(sys.props.get("path.separator").get)
         // TODO (EXP-493): Tar up directories so they can also go on the dist cache.
-        .filter{ fileName: String => fileName.endsWith(".jar") }
+        .filter{ fileName: String => fileName.toLowerCase().endsWith(".jar") || 
+            fileName.toLowerCase().endsWith(".zip")
+        }
         .map{ fileName: String => "file://" + fileName }
         .mkString(",")
     if (hdfsFormattedClasspath.isEmpty) {
