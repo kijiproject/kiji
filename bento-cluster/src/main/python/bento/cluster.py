@@ -373,14 +373,6 @@ class BentoSystem(object):
         ]
 
 
-def _format_hostaliases_entry(hostname, ip):
-    return hostname, ip
-
-
-def _format_hosts_entry(hostname, ip):
-    return ip, hostname
-
-
 class Bento(object):
     """API for interacting with a bento instance."""
 
@@ -425,16 +417,12 @@ class Bento(object):
                         '    export HOSTALIASES=${HOME}/.hosts'
                     )
                     self._hosts_file_path = GLOBAL_HOSTS_FILE_PATH
-                    self._hosts_file_formatter = _format_hosts_entry
                 else:
                     self._hosts_file_path = hostaliases
-                    self._hosts_file_formatter = _format_hostaliases_entry
             else:
                 self._hosts_file_path = GLOBAL_HOSTS_FILE_PATH
-                self._hosts_file_formatter = _format_hosts_entry
         else:
             self._hosts_file_path = hosts_file_path
-            self._hosts_file_formatter = _format_hostaliases_entry
 
     @property
     def docker_client(self):
