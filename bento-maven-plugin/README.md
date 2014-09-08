@@ -10,7 +10,7 @@ Installation
 
 Dependencies:
 
-- [Python 3](https://www.python.org) (we recommend installing python with
+- [Python 3.4.1](https://www.python.org) (we recommend installing python with
   [pyenv](https://github.com/yyuu/pyenv))
 - [Docker](https://www.docker.com)
 
@@ -37,6 +37,7 @@ Ensure that the `maven-failsafe-plugin` and the `bento-maven-plugin` are part of
       <plugin>
         <groupId>org.kiji.maven.plugins</groupId>
         <artifactId>bento-maven-plugin</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
         <executions>
           <execution>
             <goals>
