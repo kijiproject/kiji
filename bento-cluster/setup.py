@@ -9,7 +9,7 @@ from setuptools import setup
 def main(args):
     setup(
         name="kiji-bento-cluster",
-        version="2.0.3",
+        version="2.0.4",
 
         # Lists the Python modules provided by this package:
         packages=[
