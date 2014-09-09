@@ -104,11 +104,10 @@ public final class BentoCluster {
     if (osNameProperty.contains("Linux")) {
       return "unix://";
     } else if (osNameProperty.contains("OS X")) {
-      Preconditions.checkState(
-          !System.getenv().containsKey("DOCKER_HOST"),
-          "Please set environment variable DOCKER_HOST to contain the address to boot2docker"
-      );
-      return System.getenv("DOCKER_HOST");
+      final String address = System.getenv().get("DOCKER_HOST");
+      Preconditions.checkState(address != null,
+          "Please set environment variable DOCKER_HOST to contain the address to boot2docker");
+      return address;
     } else {
       throw new IllegalStateException(
           String.format("Unsupported operating system: %s", osNameProperty)
