@@ -48,6 +48,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.security.User
 import org.apache.hadoop.hbase.security.token.TokenUtil
+import org.apache.hadoop.mapred.Counters
 import org.apache.hadoop.mapred.JobConf
 import org.apache.hadoop.mapred.RunningJob
 import org.apache.hadoop.mapreduce.Counter
@@ -441,21 +442,29 @@ object KijiJob {
             case hadoopStepStats: HadoopStepStats =>
               val jobOption: Option[RunningJob] = Option(hadoopStepStats.getRunningJob)
               jobOption match {
-                case Some(runningJob) => runningJob
-                    .getCounters
-                    .getGroupNames
-                    .asScala
-                    .toSet
-                    .flatMap { group: String =>
-                      runningJob
-                          .getCounters
-                          .getGroup(group)
-                          .iterator
-                          .asScala
-                          .map { counter: Counter =>
-                            (group, counter.getName, counter.getValue)
-                          }
+                case Some(runningJob) => {
+                  Option[Counters](runningJob.getCounters()) match {
+                    case Some(counters) => counters
+                        .getGroupNames
+                        .asScala
+                        .toSet
+                        .flatMap { group: String =>
+                          counters
+                              .getGroup(group)
+                              .iterator
+                              .asScala
+                              .map { counter: Counter =>
+                                (group, counter.getName, counter.getValue)
+                              }
+                        }
+                    // TODO EXP-479: Handle null counters better than returning the empty Set.
+                    case None => {
+                      logger.warn("Flow step counters from flow step stats {} were null, " +
+                          "recording no counters.", flowStepStats)
+                      Set[(String, String, Long)]()
                     }
+                  }
+                }
                 case None => Set[(String, String, Long)]()
               }
             //In case this is a local job, only pull available stats.
@@ -487,7 +496,7 @@ object KijiJob {
     val hdfsFormattedClasspath: String = classpath
         .split(sys.props.get("path.separator").get)
         // TODO (EXP-493): Tar up directories so they can also go on the dist cache.
-        .filter{ fileName: String => fileName.toLowerCase().endsWith(".jar") || 
+        .filter{ fileName: String => fileName.toLowerCase().endsWith(".jar") ||
             fileName.toLowerCase().endsWith(".zip")
         }
         .map{ fileName: String => "file://" + fileName }
