@@ -32,16 +32,12 @@ def _get_bento_system(args):
 
 def _get_bento(args):
     output_config_dir = None
-    hosts_file = None
     if hasattr(args, 'output_config_dir'):
         output_config_dir = args.output_config_dir
-    if hasattr(args, 'hosts_file'):
-        hosts_file = args.hosts_file
     return cluster.Bento(
         bento_container=args.bento_name,
         docker_client=_get_docker_client(args),
         client_config_dir=output_config_dir,
-        hosts_file_path=hosts_file,
     )
 
 
@@ -54,11 +50,9 @@ def bento_create(args):
     created_bento = _get_bento_system(args).create_bento(
         bento_name=args.bento_name,
         platform_version=args.platform_version,
-        update_hosts=(not args.skip_hosts_edit),
         write_client_config=(not args.skip_config_write),
         client_config_dir=args.output_config_dir,
-        hosts_file_path=args.hosts_file,
-        verbose=True
+        verbose=True,
     )
     logging.info('Bento container %s created.', created_bento.bento_container)
 
@@ -104,6 +98,7 @@ def bento_start(args):
         bento_cluster.start(
             update_hosts=(not args.skip_hosts_edit),
             write_client_config=(not args.skip_config_write),
+            use_hostaliases=args.use_hostaliases,
             poll_interval=args.poll_interval,
             timeout_ms=args.timeout,
             verbose=True,
@@ -245,7 +240,7 @@ def bento_config(args):
     bento_cluster = _get_bento(args)
     try:
         bento_cluster.write_hadoop_config(args.output_config_dir)
-        bento_cluster.update_hosts(args.hosts_file)
+        bento_cluster.update_hosts(use_hostaliases=args.use_hostaliases)
 
         logging.info('Bento client configs written to %s', bento_cluster.client_config_dir)
         logging.info(
@@ -258,6 +253,17 @@ def bento_config(args):
             logging.info('Bento does not exist: %s', args.bento_name)
         else:
             raise
+
+
+def bento_setup_sudoers(args):
+    """Installs a sudoers rule allowing users belonging to the 'bento' group to add dns entries.
+
+    This script allows passwordless sudo calls to the update-etc-hosts script.
+
+    Args:
+        args: Object of arguments passed in from the command-line.
+    """
+    cluster.install_sudoers_rule()
 
 
 # - Main Entry Point -------------------------------------------------------------------------------
@@ -327,24 +333,11 @@ def main(args):
         help='Version of the hadoop/hbase stack to run in the bento cluster.'
     )
     create_parser.add_argument(
-        '-e',
-        '--skip-hosts-edit',
-        default=False,
-        help='Do not modify environment for bento hostname resolution.',
-        action='store_true',
-    )
-    create_parser.add_argument(
         '-c',
         '--skip-config-write',
         default=False,
         help='Do not overwrite (or write) hadoop client configuration files.',
         action='store_true',
-    )
-    create_parser.add_argument(
-        '-g',
-        '--hosts-file',
-        default=None,
-        help='Hosts file to add dns entries to.',
     )
     create_parser.add_argument(
         '-o',
@@ -384,9 +377,9 @@ def main(args):
     )
     start_parser.add_argument(
         '-g',
-        '--hosts-file',
-        default=None,
-        help='Hosts file to add dns entries to.',
+        '--use-hostaliases',
+        default=False,
+        help='Update the hosts file identified by $HOSTALIASES instead of /etc/hosts.',
     )
     start_parser.add_argument(
         '-o',
@@ -445,11 +438,16 @@ def main(args):
     )
     config_parser.add_argument(
         '-g',
-        '--hosts-file',
-        default=None,
-        help='Hosts file to add dns entries to.',
+        '--use-hostaliases',
+        default=False,
+        help='Update the hosts file identified by $HOSTALIASES instead of /etc/hosts.',
     )
     config_parser.set_defaults(func=bento_config)
+    setup_sudoers_parser = subparsers.add_parser(
+        'setup-sudoers',
+        help='Installs a sudoers rule allowing non-root users to add dns entries.',
+    )
+    setup_sudoers_parser.set_defaults(func=bento_setup_sudoers)
 
     parsed_args = argument_parser.parse_args(args=args)
     if hasattr(parsed_args, 'func'):

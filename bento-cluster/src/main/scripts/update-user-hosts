@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# -*- coding: utf-8 -*-
+# -*- mode: shell -*-
+
+# (c) Copyright 2014 WibiData, Inc.
+#
+# See the NOTICE file distributed with this work for additional
+# information regarding copyright ownership.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# ------------------------------------------------------------------------------
+
+# This script either creates (if not present) or updates a ${HOME}/.hosts
+# file with an entry for a newly created or started bento.
+# The .hosts file is used to supplement /etc/hosts when resolving hostnames if the
+# $HOSTALIASES environment variable points to it on Linux systems.
+
+# Usage:
+#
+#   $ update-user-hosts <IP address> <host name>
+#
+
+# ------------------------------------------------------------------------------
+
+set -o nounset   # Fail when referencing undefined variables
+set -o errexit   # Script exits on the first error
+set -o pipefail  # Pipeline status failure if any command fails
+if [[ ! -z "${DEBUG:-}" ]]; then
+  source=$(basename "${BASH_SOURCE}")
+  PS4="# ${source}":'${LINENO}: '
+  set -x
+fi
+
+# ------------------------------------------------------------------------------
+
+if [[ "$(uname)" != "Linux" ]]; then
+  echo "The use of \${HOME}/.hosts and \$HOSTALIASES is not known to work on $(uname) environments." 1>&2
+  exit 1
+fi
+
+if [[ -z "${HOSTALIASES}" ]]; then
+  echo "WARNING: The HOSTALIASES environment variable is not set." 1>&2
+  echo "WARNING: This may prevent applications from resolving the Bento host name." 1>&2
+  echo "WARNING: Please update your bash configuration and add: " 1>&2
+  echo "WARNING:     export HOSTALIASES=${HOME}/.hosts" 1>&2
+  exit 1
+fi
+
+address=$1
+host=$2
+
+if [[ $host != bento* ]]; then
+  echo "Invalid hostname: '${host}'. Must start with 'bento'." 1>&2
+  exit 1
+fi
+
+if [[ $address != 172.17.* ]]; then
+  echo "Invalid address: '${address}'. Must be be in the 172.17.0.0/16 subnet." 1>&2
+  exit 1
+fi
+
+# Update the host aliases user file.
+# The host aliases user file is formatted as a list of: "from to" rules.
+# Every time a host name matching "from" is encountered, it is rewritten as "to"
+# with no further processing.
+touch "${HOSTALIASES}"
+
+temp=$(mktemp "${HOSTALIASES}.XXXXXX")
+cat <<EOF >> "$temp"
+${host} ${address}
+EOF
+grep --invert-match "^${host}\s" "$HOSTALIASES" >> "$temp"
+cp --force "${HOSTALIASES}" "${HOSTALIASES}.backup"
+mv --force "$temp" "$HOSTALIASES"

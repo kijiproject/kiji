@@ -21,17 +21,6 @@
 
 # ------------------------------------------------------------------------------
 
-set -o nounset   # Fail when referencing undefined variables
-set -o errexit   # Script exits on the first error
-set -o pipefail  # Pipeline status failure if any command fails
-if [[ ! -z "${DEBUG:-}" ]]; then
-  source=$(basename "${BASH_SOURCE}")
-  PS4="# ${source}":'${LINENO}: '
-  set -x
-fi
-
-# ------------------------------------------------------------------------------
-
 # Canonicalize a path into an absolute, symlink free path.
 #
 # Portable implementation of the GNU coreutils "readlink -f path".
