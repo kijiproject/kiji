@@ -545,7 +545,7 @@ class Bento(object):
                     hosts_updater_script_abspath,
                     self.bento_ip,
                     self.bento_hostname
-                ]
+                ],
             )
             subprocess.check_call(args=update_etc_hosts_command)
 
@@ -649,7 +649,8 @@ def _sudo_command(args):
     if not os.isatty(sys.stdin.fileno()):
         # Enable non-interactive mode for sudo when using a non-interactive shell.
         sudo_args.append('-n')
-    return sudo_args.extend(args)
+    sudo_args.extend(args)
+    return sudo_args
 
 
 def _which_exec(executable_name):
