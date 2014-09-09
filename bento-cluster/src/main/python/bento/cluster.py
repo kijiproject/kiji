@@ -540,9 +540,14 @@ class Bento(object):
             )
         else:
             # Run the update-etc-hosts script.
-            subprocess.check_call(
-                args=['sudo', hosts_updater_script_abspath, self.bento_ip, self.bento_hostname]
+            update_etc_hosts_command = _sudo_command(
+                args=[
+                    hosts_updater_script_abspath,
+                    self.bento_ip,
+                    self.bento_hostname
+                ]
             )
+            subprocess.check_call(args=update_etc_hosts_command)
 
     def write_hadoop_config(self, config_dir=None):
         """Writes hadoop and hbase configuration files for usage with hadoop/hbase/kiji clients.
@@ -628,6 +633,23 @@ def install_sudoers_rule(
 
     logging.info('Installed sudoers file to: %s', rule_file_path)
     logging.info('To complete setup add the current user to the "bento" group.')
+
+
+def _sudo_command(args):
+    """Generates a list of command line arguments that will be run as root using sudo.
+
+    This method will correctly add the '-n' flag when running in a non-interactive shell.
+
+    Args:
+        args: The command line arguments to run with sudo.
+    Returns:
+        The argument list to run.
+    """
+    sudo_args = ['sudo']
+    if not os.isatty(sys.stdin.fileno()):
+        # Enable non-interactive mode for sudo when using a non-interactive shell.
+        sudo_args.append('-n')
+    return sudo_args.extend(args)
 
 
 def _which_exec(executable_name):
