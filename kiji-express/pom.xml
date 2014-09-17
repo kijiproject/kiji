@@ -179,7 +179,7 @@
         <type>pom</type>
 
         <version>${kiji-platforms.version}</version>
-        <scope>compile</scope>
+        <scope>provided</scope>
       </dependency>
 
       <!-- Test dependencies. -->
