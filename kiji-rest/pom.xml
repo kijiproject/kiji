@@ -169,14 +169,9 @@
       <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
     </repository>
     <repository>
-      <id>kiji-nightly</id>
-      <name>kiji-nightly</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-    </repository>
-    <repository>
       <id>cloudera-repos</id>
       <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
-    </repository>    
+    </repository>
   </repositories>
   <scm>
     <connection>scm:git:git@github.com:kijiproject/kiji-rest.git</connection>
