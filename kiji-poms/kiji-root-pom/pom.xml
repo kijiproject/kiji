@@ -689,25 +689,12 @@
       <name>kiji-repos</name>
       <url>https://repo.wibidata.com/artifactory/kiji</url>
     </repository>
-    <repository>
-      <id>kiji-nightly</id>
-      <name>kiji-nightly</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-    </repository>
   </repositories>
   <pluginRepositories>
     <pluginRepository>
       <id>kiji-plugins</id>
       <name>kiji-plugins</name>
       <url>https://repo.wibidata.com/artifactory/kiji</url>
-    </pluginRepository>
-    <pluginRepository>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-      <id>kiji-plugins-nightly</id>
-      <name>kiji-plugins-nightly</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
     </pluginRepository>
   </pluginRepositories>
 

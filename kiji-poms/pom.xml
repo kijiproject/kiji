@@ -51,16 +51,16 @@
     <profile>
       <id>kiji-nightly</id>
       <distributionManagement>
-      <repository>
-        <id>kiji-nightly</id>
-        <name>kiji-nightly-releases</name>
-        <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-      </repository>
-      <snapshotRepository>
-        <id>kiji-nightly</id>
-        <name>kiji-nightly-snapshots</name>
-        <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-      </snapshotRepository>
+        <repository>
+          <id>kiji-nightly</id>
+          <name>kiji-nightly-releases</name>
+          <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
+        </repository>
+        <snapshotRepository>
+          <id>kiji-nightly</id>
+          <name>kiji-nightly-snapshots</name>
+          <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
+        </snapshotRepository>
       </distributionManagement>
     </profile>
   </profiles>
