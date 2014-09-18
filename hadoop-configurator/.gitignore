@@ -1,0 +1,12 @@
+# Editor temporary files.
+*~
+
+# IDE project files.
+/.classpath
+/.project
+/.settings/
+/prj.el
+/.jde/
+
+# Build artifacts.
+/target/

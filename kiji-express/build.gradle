@@ -1,0 +1,15 @@
+apply plugin: 'scala'
+
+ext.cascadingVersion = '2.1.4-wip-103'
+
+repositories {
+  mavenCentral()
+  mavenRepo name: 'conjars', url: 'http://conjars.org/repo/'
+  mavenRepo name: 'apache', url: 'https://repository.apache.org/content/repositories/releases/'
+}
+
+dependencies {
+  compile group: 'cascading', name: 'cascading-core', version: cascadingVersion
+  compile group: 'cascading', name: 'cascading-local', version: cascadingVersion
+  compile group: 'cascading', name: 'cascading-hadoop', version: cascadingVersion
+}

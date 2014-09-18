@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e
+
+hadoop fs -mkdir -p /user/history
+hadoop fs -chmod -R 1777 /user/history
+hadoop fs -chown mapred:hadoop /user/history
+
+hadoop fs -mkdir -p /var/log/hadoop-yarn
+hadoop fs -chown yarn:mapred /var/log/hadoop-yarn

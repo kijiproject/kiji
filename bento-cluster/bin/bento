@@ -1,0 +1,230 @@
+#!/usr/bin/env bash
+
+# (c) Copyright 2012 WibiData, Inc.
+#
+# See the NOTICE file distributed with this work for additional
+# information regarding copyright ownership.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# ------------------------------------------------------------------------------
+
+set -o nounset   # Fail when referencing undefined variables
+set -o errexit   # Script exits on the first error
+set -o pipefail  # Pipeline status failure if any command fails
+if [[ ! -z "${DEBUG:-}" ]]; then
+  source=$(basename "${BASH_SOURCE}")
+  PS4="# ${source}":'${LINENO}: '
+  set -x
+fi
+
+# ------------------------------------------------------------------------------
+
+# Canonicalize a path into an absolute, symlink free path.
+#
+# Portable implementation of the GNU coreutils "readlink -f path".
+# The '-f' option of readlink does not exist on MacOS, for instance.
+#
+# Args:
+#   param $1: path to canonicalize.
+# Stdout:
+#   Prints the canonicalized path on stdout.
+function resolve_symlink() {
+  local target_file=$1
+
+  if [[ -z "${target_file}" ]]; then
+    echo ""
+    return 0
+  fi
+
+  cd "$(dirname "${target_file}")"
+  target_file=$(basename "${target_file}")
+
+  # Iterate down a (possible) chain of symlinks
+  local count=0
+  while [[ -L "${target_file}" ]]; do
+    if [[ "${count}" -gt 1000 ]]; then
+      # Just stop here, we've hit 1,000 recursive symlinks. (cycle?)
+      break
+    fi
+
+    target_file=$(readlink "${target_file}")
+    cd $(dirname "${target_file}")
+    target_file=$(basename "${target_file}")
+    count=$(( ${count} + 1 ))
+  done
+
+  # Compute the canonicalized name by finding the physical path
+  # for the directory we're in and appending the target file.
+  local phys_dir=$(pwd -P)
+  echo "${phys_dir}/${target_file}"
+}
+
+# ------------------------------------------------------------------------------
+
+bento_bin_path="${BASH_SOURCE:-$0}"
+bento_bin_path=$(resolve_symlink "${bento_bin_path}")
+
+BENTO_CLUSTER_HOME=$(dirname "$(dirname "${bento_bin_path}")")
+BENTO_CLUSTER_HOME=$(cd "${BENTO_CLUSTER_HOME}"; pwd -P)
+
+# ------------------------------------------------------------------------------
+
+function print_tool_usage() {
+  echo "The bento script can start and stop Docker containers containing HDFS, YARN, ZooKeeper,"
+  echo "HBase and Cassandra services"
+  echo
+  echo "USAGE"
+  echo
+  echo "  bento (start|stop|status)"
+  echo
+  echo "COMMANDS"
+  echo
+  echo "  help   - Displays this help message. Use --verbose for more information."
+  echo "  start  - Start a Bento container."
+  echo "  stop   - Stop a Bento container."
+  echo "  status - Display the status of a Bento container."
+  echo "  rm     - Deletes a Bento container and all data."
+  echo "  ip     - Get the ip address of a Bento container."
+  echo "  host   - Get the host name of a Bento container."
+  echo "  build  - Build a new Bento image from the Dockerfile in ${BENTO_CLUSTER_HOME}/docker."
+  echo "  logs   - Tail the Bento process (supervisord) logs."
+  echo
+  echo "FLAGS (following the command)"
+  echo "  all"
+  echo "    -n     Specify a container name. Defaults to 'bento'."
+  echo "  start"
+  echo "    -f     Create container in foreground (will attach stdin/tty)."
+  echo "    -r     Remove the container on stop. Must be used with '-f'."
+  echo "    -h     Do not add hostname to /etc/hosts."
+  echo "    -c     Do not overwrite Hadoop & HBase client configuration with started Bento container."
+}
+
+# ------------------------------------------------------------------------------
+# Script main begins here:
+
+if [[ -z ${1:-} ]]; then
+  print_tool_usage
+  exit 0
+fi
+
+command=$1
+shift  # pop off the command
+
+container_name=bento
+daemon='-d'
+edit_hosts=true
+remove=''
+client_config=true
+
+while getopts ":f :h :n: :r" opt; do
+  case $opt in
+    f)
+      daemon='-it'
+      edit_hosts=false
+      ;;
+    h)
+      edit_hosts=false
+      ;;
+    n)
+      container_name="${OPTARG}"
+      ;;
+    r)
+      remove="--rm=true"
+      ;;
+    c)
+      client_config=false
+      ;;
+    \?)
+      echo "Unknown option: -${OPTARG}" >&2
+      ;;
+  esac
+done
+shift $((OPTIND-1))
+
+case ${command} in
+  help)
+    print_tool_usage
+    exit 0
+    ;;
+  start)
+    if status=$(docker inspect --format="{{.State.Running}}" ${container_name} 2> /dev/null); then
+      if [[ $status == 'true' ]]; then
+        echo "Bento container '${container_name}' is already started."
+        exit 1;
+      else
+        docker start ${container_name} > /dev/null
+        echo "Bento container '${container_name}' started."
+      fi
+    else
+      docker run ${daemon} ${remove} --name ${container_name} kijiproject/bento > /dev/null
+      echo "Bento container '${container_name}' created and started."
+      ADDRESS=$(docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
+      HOST=$(docker inspect --format="{{.Config.Hostname}}" ${container_name})
+      if [[ "$edit_hosts" == true ]]; then
+        echo "Adding container address and host to /etc/hosts:"
+        echo "${ADDRESS} ${HOST}" | sudo tee -a /etc/hosts
+      else
+        echo "Not adding container address and host to /etc/hosts:"
+        echo "${ADDRESS} ${HOST}"
+      fi
+    fi
+    ADDRESS=$(docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
+    if [[ "$client_config" == true ]]; then
+      echo "Adding address to Bento container '${container_name}' to local Hadoop & HBase client configurations."
+      sed "s/\$BENTO_ADDRESS/$ADDRESS/" $BENTO_CLUSTER_HOME/client-conf-template/core-site.xml > \
+        $BENTO_CLUSTER_HOME/client-conf/hadoop/core-site.xml
+      sed "s/\$BENTO_ADDRESS/$ADDRESS/" $BENTO_CLUSTER_HOME/client-conf-template/hbase-site.xml > \
+        $BENTO_CLUSTER_HOME/client-conf/hbase/hbase-site.xml
+    else
+      echo "Not adding address to Bento container '${container_name}' to local Hadoop & HBase client configurations."
+    fi
+    ;;
+  stop)
+    docker stop ${container_name} > /dev/null
+    echo "Bento container '${container_name}' stopped."
+    ;;
+  rm)
+    docker rm ${container_name} > /dev/null
+    echo "Bento container '${container_name}' removed."
+    ;;
+  status)
+    if status=$(docker inspect --format="{{.State.Running}}" ${container_name} 2> /dev/null); then
+      if [[ $status == 'true' ]]; then
+        echo "Bento container '${container_name}' is running."
+      else
+        echo "Bento container '${container_name}' is stopped."
+      fi
+    else
+      echo "Bento container '${container_name}' does not exist."
+    fi
+    ;;
+  ip)
+    echo $(docker inspect --format="{{.NetworkSettings.IPAddress}}" ${container_name})
+    ;;
+  host)
+    echo $(docker inspect --format="{{.Config.Hostname}}" ${container_name})
+    ;;
+  build)
+    docker build -t "kijiproject/bento" ${BENTO_CLUSTER_HOME}/docker
+    ;;
+  logs)
+    docker logs -f ${container_name}
+    ;;
+  *)
+    echo "Unknown command: ${command}"
+    echo "Try:"
+    echo "  bento help"
+    exit 1
+    ;;
+esac

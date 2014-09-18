@@ -1,0 +1,49 @@
+
+
+                              Bento Cluster Release Notes
+
+Version 1.3.0
+  * POM-40. Require JDK 7 to compile Kiji projects.
+
+Version 1.2.0
+  * CLUSTER-28. Upgrade to CDH 4.3.0.
+
+Version 1.1.0
+  * Upgrade to CDH 4.2 (HBase 0.94).
+  * CLUSTER-27. Fix links to view task tracker logs.
+
+Version 1.0.0
+  * CLUSTER-22. DNS check no longer requires localhost and $(hostame) to resolve
+      to the same IP address.
+  * CLUSTER-25. Add environment variable BENTO_LOG_ENABLE=1 to capture bento logs
+      to the bento log file: "$BENTO_CLUSTER_HOME/state/bento-cluster.log".
+  * BENTO-10. Add import tool. Run 'bento import --src=</path/to/old/bentobox>' to
+      copy data from an existing BentoBox into this instance.
+
+Version 1.0.0-rc4
+  * BENTO-15. Include scripts to track last checkin time for updates.
+  * CLUSTER-19. The DNS check from CLUSTER-7 is not run on Mac OS X machines.
+  * CLUSTER-18. bento-cluster now includes a status command.
+  * CLUSTER-7. bento-cluster now checks if there are DNS problems(common to
+      the default configuration on Ubuntu systems) on starting.
+  * CLUSTER-5. bento-cluster will now refuse to start if any configured ports
+      are in-use.
+  * CLUSTER-10. bento-cluster now informs user of the ports the NameNode,
+      JobTracker, and Zookeeper services are available on. User is informed
+      both when cluster starts and when cluster is configured.
+
+Version 1.0.0-rc3
+  * CLUSTER-4. Allow port configuration utility to be run by the user
+      at any time. Use the `bento config` command to do this.
+  * CLUSTER-14. Adds RELEASE_NOTES.txt
+
+Version 1.0.0-rc2
+  * CLUSTER-11: Dependencies on artifacts such as odiago-common-flags have
+      been updated to correctly depend on kiji-common-flags, etc.
+  * CLUSTER-8: Fixes bento-env.sh for zsh users.
+  * CLUSTER-9: bento-env.sh nows works if invoked via symlinks.
+  * CLUSTER-3: Fixes a bug where the bento cluster wouldn't start.
+  * CLUSTER-1: Bento cluster will now correctly run webapps for HDFS.
+
+Version 1.0.0-rc1
+  * Initial release

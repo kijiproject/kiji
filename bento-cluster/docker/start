@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e
+
+IP=`hostname --ip-address`
+
+sed -i -e "s/\$BENTO_ADDRESS/$IP/" /etc/cassandra/conf.bento/*
+sed -i -e "s/\$BENTO_ADDRESS/$IP/" /etc/hbase/conf.bento/*
+sed -i -e "s/\$BENTO_ADDRESS/$IP/" /etc/hadoop/conf.bento/*
+sed -i -e "s/\$BENTO_ADDRESS/$IP/" /etc/zookeeper/conf.bento/*
+
+/usr/bin/supervisord -c /etc/supervisor/supervisord.conf

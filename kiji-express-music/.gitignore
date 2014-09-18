@@ -1,0 +1,21 @@
+# Gradle things
+build/
+.gradle/
+
+# Eclipse things
+.classpath
+.project
+.settings/
+
+# Idea things
+*.iml
+.idea/
+
+# Maven things
+target/
+dependency-reduced-pom.xml
+
+# Vim things
+*.swp
+*.swo
+.cache
