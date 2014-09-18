@@ -104,15 +104,12 @@
       <id>kiji-repos</id>
       <name>kiji-repos</name>
       <url>https://repo.wibidata.com/artifactory/kiji</url>
-      <snapshots> <enabled>false</enabled> </snapshots>
-      <releases> <enabled>true</enabled> </releases>
-    </repository>
-    <repository>
-      <id>kiji-nightly</id>
-      <name>kiji-nightly</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-      <snapshots> <enabled>true</enabled> </snapshots>
-      <releases> <enabled>false</enabled> </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
     </repository>
   </repositories>
 
