@@ -51,7 +51,7 @@ import org.kiji.schema.util.ResourceUtils;
 @ApiAudience.Private
 public final class KijiBulkLoad extends BaseTool {
   /** ExecutorService to execute the callables when bulk-loading. */
-  private ExecutorService executorService = Executors.newCachedThreadPool();
+  private ExecutorService mExecutorService = Executors.newCachedThreadPool();
 
   @Flag(name="hfile", usage="Path of the directory containing HFile(s) to bulk-load. "
       + "Typically --hfile=hdfs://hdfs-cluster-address/path/to/hfile.dir/")
@@ -60,12 +60,12 @@ public final class KijiBulkLoad extends BaseTool {
   @Flag(name="table", usage="URI of the Kiji table to bulk-load into.")
   private String mTableURIFlag = null;
 
-  @Flag(name="timeout-milliseconds", usage="Timeout in milliseconds to wait for a bulk-load to " +
-      "succeed. Default 10 seconds (10000 milliseconds).")
-  private final Long loadTimeoutMilliseconds = 10000L; // 10 seconds
+  @Flag(name="timeout-milliseconds", usage="Timeout in milliseconds to wait for a bulk-load to "
+      + "succeed. Default 10 seconds (10000 milliseconds).")
+  private final Long mLoadTimeoutMilliseconds = 10000L; // 10 seconds
 
-  @Flag(name="chmod-interactive", usage="When false, does not prompt for confirmation before " +
-      "chmod'ing the hfile directory.")
+  @Flag(name="chmod-interactive", usage="When false, does not prompt for confirmation before "
+      + "chmod'ing the hfile directory.")
   private Boolean mChmodInteractive = true;
 
   /** URI of the Kiji table to bulk-load into. */
@@ -96,6 +96,7 @@ public final class KijiBulkLoad extends BaseTool {
    * Recursively sets the permissions to 777 on the HFiles.  There is no built-in way in the
    * Hadoop Java API to recursively set permissions on a directory, so we implement it here.
    *
+   * @param path The Path to the directory to chmod.
    * @throws IOException on IOException.
    */
   private void recursiveGrantAllHFilePermissions(Path path) throws IOException {
@@ -164,22 +165,22 @@ public final class KijiBulkLoad extends BaseTool {
           }
         };
 
-        Future<Void> hFileLoadTask = executorService.submit(hFileLoadCallable);
+        Future<Void> hFileLoadTask = mExecutorService.submit(hFileLoadCallable);
         Long startTime = System.currentTimeMillis();
-        // Wait until loadTimeoutMilliseconds has passed.  We do not use Future#get(long timeout)
+        // Wait until mLoadTimeoutMilliseconds has passed.  We do not use Future#get(long timeout)
         // because that will cancel the future if it isn't done.
         while (
-            System.currentTimeMillis() < startTime + loadTimeoutMilliseconds
+            System.currentTimeMillis() < startTime + mLoadTimeoutMilliseconds
             && !hFileLoadTask.isDone()) {
           Thread.sleep(100);
         }
         if (hFileLoadTask.isDone()) {
           return SUCCESS;
         }
-        // If it did not complete in loadTimeoutMilliseconds, try to chmod the directory.
+        // If it did not complete in mLoadTimeoutMilliseconds, try to chmod the directory.
         if (mChmodInteractive) {
           if (!inputConfirmation(
-              "First attempt at bulk-load timed out after " + loadTimeoutMilliseconds
+              "First attempt at bulk-load timed out after " + loadTimeoutMilliseconds56
                   + " milliseconds.  Do you want to chmod -R 777 the HFile directory?",
               mHFile.getName()
           )) {
@@ -188,7 +189,7 @@ public final class KijiBulkLoad extends BaseTool {
           } else {
             recursiveGrantAllHFilePermissions(mHFile);
             try {
-              hFileLoadTask.get(loadTimeoutMilliseconds, TimeUnit.MILLISECONDS);
+              hFileLoadTask.get(mLoadTimeoutMilliseconds, TimeUnit.MILLISECONDS);
             } catch (TimeoutException e) {
               getPrintStream().println("Bulk-load failed due to a second timeout.");
               return FAILURE;
@@ -197,7 +198,7 @@ public final class KijiBulkLoad extends BaseTool {
         } else {
           recursiveGrantAllHFilePermissions(mHFile);
           try {
-            hFileLoadTask.get(loadTimeoutMilliseconds, TimeUnit.MILLISECONDS);
+            hFileLoadTask.get(mLoadTimeoutMilliseconds, TimeUnit.MILLISECONDS);
           } catch (TimeoutException e) {
             getPrintStream().println("Bulk-load failed due to a second timeout.");
             return FAILURE;
