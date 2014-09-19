@@ -180,7 +180,7 @@ public final class KijiBulkLoad extends BaseTool {
         // If it did not complete in mLoadTimeoutMilliseconds, try to chmod the directory.
         if (mChmodInteractive) {
           if (!inputConfirmation(
-              "First attempt at bulk-load timed out after " + loadTimeoutMilliseconds56
+              "First attempt at bulk-load timed out after " + mLoadTimeoutMilliseconds
                   + " milliseconds.  Do you want to chmod -R 777 the HFile directory?",
               mHFile.getName()
           )) {
