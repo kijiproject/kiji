@@ -19,13 +19,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds a bento docker image.
+# Create, start, and attach to an ephemeral bento docker container.
 #
 # USAGE
 #
-#   bento-build [-p platform-version]
+#   bento-attach [-p platform-version] [-n container-name]
 #
 # platform-version (-p) defaults to cdh5.0.3
+# container-name (-n) defaults to bento
 
 # ------------------------------------------------------------------------------
 
@@ -107,10 +108,14 @@ if [[ ${docker_version} < 1.0.0 ]] ; then
   exit 1
 fi
 
+container_name=bento
 platform_version="cdh5.0.3"
 
-while getopts ":v:" opt; do
+while getopts ":n: :p:" opt; do
   case $opt in
+    n)
+      container_name="${OPTARG}"
+      ;;
     p)
       platform_version="${OPTARG}"
       ;;
@@ -120,5 +125,4 @@ while getopts ":v:" opt; do
   esac
 done
 
-$docker build -t "kijiproject/bento-cluster-base:cdh5" ${BENTO_CLUSTER_HOME}/docker-cdh5-base
-$docker build -t "kijiproject/bento-cluster:${platform_version}" ${BENTO_CLUSTER_HOME}/docker-${platform_version}
+$docker run -it --rm=true --hostname ${container_name} --name ${container_name} kijiproject/bento-cluster:${platform_version} /bin/bash
