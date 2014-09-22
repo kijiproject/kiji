@@ -51,7 +51,6 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.cassandra.CassandraKijiURI;
-import org.kiji.schema.impl.cassandra.CassandraKijiRowData;
 import org.kiji.schema.impl.cassandra.CassandraKijiScannerOptions;
 import org.kiji.schema.impl.cassandra.CassandraKijiTableReader;
 import org.kiji.schema.layout.ColumnReaderSpec;
@@ -164,7 +163,7 @@ public final class CassandraKijiTableInputFormat
     private KijiRowScanner mScanner = null;
     private Iterator<KijiRowData> mIterator = null;
     private CassandraInputSplit mSplit = null;
-    private CassandraKijiRowData mCurrentRow = null;
+    private KijiRowData mCurrentRow = null;
     private Iterator<CassandraTokenRange> mTokenRangeIterator = null;
 
     private long mStartPos;
@@ -357,7 +356,7 @@ public final class CassandraKijiTableInputFormat
     public boolean nextKeyValue() throws IOException {
       while (true) {
         if (mIterator.hasNext()) {
-          mCurrentRow = (CassandraKijiRowData) mIterator.next();
+          mCurrentRow = mIterator.next();
           return true;
         }
         // We are out of rows in the current token range.
