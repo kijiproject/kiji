@@ -63,7 +63,7 @@ public class EmailDomainProducer extends KijiProducer {
       return;
     }
     String email = input.getMostRecentValue("info", "email").toString();
-    int atSymbol = email.indexOf("@");
+    int atSymbol = email.indexOf('@');
     if (atSymbol < 0) {
       // Couldn't find the '@' in the email address. Give up.
       return;

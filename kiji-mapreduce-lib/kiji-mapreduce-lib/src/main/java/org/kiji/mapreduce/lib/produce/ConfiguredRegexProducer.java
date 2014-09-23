@@ -82,7 +82,7 @@ public class ConfiguredRegexProducer extends RegexProducer {
     if (null == mOutputColumn || mOutputColumn.isEmpty()) {
       throw new RuntimeException(CONF_OUTPUT_COLUMN + " not found");
     }
-    int colon = mOutputColumn.indexOf(":");
+    int colon = mOutputColumn.indexOf(':');
     if (colon < 0) {
       throw new RuntimeException(CONF_OUTPUT_COLUMN + " must be in family:qualifier format");
     }

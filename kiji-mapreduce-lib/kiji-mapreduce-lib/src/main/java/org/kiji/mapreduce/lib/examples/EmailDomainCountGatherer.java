@@ -74,7 +74,7 @@ public class EmailDomainCountGatherer extends KijiGatherer<Text, IntWritable> {
       return;
     }
     String email = input.getMostRecentValue("info", "email").toString();
-    int atSymbol = email.indexOf("@");
+    int atSymbol = email.indexOf('@');
     if (atSymbol < 0) {
       // Invalid email.
       return;
