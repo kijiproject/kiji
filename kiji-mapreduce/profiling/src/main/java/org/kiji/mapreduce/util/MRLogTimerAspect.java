@@ -74,10 +74,11 @@ public class MRLogTimerAspect {
     Object returnanswer = thisJoinPoint.proceed();
     end = System.nanoTime();
     String funcSig = thisJoinPoint.getSignature().toLongString();
-    if (!mSignatureTimeMap.containsKey(funcSig)) {
-      mSignatureTimeMap.put(funcSig, new LoggingInfo(end - start, 1));
-    } else {
-      mSignatureTimeMap.get(funcSig).increment(end - start);
+
+    final LoggingInfo existing =
+        mSignatureTimeMap.putIfAbsent(funcSig, new LoggingInfo(end - start, 1));
+    if (existing != null) {
+      existing.increment(end - start);
     }
     return returnanswer;
   }
