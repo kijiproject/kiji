@@ -119,10 +119,11 @@ public class KijiInstanceCache {
                         .build();
                   } catch (ExecutionException e) {
                     // Unwrap (if possible) and rethrow. Will be caught by #getFreshKijiTableReader.
-                    if (e.getCause() instanceof IOException) {
-                      throw (IOException) e.getCause();
+                    final Throwable cause = e.getCause();
+                    if (cause instanceof IOException) {
+                      throw (IOException) cause;
                     } else {
-                      throw new IOException(e.getCause());
+                      throw new IOException(cause);
                     }
                   }
                 }
