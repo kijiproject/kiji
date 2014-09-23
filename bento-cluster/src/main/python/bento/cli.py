@@ -389,11 +389,13 @@ def main(args):
     )
     start_parser.add_argument(
         '--poll-interval',
+        type=int,
         default=cluster.DEFAULT_POLL_INTERVAL,
         help='Time in milliseconds to wait between checking if the bento instance has started.',
     )
     start_parser.add_argument(
         '--timeout',
+        type=int,
         default=cluster.DEFAULT_TIMEOUT_MS,
         help='Time in milliseconds to wait for the bento instance to start.',
     )
@@ -401,11 +403,13 @@ def main(args):
     stop_parser = subparsers.add_parser('stop', help='Stop a Bento container.')
     stop_parser.add_argument(
         '--poll-interval',
+        type=int,
         default=cluster.DEFAULT_POLL_INTERVAL,
         help='Time in milliseconds to wait between checking if the bento instance has stopped.',
     )
     stop_parser.add_argument(
         '--timeout',
+        type=int,
         default=cluster.DEFAULT_TIMEOUT_MS,
         help='Time in milliseconds to wait for the bento instance to stop.',
     )
