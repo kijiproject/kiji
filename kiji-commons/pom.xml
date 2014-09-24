@@ -28,7 +28,7 @@
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.1.8</version>
+    <version>1.2.1-SNAPSHOT</version>
   </parent>
 
   <name>KijiCommons top-level project</name>
@@ -36,8 +36,10 @@
   <inceptionYear>2014</inceptionYear>
 
   <properties>
-    <kiji-delegation.version>1.0.2</kiji-delegation.version>
+    <annotations.version>1.1.2-SNAPSHOT</annotations.version>
     <kiji-checkin.version>1.0.6</kiji-checkin.version>
+    <kiji-common-flags.version>1.1.1-SNAPSHOT</kiji-common-flags.version>
+    <kiji-delegation.version>1.0.2</kiji-delegation.version>
   </properties>
 
   <modules>
@@ -49,9 +51,21 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>org.kiji.annotations</groupId>
+        <artifactId>annotations</artifactId>
+        <version>${annotations.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
         <groupId>org.kiji.checkin</groupId>
         <artifactId>kiji-checkin</artifactId>
         <version>${kiji-checkin.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.kiji.common</groupId>
+        <artifactId>kiji-common-flags</artifactId>
+        <version>${kiji-common-flags.version}</version>
         <scope>compile</scope>
       </dependency>
       <dependency>
