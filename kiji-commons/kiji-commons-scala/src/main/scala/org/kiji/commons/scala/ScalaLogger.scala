@@ -16,9 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.kiji.commons.scala
-
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -39,30 +37,11 @@ class ScalaLogger private (
    */
   def getLogger(): Logger = mLog
 
-  def error(format: String, args: Any*): Unit = {
-    val parameters: Array[Any] = args.toArray[Any]
-    mLog.error(format, parameters)
-  }
-
-  def warn(format: String, args: Any*): Unit = {
-    val parameters: Array[Any] = args.toArray[Any]
-    mLog.warn(format, parameters)
-  }
-
-  def info(format: String, args: Any*): Unit = {
-    val parameters: Array[Any] = args.toArray[Any]
-    mLog.info(format, parameters)
-  }
-
-  def debug(format: String, args: Any*): Unit = {
-    val parameters: Array[Any] = args.toArray[Any]
-    mLog.debug(format, parameters)
-  }
-
-  def trace(format: String, args: Any*): Unit = {
-    val parameters: Array[Any] = args.toArray[Any]
-    mLog.trace(format, parameters)
-  }
+  def error(msg: => String): Unit = if (isErrorEnabled()) { mLog.error(msg) }
+  def warn(msg: => String): Unit = if (isWarnEnabled()) { mLog.warn(msg) }
+  def info(msg: => String): Unit = if (isInfoEnabled()) { mLog.info(msg) }
+  def debug(msg: => String): Unit = if (isDebugEnabled()) { mLog.debug(msg) }
+  def trace(msg: => String): Unit = if(isTraceEnabled()) { mLog.trace(msg) }
 
   def isErrorEnabled(): Boolean = mLog.isErrorEnabled()
   def isWarnEnabled(): Boolean = mLog.isWarnEnabled()
