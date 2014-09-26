@@ -19,8 +19,8 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <maven.compiler.source>1.6</maven.compiler.source>
-    <maven.compiler.target>1.6</maven.compiler.target>
+    <maven.compiler.source>1.7</maven.compiler.source>
+    <maven.compiler.target>1.7</maven.compiler.target>
 
     <skipTests>false</skipTests>
     <skipVerify>false</skipVerify>
@@ -92,27 +92,6 @@
         </plugin>
 
         <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-enforcer-plugin</artifactId>
-          <version>${maven-enforcer-plugin.version}</version>
-          <executions>
-            <execution>
-              <id>enforce-java</id>
-              <goals>
-                <goal>enforce</goal>
-              </goals>
-              <configuration>
-                <rules>
-                  <requireJavaVersion>
-                    <version>[1.7,)</version>
-                  </requireJavaVersion>
-                </rules>
-              </configuration>
-            </execution>
-          </executions>
-        </plugin>
-
-        <plugin>
           <groupId>org.apache.avro</groupId>
           <artifactId>avro-maven-plugin</artifactId>
           <version>${avro.version}</version>
@@ -167,7 +146,6 @@
         </plugin>
 
         <plugin>
-          <!-- Compile for Java 1.6, with warnings enabled. -->
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>${maven-compiler-plugin.version}</version>
@@ -184,8 +162,8 @@
             <encoding>UTF-8</encoding>
             <showDeprecation>true</showDeprecation>
             <showWarnings>true</showWarnings>
-            <source>1.6</source>
-            <target>1.6</target>
+            <source>${maven.compiler.source}</source>
+            <target>${maven.compiler.target}</target>
             <excludes>
               <exclude>**/*.scala</exclude>
             </excludes>
