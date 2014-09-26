@@ -77,33 +77,6 @@
 
   <build>
     <plugins>
-      <!-- TODO: Remove these overridden compiler settings when the root pom is updated. -->
-      <plugin>
-        <!-- Compile for Java 1.7, with warnings enabled. -->
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>${maven-compiler-plugin.version}</version>
-        <configuration>
-          <!-- Maven doesn't let me specify more than one command line
-               flag with the same name, so I've used both styles of
-               specifying compiler args to get all warnings except
-               serialVersionUID. -->
-          <compilerArguments> <Xlint /> </compilerArguments>
-          <compilerArgument>-Xlint:-serial</compilerArgument>
-          <testCompilerArguments> <Xlint /> </testCompilerArguments>
-          <testCompilerArgument>-Xlint:-serial</testCompilerArgument>
-          <!-- End of maven compiler args hack -->
-          <encoding>UTF-8</encoding>
-          <showDeprecation>true</showDeprecation>
-          <showWarnings>true</showWarnings>
-          <source>1.7</source>
-          <target>1.7</target>
-          <excludes>
-            <exclude>**/*.scala</exclude>
-          </excludes>
-        </configuration>
-      </plugin>
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
