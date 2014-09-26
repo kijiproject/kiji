@@ -19,4 +19,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -e # Script stops running if any statement has a non-zero exit code
+set -o pipefail  # Pipeline status failure if any command fails
+
 /usr/bin/env python3 -m bento.cli ${@}

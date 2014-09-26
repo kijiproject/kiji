@@ -43,8 +43,11 @@ import xmlrpc.client
 
 import docker
 
+from urllib.parse import urlparse
+
 HOSTS_UPDATER_ETC = 'update-etc-hosts'
 HOSTS_UPDATER_HOSTALIASES = 'update-user-hosts'
+ROUTE_ADDER = 'add-bento-route'
 
 DEFAULT_GLOBAL_SCRIPT_PATH = '/usr/local/bin'
 DEFAULT_BENTO_NAME = 'bento'
@@ -416,6 +419,7 @@ class Bento(object):
         self,
         update_hosts=True,
         write_client_config=True,
+        add_route=True,
         use_hostaliases=False,
         verbose=False,
         poll_interval=DEFAULT_POLL_INTERVAL,
@@ -449,6 +453,14 @@ class Bento(object):
             self.write_hadoop_config(self.client_config_dir)
         if update_hosts:
             self.update_hosts(use_hostaliases=use_hostaliases)
+        if sys.platform == 'darwin' and add_route:
+            route_add_script = os.path.join(DEFAULT_GLOBAL_SCRIPT_PATH, ROUTE_ADDER)
+            if not os.path.isfile(route_add_script):
+                route_add_script = _which_exec(ROUTE_ADDER)
+            assert os.path.isfile(route_add_script), 'Invalid add-bento-route script at path: %s' % (route_add_script)
+            docker_ip = urlparse(os.environ['DOCKER_HOST']).netloc.split(':')[0]
+            add_route_cmd = _sudo_command(args=[route_add_script, self.bento_ip, docker_ip])
+            subprocess.check_call(args=add_route_cmd)
 
         # Wait until the system is started.
         _wait_for(
@@ -458,6 +470,7 @@ class Bento(object):
             timeout_ms=timeout_ms,
         )
         logging.info('Bento container started.')
+        logging.info('Waiting for Bento services to start.')
         _wait_for(
             # This has to be a lambda because 'self.is__running' is a property.
             condition=lambda: self.is_running,
@@ -594,26 +607,14 @@ def install_sudoers_rule(
         rule_file_name: The path to the desired sudoers rule file. Defaults to
             '/etc/sudoers.d/bento'.
     """
-    # Get the path to the update-etc-hosts script.
-    hosts_updater_abspath = _which_exec(HOSTS_UPDATER_ETC)
-    hosts_updater_destination = os.path.join(global_script_path, HOSTS_UPDATER_ETC)
+    #Copies scripts that use sudo to root's PATH.
+    hosts_dest = _install_sudo_script(HOSTS_UPDATER_ETC)
+    route_dest = _install_sudo_script(ROUTE_ADDER)
 
-    if hosts_updater_abspath is None:
-        logging.error(
-            'Failed to locate the "%s" script. Unable to add sudoers rule for bento.',
-            HOSTS_UPDATER_ETC,
-        )
-        return
+    scripts_paths = '%s, %s' % (hosts_dest, route_dest)
 
-    # Copy the script to the desired location.
-    cp_hosts_updater = ['sudo', 'cp', hosts_updater_abspath, hosts_updater_destination]
-    assert subprocess.check_call(args=cp_hosts_updater) == 0, \
-        'Failed to copy bento sudoers file to: %s' % rule_file_path
-
-    logging.info('Installed %s to %s', hosts_updater_abspath, hosts_updater_destination)
-
-    # Replace script-location in template.
-    script_contents = SUDOERS_RULE_TEMPLATE % dict(script_path=hosts_updater_destination)
+    # Replace script-locations in template.
+    script_contents = SUDOERS_RULE_TEMPLATE % dict(script_path=scripts_paths)
 
     with tempfile.NamedTemporaryFile(prefix=os.path.basename(rule_file_path)) as rule_file:
         # Write the file to a temporary location.
@@ -651,6 +652,37 @@ def _sudo_command(args):
         sudo_args.append('-n')
     sudo_args.extend(args)
     return sudo_args
+
+
+def _install_sudo_script(
+    script_name,
+    global_script_path=DEFAULT_GLOBAL_SCRIPT_PATH,
+):
+    """Installs a script to a directory using sudo.
+
+    Args:
+        global_script_path: The path to the folder to install the update-etc-hosts script to.
+    """
+    # Get the path to the update-etc-hosts script.
+    script_abspath = _which_exec(script_name)
+    script_destination = os.path.join(global_script_path, script_name)
+
+    if script_abspath is None:
+        logging.error(
+            'Failed to locate the "%s" script. Unable to install script %s to %s.',
+            script_name,
+            script_destination,
+        )
+        return
+
+    # Copy the script to the desired location.
+    copy_script_to_dest_cmd = ['sudo', 'cp', script_abspath, script_destination]
+    assert subprocess.check_call(args=copy_script_to_dest_cmd) == 0, \
+        'Failed to copy file %s to: %s' % (script_abspath, script_destination)
+
+    logging.info('Installed %s to %s', script_abspath, script_destination)
+
+    return script_destination
 
 
 def _which_exec(executable_name):

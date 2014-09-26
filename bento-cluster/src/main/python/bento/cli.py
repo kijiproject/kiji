@@ -7,6 +7,7 @@
 import argparse
 import json
 import logging
+import os
 import sys
 import time
 
@@ -92,18 +93,16 @@ def bento_start(args):
         args: Object of arguments passed in from the command-line.
     """
     bento_cluster = _get_bento(args)
-    if bento_cluster.is_container_running:
-        logging.info('Bento container %s already started.', bento_cluster.bento_container)
-    else:
-        bento_cluster.start(
-            update_hosts=(not args.skip_hosts_edit),
-            write_client_config=(not args.skip_config_write),
-            use_hostaliases=args.use_hostaliases,
-            poll_interval=args.poll_interval,
-            timeout_ms=args.timeout,
-            verbose=True,
-        )
-        logging.info('Bento container %s started.', bento_cluster.bento_container)
+    bento_cluster.start(
+        update_hosts=(not args.skip_hosts_edit),
+        write_client_config=(not args.skip_config_write),
+        add_route=(not args.skip_route_add),
+        use_hostaliases=args.use_hostaliases,
+        poll_interval=args.poll_interval,
+        timeout_ms=args.timeout,
+        verbose=True,
+    )
+    logging.info('Bento container %s started.', bento_cluster.bento_container)
 
 
 def bento_stop(args):
@@ -258,7 +257,7 @@ def bento_config(args):
 def bento_setup_sudoers(args):
     """Installs a sudoers rule allowing users belonging to the 'bento' group to add dns entries.
 
-    This script allows passwordless sudo calls to the update-etc-hosts script.
+    This script allows passwordless sudo calls to the update-etc-hosts and add-bento-route scripts.
 
     Args:
         args: Object of arguments passed in from the command-line.
@@ -360,7 +359,7 @@ def main(args):
     info_parser.set_defaults(func=bento_info)
     rm_parser = subparsers.add_parser('rm', help='Deletes a Bento container and all data.')
     rm_parser.set_defaults(func=bento_rm)
-    start_parser = subparsers.add_parser('start', help='Start a Bento container.')
+    start_parser = subparsers.add_parser('start', help='Start a Bento container, and wait for services to start.')
     start_parser.add_argument(
         '-e',
         '--skip-hosts-edit',
@@ -373,6 +372,13 @@ def main(args):
         '--skip-config-write',
         default=False,
         help='Do not overwrite (or write) hadoop client configuration files.',
+        action='store_true',
+    )
+    start_parser.add_argument(
+        '-r',
+        '--skip-route-add',
+        default=False,
+        help='Will add a static route through boot2docker to bento box, if run on OSX. Does nothing on linux box.',
         action='store_true',
     )
     start_parser.add_argument(
@@ -449,12 +455,14 @@ def main(args):
     config_parser.set_defaults(func=bento_config)
     setup_sudoers_parser = subparsers.add_parser(
         'setup-sudoers',
-        help='Installs a sudoers rule allowing non-root users to add dns entries.',
+        help='Installs a sudoers rule allowing non-root users to add dns entries and add a bento static route on osx.',
     )
     setup_sudoers_parser.set_defaults(func=bento_setup_sudoers)
 
     parsed_args = argument_parser.parse_args(args=args)
     if hasattr(parsed_args, 'func'):
+        if sys.platform == 'darwin':
+            assert os.environ.get('DOCKER_HOST') != None, 'Must set DOCKER_HOST environment variable on OSX machines.'
         parsed_args.func(parsed_args)
     else:
         argument_parser.print_usage()

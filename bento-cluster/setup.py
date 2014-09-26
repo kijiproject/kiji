@@ -27,6 +27,7 @@ def main(args):
             "src/main/scripts/create-hadoop-user",
             "src/main/scripts/update-etc-hosts",
             "src/main/scripts/update-user-hosts",
+            "src/main/scripts/add-bento-route",
         ],
 
         # Dependencies on other Python packages:
