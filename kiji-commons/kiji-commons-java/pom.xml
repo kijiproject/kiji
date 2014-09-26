@@ -35,18 +35,6 @@
       <groupId>org.kiji.annotations</groupId>
       <artifactId>annotations</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.kiji.checkin</groupId>
-      <artifactId>kiji-checkin</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.common</groupId>
-      <artifactId>kiji-common-flags</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.delegation</groupId>
-      <artifactId>kiji-delegation</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>com.google.guava</groupId>

@@ -21,10 +21,11 @@ package org.kiji.commons;
 
 import java.util.Iterator;
 
+import javax.annotation.concurrent.NotThreadSafe;
+
 import com.google.common.collect.Iterators;
 import com.google.common.collect.PeekingIterator;
 import com.google.common.collect.UnmodifiableIterator;
-import org.apache.http.annotation.NotThreadSafe;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;

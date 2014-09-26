@@ -47,8 +47,8 @@ object ResourceUtils {
 
   /**
    * Performs an operation with a resource that requires post processing. This method will throw a
-   * [[org.kiji.express.flow.util.ResourceUtil.CompoundException]] when exceptions get thrown
-   * during the operation and while resources are being closed.
+   * [[CompoundException]] when exceptions get thrown during the operation and while resources are
+   * being closed.
    *
    * @tparam T is the return type of the operation.
    * @tparam R is the type of resource such as a Kiji instance or table.
