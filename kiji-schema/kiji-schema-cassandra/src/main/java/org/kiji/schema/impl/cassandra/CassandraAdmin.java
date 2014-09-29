@@ -62,7 +62,7 @@ public abstract class CassandraAdmin implements Closeable {
    *
    * @return The Session.
    */
-  private Session getSession() {
+  protected Session getSession() {
     return mSession;
   }
 
@@ -88,18 +88,22 @@ public abstract class CassandraAdmin implements Closeable {
    */
   private void createKeyspaceIfMissingForURI(KijiURI kijiURI) {
     String keyspace = CassandraTableName.getKeyspace(kijiURI);
-    LOG.info(String.format("Creating keyspace %s (if missing) for %s.", keyspace, kijiURI));
 
-    // TODO: Check whether keyspace is > 48 characters long and if so provide Kiji error to user.
-    String queryText = "CREATE KEYSPACE IF NOT EXISTS " + keyspace
-        + " WITH REPLICATION = {'class' : 'SimpleStrategy', 'replication_factor': 1}";
-    ResultSet resultSet = getSession().execute(queryText);
-    LOG.info(resultSet.toString());
-    getSession().execute(String.format("USE %s", keyspace));
+    // Do a check first for the existence of the appropriate keyspace.  If it exists already, then
+    // don't try to create it.
+    if (!keyspaceExists(keyspace)) {
+      LOG.info(String.format("Creating keyspace %s for Kiji instance %s.", keyspace, kijiURI));
 
+      // TODO: Check whether keyspace is > 48 characters long and if so provide Kiji error to user.
+      String queryText = "CREATE KEYSPACE IF NOT EXISTS " + keyspace
+          + " WITH REPLICATION = {'class' : 'SimpleStrategy', 'replication_factor': 1}";
+      ResultSet resultSet = getSession().execute(queryText);
+      LOG.info(resultSet.toString());
+    }
     // Check that the keyspace actually exists!
     assert(keyspaceExists(keyspace));
 
+    getSession().execute(String.format("USE %s", keyspace));
   }
 
   /**
