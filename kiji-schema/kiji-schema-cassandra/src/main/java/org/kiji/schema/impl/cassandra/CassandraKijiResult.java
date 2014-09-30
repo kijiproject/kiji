@@ -113,20 +113,19 @@ public final class CassandraKijiResult {
     final KijiDataRequest pagedRequest = pagedRequestBuilder.build();
 
     if (unpagedRequest.isEmpty() && pagedRequest.isEmpty()) {
-      return new EmptyKijiResult<T>(entityId, dataRequest);
+      return new EmptyKijiResult<>(entityId, dataRequest);
     }
 
     final MaterializedKijiResult<T> materializedKijiResult;
     if (!unpagedRequest.isEmpty()) {
       materializedKijiResult =
           createMaterialized(
-              table.getURI(),
+              table,
               entityId,
               unpagedRequest,
               layout,
               columnTranslator,
-              requestDecoderProvider,
-              table.getAdmin());
+              requestDecoderProvider);
     } else {
       materializedKijiResult = null;
     }
@@ -134,7 +133,7 @@ public final class CassandraKijiResult {
     final CassandraPagedKijiResult<T> pagedKijiResult;
     if (!pagedRequest.isEmpty()) {
       pagedKijiResult =
-          new CassandraPagedKijiResult<T>(
+          new CassandraPagedKijiResult<>(
               entityId,
               pagedRequest,
               table,
@@ -157,24 +156,22 @@ public final class CassandraKijiResult {
   /**
    * Create a materialized {@code KijiResult} for a get on a Cassandra Kiji table.
    *
-   * @param tableURI The table URI.
+   * @param table The Cassandra Kiji table.
    * @param entityId The entity ID of the row to get.
    * @param dataRequest The data request defining the columns to get. All columns must be non-paged.
    * @param layout The layout of the table.
    * @param translator A column name translator for the table.
    * @param decoderProvider A decoder provider for the table.
-   * @param admin The Cassandra connection.
    * @param <T> The value type of cells in the result.
    * @return A materialized {@code KijiResult} for the row.
    */
   public static <T> MaterializedKijiResult<T> createMaterialized(
-      final KijiURI tableURI,
+      final CassandraKijiTable table,
       final EntityId entityId,
       final KijiDataRequest dataRequest,
       final KijiTableLayout layout,
       final CassandraColumnNameTranslator translator,
-      final CellDecoderProvider decoderProvider,
-      final CassandraAdmin admin
+      final CellDecoderProvider decoderProvider
   ) {
 
     SortedMap<KijiColumnName, ListenableFuture<Iterator<KijiCell<T>>>> resultFutures =
@@ -189,14 +186,13 @@ public final class CassandraKijiResult {
       resultFutures.put(
           columnRequest.getColumnName(),
           CassandraKijiResult.<T>getColumn(
-              tableURI,
+              table,
               entityId,
               columnRequest,
               dataRequest,
               layout,
               translator,
-              decoderProvider,
-              admin));
+              decoderProvider));
     }
 
     SortedMap<KijiColumnName, List<KijiCell<T>>> results = Maps.newTreeMap();
@@ -211,32 +207,30 @@ public final class CassandraKijiResult {
     return MaterializedKijiResult.create(entityId, dataRequest, layout, results);
   }
 
-  // CSOFF: ParameterNumber
   /**
    * Query Cassandra for a Kiji qualified-column or column-family in a Kiji row. The result is a
    * future containing an iterator over the result cells.
    *
-   * @param tableURI The table URI.
+   * @param table The Cassandra Kiji table.
    * @param entityId The entity ID of the row in the Kiji table.
    * @param columnRequest The requested column.
    * @param dataRequest The data request defining the request options.
    * @param layout The table's layout.
    * @param translator A column name translator for the table.
    * @param decoderProvider A decoder provider for the table.
-   * @param admin The Cassandra connection to use for querying.
    * @param <T> The value type of the column.
    * @return A future containing an iterator of cells in the column.
    */
   public static <T> ListenableFuture<Iterator<KijiCell<T>>> getColumn(
-      final KijiURI tableURI,
+      final CassandraKijiTable table,
       final EntityId entityId,
       final Column columnRequest,
       final KijiDataRequest dataRequest,
       final KijiTableLayout layout,
       final CassandraColumnNameTranslator translator,
-      final CellDecoderProvider decoderProvider,
-      final CassandraAdmin admin
+      final CellDecoderProvider decoderProvider
   ) {
+    final KijiURI tableURI = table.getURI();
     final KijiColumnName column = columnRequest.getColumnName();
     final CassandraColumnName cassandraColumn;
     try {
@@ -248,22 +242,22 @@ public final class CassandraKijiResult {
 
     final ColumnId localityGroupId =
         layout.getFamilyMap().get(column.getFamily()).getLocalityGroup().getId();
-    final CassandraTableName table =
+    final CassandraTableName tableName =
         CassandraTableName.getLocalityGroupTableName(tableURI, localityGroupId);
 
-    if (column.isFullyQualified()) {
+    final CQLStatementCache statementCache = table.getStatementCache();
 
+    if (column.isFullyQualified()) {
       final Statement statement =
-          CQLUtils.getQualifiedColumnGetStatement(
-              layout,
-              table,
+          statementCache.createGetStatement(
+              tableName,
               entityId,
               cassandraColumn,
               dataRequest,
               columnRequest);
 
       return Futures.transform(
-          admin.executeAsync(statement),
+          table.getAdmin().executeAsync(statement),
           RowDecoders.<T>getQualifiedColumnDecoderFunction(column, decoderProvider));
     } else {
 
@@ -281,17 +275,17 @@ public final class CassandraKijiResult {
       }
 
       final Statement statement =
-          CQLUtils.getColumnFamilyGetStatement(
-              layout,
-              table,
+          statementCache.createGetStatement(
+              tableName,
               entityId,
               cassandraColumn,
+              dataRequest,
               columnRequest);
 
       return Futures.transform(
-          admin.executeAsync(statement),
+          table.getAdmin().executeAsync(statement),
           RowDecoders.<T>getColumnFamilyDecoderFunction(
-              table,
+              tableName,
               column,
               columnRequest,
               dataRequest,
@@ -300,7 +294,6 @@ public final class CassandraKijiResult {
               decoderProvider));
     }
   }
-  // CSON: ParameterNumber
 
   /**
    * Unwrap a Cassandra listenable future.

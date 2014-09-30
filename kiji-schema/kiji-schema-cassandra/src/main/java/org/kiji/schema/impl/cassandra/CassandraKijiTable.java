@@ -41,7 +41,6 @@ import org.kiji.schema.KijiTableAnnotator;
 import org.kiji.schema.KijiTableNotFoundException;
 import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.avro.RowKeyFormat;
 import org.kiji.schema.avro.RowKeyFormat2;
 import org.kiji.schema.cassandra.CassandraKijiURI;
 import org.kiji.schema.impl.LayoutConsumer;
@@ -116,6 +115,12 @@ public final class CassandraKijiTable implements KijiTable {
   private volatile TableLayoutMonitor mLayoutMonitor;
 
   /**
+   * A cached version of the table's row key format.  Safe to cache, because row key formats can not
+   * be modified after table creation.
+   */
+  private final RowKeyFormat2 mRowKeyFormat;
+
+  /**
    * Construct an opened Kiji table stored in Cassandra.
    *
    * @param kiji The Kiji instance.
@@ -149,7 +154,8 @@ public final class CassandraKijiTable implements KijiTable {
     mReaderFactory = new CassandraKijiReaderFactory(this);
 
     mLayoutMonitor = layoutMonitor;
-    mEntityIdFactory = createEntityIdFactory(mLayoutMonitor.getLayout());
+    mRowKeyFormat = (RowKeyFormat2) mLayoutMonitor.getLayout().getDesc().getKeysFormat();
+    mEntityIdFactory = EntityIdFactory.getFactory(mRowKeyFormat);
 
     // Table is now open and must be released properly:
     mRetainCount.set(1);
@@ -160,27 +166,19 @@ public final class CassandraKijiTable implements KijiTable {
     DebugResourceTracker.get().registerResource(this);
   }
 
-  /**
-   * Constructs an Entity ID factory from a layout capsule.
-   *
-   * @param layout layout to construct an entity ID factory from.
-   * @return a new entity ID factory as described from the table layout.
-   */
-  private static EntityIdFactory createEntityIdFactory(final KijiTableLayout layout) {
-    final Object format = layout.getDesc().getKeysFormat();
-    if (format instanceof RowKeyFormat) {
-      return EntityIdFactory.getFactory((RowKeyFormat) format);
-    } else if (format instanceof RowKeyFormat2) {
-      return EntityIdFactory.getFactory((RowKeyFormat2) format);
-    } else {
-      throw new RuntimeException("Invalid Row Key format found in Kiji Table: " + format);
-    }
-  }
-
   /** {@inheritDoc} */
   @Override
   public EntityId getEntityId(Object... kijiRowKey) {
     return mEntityIdFactory.getEntityId(kijiRowKey);
+  }
+
+  /**
+   * Get the CQL statement cache for this Kiji Cassandra table.
+   *
+   * @return The CQL statement cache for this Kiji Cassandra table.
+   */
+  public CQLStatementCache getStatementCache() {
+    return mAdmin.getStatementCache(mRowKeyFormat);
   }
 
   /** {@inheritDoc} */

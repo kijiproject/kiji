@@ -21,6 +21,7 @@ package org.kiji.schema.impl.cassandra;
 
 import java.io.Closeable;
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 
 import com.datastax.driver.core.Metadata;
 import com.datastax.driver.core.PreparedStatement;
@@ -30,10 +31,14 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.TableMetadata;
 import com.google.common.base.Preconditions;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.schema.KijiURI;
+import org.kiji.schema.avro.RowKeyFormat2;
 import org.kiji.schema.cassandra.CassandraTableName;
 
 /**
@@ -57,14 +62,18 @@ public abstract class CassandraAdmin implements Closeable {
   /** Keep a cache of all of the prepared CQL statements. */
   private final CassandraStatementCache mStatementCache;
 
-  /**
-   * Getter for open Session.
-   *
-   * @return The Session.
-   */
-  protected Session getSession() {
-    return mSession;
-  }
+  private final LoadingCache<RowKeyFormat2, CQLStatementCache> mStatementCaches =
+      CacheBuilder
+          .newBuilder()
+          .expireAfterAccess(15, TimeUnit.MINUTES) // Avoid holding on to one-off tables
+          .build(
+              new CacheLoader<RowKeyFormat2, CQLStatementCache>() {
+                /** {@inheritDoc} */
+                @Override
+                public CQLStatementCache load(final RowKeyFormat2 rowKeyFormat) {
+                  return new CQLStatementCache(getSession(), rowKeyFormat);
+                }
+              });
 
   /**
    * Constructor for use by classes that extend this class.  Creates a CassandraAdmin object for a
@@ -79,6 +88,15 @@ public abstract class CassandraAdmin implements Closeable {
     this.mKijiURI = kijiURI;
     createKeyspaceIfMissingForURI(mKijiURI);
     mStatementCache = new CassandraStatementCache(mSession);
+  }
+
+  /**
+   * Getter for open Session.
+   *
+   * @return The Session.
+   */
+  protected Session getSession() {
+    return mSession;
   }
 
   /**
@@ -183,12 +201,20 @@ public abstract class CassandraAdmin implements Closeable {
     return metadata.getKeyspace(keyspace).getTable(tableName.getTable()) != null;
   }
 
-  // TODO: Implement close method
   /** {@inheritDoc} */
   @Override
   public void close() {
-    // Cannot close this right now without wreaking havoc in the unit tests.
     getSession().getCluster().close();
+  }
+
+  /**
+   * Retrieve the statement cache for a given Cassandra table.
+   *
+   * @param rowKeyFormat The rowKeyFormat of the table.
+   * @return The statement cache for the table.
+   */
+  public CQLStatementCache getStatementCache(final RowKeyFormat2 rowKeyFormat) {
+    return mStatementCaches.getUnchecked(rowKeyFormat);
   }
 
   // ----------------------------------------------------------------------------------------------
@@ -250,4 +276,3 @@ public abstract class CassandraAdmin implements Closeable {
     return mStatementCache.getPreparedStatement(query);
   }
 }
-

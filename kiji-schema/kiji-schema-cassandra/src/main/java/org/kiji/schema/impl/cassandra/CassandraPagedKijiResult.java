@@ -145,14 +145,13 @@ public class CassandraPagedKijiResult<T> implements KijiResult<T> {
     public Iterator<KijiCell<T>> iterator() {
       return CassandraKijiResult.unwrapFuture(
           CassandraKijiResult.<T>getColumn(
-              mTable.getURI(),
+              mTable,
               mEntityId,
               mColumnRequest,
               mDataRequest,
               mLayout,
               mColumnTranslator,
-              mDecoderProvider,
-              mTable.getAdmin()));
+              mDecoderProvider));
     }
   }
 }

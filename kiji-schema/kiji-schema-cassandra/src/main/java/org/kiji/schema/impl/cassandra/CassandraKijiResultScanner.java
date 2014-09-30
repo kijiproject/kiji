@@ -156,6 +156,7 @@ public class CassandraKijiResultScanner<T> implements KijiResultScanner<T> {
       final KijiTableLayout layout
   ) {
 
+    final CQLStatementCache statementCache = table.getStatementCache();
     final List<ResultSetFuture> localityGroupFutures =
         FluentIterable
             .from(tables)
@@ -164,7 +165,7 @@ public class CassandraKijiResultScanner<T> implements KijiResultScanner<T> {
                   /** {@inheritDoc} */
                   @Override
                   public Statement apply(final CassandraTableName tableName) {
-                    return CQLUtils.getEntityIDScanStatement(layout, tableName, options);
+                    return statementCache.createEntityIDScanStatement(tableName, options);
                   }
                 })
             .transform(
