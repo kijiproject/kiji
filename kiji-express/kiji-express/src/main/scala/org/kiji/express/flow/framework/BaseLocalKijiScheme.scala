@@ -162,7 +162,7 @@ object BaseLocalKijiScheme {
    * @return A InputContext instance that is used to read data from the table.
    */
   def configureInputContext(
-      table:KijiTable,
+      table: KijiTable,
       conf: JobConf,
       rowFilterSpec: RowFilterSpec,
       rowRangeSpec: RowRangeSpec,
@@ -179,22 +179,36 @@ object BaseLocalKijiScheme {
         .withColumnReaderSpecOverrides(overrides.asJava)
         .buildAndOpen()
 
-    // Set up scanning options.
-    val eidFactory = EntityIdFactory.getFactory(table.getLayout())
-    val scannerOptions = new KijiScannerOptions()
-    scannerOptions.setKijiRowFilter(
-        rowFilterSpec.toKijiRowFilter.getOrElse(null))
-    scannerOptions.setStartRow(
-        rowRangeSpec.startEntityId match {
-          case Some(entityId) => entityId.toJavaEntityId(eidFactory)
-          case None => null
-        })
-    scannerOptions.setStopRow(
-        rowRangeSpec.limitEntityId match {
-          case Some(entityId) => entityId.toJavaEntityId(eidFactory)
-          case None => null
-        })
-    val scanner: KijiRowScanner = reader.getScanner(request, scannerOptions)
+    // Set up the scanner.
+    val scanner: KijiRowScanner = if (
+      rowFilterSpec.toKijiRowFilter.isEmpty &&
+      rowRangeSpec.startEntityId.isEmpty &&
+      rowRangeSpec.limitEntityId.isEmpty
+    ) {
+      // Some implementations of KijiTable (ex. CassandraKijiTable) don't support scanner options at
+      // all, so we can't just pass in an empty scanner options.
+      reader.getScanner(request)
+    } else {
+      // Set up scanning options.
+      val eidFactory = EntityIdFactory.getFactory(table.getLayout)
+      val scannerOptions = new KijiScannerOptions()
+      scannerOptions.setKijiRowFilter(rowFilterSpec.toKijiRowFilter.orNull)
+      scannerOptions.setStartRow(
+          rowRangeSpec.startEntityId match {
+            case Some(entityId) => entityId.toJavaEntityId(eidFactory)
+            case None => null
+          }
+      )
+      scannerOptions.setStopRow(
+          rowRangeSpec.limitEntityId match {
+            case Some(entityId) => entityId.toJavaEntityId(eidFactory)
+            case None => null
+          }
+      )
+      reader.getScanner(request, scannerOptions)
+    }
+
+    // Store everything in a case class.
     InputContext(
       reader,
       scanner,
