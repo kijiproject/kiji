@@ -38,11 +38,11 @@ import org.kiji.schema.HBaseEntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiTable;
+import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiURI;
-import org.kiji.scoring.FreshKijiTableReader;
 
 /**
- * A cache object containing all Kiji, KijiTable, and FreshKijiTableReader objects for a Kiji
+ * A cache object containing all Kiji, KijiTable, and KijiTableReader objects for a Kiji
  * instance. Handles the creation and lifecycle of instances.
  */
 public class KijiInstanceCache {
@@ -84,41 +84,37 @@ public class KijiInstanceCache {
               }
           );
 
-  private final LoadingCache<String, FreshKijiTableReader> mFreshReaders =
+  private final LoadingCache<String, KijiTableReader> mReaders =
       CacheBuilder.newBuilder()
-          // Expire fresh reader if it has not been used in 10 minutes
+          // Expire reader if it has not been used in 10 minutes
           // TODO (REST-133): Make this value configurable
           .expireAfterAccess(10, TimeUnit.MINUTES)
           .removalListener(
-              new RemovalListener<String, FreshKijiTableReader>() {
+              new RemovalListener<String, KijiTableReader>() {
                 @Override
                 public void onRemoval(
                     RemovalNotification<String,
-                    FreshKijiTableReader> notification
+                    KijiTableReader> notification
                 ) {
                   try {
                     notification.getValue().close(); // strong cache; should not be null
                   } catch (IOException e) {
-                    LOG.warn("Unable to close FreshKijiTableReader {} on table {}.",
+                    LOG.warn("Unable to close KijiTableReader {} on table {}.",
                         notification.getValue(), notification.getValue());
                   }
                 }
               }
           )
           .build(
-              new CacheLoader<String, FreshKijiTableReader>() {
+              new CacheLoader<String, KijiTableReader>() {
                 @Override
-                public FreshKijiTableReader load(String table) throws IOException {
+                public KijiTableReader load(String table) throws IOException {
                   try {
                     Preconditions.checkState(mIsOpen,
-                        "Cannot open FreshKijiTableReader in closed cache.");
-                    return FreshKijiTableReader.Builder.create()
-                        .withTable(mTables.get(table))
-                        .withAutomaticReread(TEN_MINUTES)
-                        .withPartialFreshening(false)
-                        .build();
+                        "Cannot open KijiTableReader in closed cache.");
+                    return mTables.get(table).openTableReader();
                   } catch (ExecutionException e) {
-                    // Unwrap (if possible) and rethrow. Will be caught by #getFreshKijiTableReader.
+                    // Unwrap (if possible) and rethrow. Will be caught by #getKijiTableReader.
                     final Throwable cause = e.getCause();
                     if (cause instanceof IOException) {
                       throw (IOException) cause;
@@ -163,25 +159,25 @@ public class KijiInstanceCache {
   }
 
   /**
-   * Returns the FreshKijiTableReader instance for the table held by this cache.  This
-   * FreshKijiTableReader instance should *NOT* be closed.
+   * Returns the KijiTableReader instance for the table held by this cache.  This
+   * KijiTableReader instance should *NOT* be closed.
    *
    * @param table name.
-   * @return a FreshKijiTableReader for the table.
-   * @throws ExecutionException if a FreshKijiTableReader cannot be created for the table.
+   * @return a KijiTableReader for the table.
+   * @throws ExecutionException if a KijiTableReader cannot be created for the table.
    */
-  public FreshKijiTableReader getFreshKijiTableReader(String table) throws ExecutionException {
-    return mFreshReaders.get(table);
+  public KijiTableReader getKijiTableReader(String table) throws ExecutionException {
+    return mReaders.get(table);
   }
 
   /**
-   * Invalidates cached KijiTable and KijiFreshTableReader instances for a table.
+   * Invalidates cached KijiTable and KijiTableReader instances for a table.
    *
    * @param table name to be invalidated.
    */
   public void invalidateTable(String table) {
     mTables.invalidate(table);
-    mFreshReaders.invalidate(table);
+    mReaders.invalidate(table);
   }
 
   /**
@@ -191,8 +187,8 @@ public class KijiInstanceCache {
    */
   public void stop() throws IOException {
     mIsOpen = false; // Stop caches from loading more entries
-    mFreshReaders.invalidateAll();
-    mFreshReaders.cleanUp();
+    mReaders.invalidateAll();
+    mReaders.cleanUp();
     mTables.invalidateAll();
     mTables.cleanUp();
     mKiji.release();
@@ -227,16 +223,16 @@ public class KijiInstanceCache {
         }
       }
 
-      // Check that the FreshKijiTableReader instances are healthy
-      for (FreshKijiTableReader freshReader : mFreshReaders.asMap().values()) {
+      // Check that the KijiTableReader instances are healthy
+      for (KijiTableReader reader : mReaders.asMap().values()) {
         try {
-          freshReader.get(HBaseEntityId.fromHBaseRowKey(new byte[0]), KijiDataRequest.empty());
+          reader.get(HBaseEntityId.fromHBaseRowKey(new byte[0]), KijiDataRequest.empty());
         } catch (IllegalStateException e) {
-          issues.add(String.format("FreshKijiTableReader instance %s is in illegal state.",
-              freshReader));
+          issues.add(String.format("KijiTableReader instance %s is in illegal state.",
+              reader));
         } catch (IOException e) {
-          issues.add(String.format("FreshKijiTableReader instance %s cannot get data.",
-              freshReader));
+          issues.add(String.format("KijiTableReader instance %s cannot get data.",
+              reader));
         }
       }
     } else {

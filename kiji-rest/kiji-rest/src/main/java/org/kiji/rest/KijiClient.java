@@ -24,7 +24,7 @@ import java.util.Collection;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiSchemaTable;
 import org.kiji.schema.KijiTable;
-import org.kiji.scoring.FreshKijiTableReader;
+import org.kiji.schema.KijiTableReader;
 
 /**
  * Interface for Kiji clients that are utilized by KijiREST resources.
@@ -75,7 +75,7 @@ public interface KijiClient {
    * @return FreshKijiTableReader object
    * @throws javax.ws.rs.WebApplicationException if there is an error.
    */
-  FreshKijiTableReader getFreshKijiTableReader(String instance, String table);
+  KijiTableReader getKijiTableReader(String instance, String table);
 
   /**
    * Removes the table from the various table reader caches. This can happen as a response to a

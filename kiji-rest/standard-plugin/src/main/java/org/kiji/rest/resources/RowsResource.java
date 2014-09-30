@@ -95,7 +95,6 @@ import org.kiji.schema.filter.FormattedEntityIdRowFilter;
 import org.kiji.schema.filter.KijiRowFilter;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.ResourceUtils;
-import org.kiji.scoring.FreshKijiTableReader;
 
 /**
  * This REST resource interacts with Kiji tables.
@@ -467,24 +466,8 @@ public class RowsResource {
       final boolean freshen,
       final long timeout,
       final Map<String, String> fresheningParameters) throws IOException {
-    KijiRowData rowData;
-    // TODO: add FreshRequestOptions to disable freshening and simplify below - WDSCORE-75
-    if (freshen) {
-      // Do freshening
-      FreshKijiTableReader reader = mKijiClient.getFreshKijiTableReader(
-          table.getURI().getInstance(),
-          table.getURI().getTable());
-      FreshKijiTableReader.FreshRequestOptions freshOpts =
-          FreshKijiTableReader.FreshRequestOptions.Builder.create()
-              .withTimeout(timeout)
-              .withParameters(fresheningParameters)
-              .build();
-      rowData = reader.get(eid, request, freshOpts);
-    } else {
-      // Don't freshen
-      rowData = RowResourceUtil.getKijiRowData(table, eid, request);
-    }
-    return rowData;
+    // TODO: remove freshen, timeout and fresheningParameters
+    return RowResourceUtil.getKijiRowData(table, eid, request);
   }
 
   /**

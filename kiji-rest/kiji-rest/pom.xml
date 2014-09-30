@@ -54,34 +54,6 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
     </dependency>
 
     <dependency>
-      <groupId>org.kiji.scoring</groupId>
-      <artifactId>kiji-scoring</artifactId>
-      <version>${kiji-scoring.version}</version>
-      <exclusions>
-        <!-- Dropwizard works with the internals of logback which conflict
-        with these excluded packages -->
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.kiji.mapreduce</groupId>
-      <artifactId>kiji-mapreduce</artifactId>
-      <version>${kiji-mapreduce.version}</version>
-      <exclusions>
-        <!-- Dropwizard works with the internals of logback which conflict
-        with these excluded packages -->
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
       <groupId>org.kiji.platforms</groupId>
       <artifactId>kiji-compile-platform</artifactId>
       <type>pom</type>

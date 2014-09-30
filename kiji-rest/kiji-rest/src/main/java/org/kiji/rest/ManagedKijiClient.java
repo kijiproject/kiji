@@ -59,10 +59,10 @@ import org.kiji.schema.KijiNotInstalledException;
 import org.kiji.schema.KijiSchemaTable;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableNotFoundException;
+import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.util.ResourceUtils;
 import org.kiji.schema.zookeeper.ZooKeeperUtils;
-import org.kiji.scoring.FreshKijiTableReader;
 
 /**
  * Managed resource for tracking Kiji connections.
@@ -291,12 +291,12 @@ public class ManagedKijiClient implements KijiClient, Managed {
 
   /** {@inheritDoc} */
   @Override
-  public FreshKijiTableReader getFreshKijiTableReader(String instance, String table) {
+  public KijiTableReader getKijiTableReader(String instance, String table) {
     final State state = mState.get();
     Preconditions.checkState(state == State.STARTED,
         "Can not get fresh Kiji table reader while in state %s.", state);
     try {
-      return getInstanceCache(instance).getFreshKijiTableReader(table);
+      return getInstanceCache(instance).getKijiTableReader(table);
     } catch (ExecutionException e) {
       final Throwable cause = e.getCause();
       throw new WebApplicationException(cause, getExceptionStatus(cause));

@@ -151,11 +151,11 @@ public class TestManagedKijiClient extends KijiClientTest {
   }
 
   @Test
-  public void testKeepsFreshenersCached() throws Exception {
+  public void testKeepsReadersCached() throws Exception {
     for (String instance : mInstanceNames) {
       for (String table : INSTANCE_TABLES) {
-        assertTrue(mKijiClient.getFreshKijiTableReader(instance, table)
-            == mKijiClient.getFreshKijiTableReader(instance, table));
+        assertTrue(mKijiClient.getKijiTableReader(instance, table)
+            == mKijiClient.getKijiTableReader(instance, table));
       }
     }
   }
@@ -192,9 +192,9 @@ public class TestManagedKijiClient extends KijiClientTest {
 
 
   @Test(expected = WebApplicationException.class)
-  public void testGetFreshenerInvalidInstanceForbidden() throws Exception {
+  public void testGetReaderInvalidInstanceForbidden() throws Exception {
     try {
-      mKijiClient.getFreshKijiTableReader("foo", "bar");
+      mKijiClient.getKijiTableReader("foo", "bar");
     } catch (WebApplicationException e) {
       assertEquals(Response.Status.FORBIDDEN.getStatusCode(), e.getResponse().getStatus());
       throw e;
@@ -202,9 +202,9 @@ public class TestManagedKijiClient extends KijiClientTest {
   }
 
   @Test(expected = WebApplicationException.class)
-  public void testGetFreshenerInvalidTableNotFound() throws Exception {
+  public void testGetReaderInvalidTableNotFound() throws Exception {
     try {
-      mKijiClient.getFreshKijiTableReader(mInstanceNames.iterator().next(), "bar");
+      mKijiClient.getKijiTableReader(mInstanceNames.iterator().next(), "bar");
     } catch (WebApplicationException e) {
       assertEquals(Response.Status.NOT_FOUND.getStatusCode(), e.getResponse().getStatus());
       throw e;
