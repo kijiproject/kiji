@@ -1,0 +1,13 @@
+/output/
+
+# Temporary files used by editors.
+*~
+*.swp
+.#*
+\#*
+
+# Idea things
+*.iml
+.idea/
+atlassian-ide-plugin.xml
+
