@@ -43,4 +43,17 @@
     <value>/var/lib/hadoop-mapreduce/cache/${user.name}/tasks</value>
   </property>
 
+  <property>
+    <name>mapreduce.map.env</name>
+    <value>LD_LIBRARY_PATH=/usr/lib/hadoop/lib/native:$JAVA_LIBRARY_PATH</value>
+  </property>
+  <property>
+    <name>mapreduce.reduce.env</name>
+    <value>LD_LIBRARY_PATH=/usr/lib/hadoop/lib/native:$JAVA_LIBRARY_PATH</value>
+  </property>
+  <property>
+    <name>mapreduce.admin.user.env</name>
+    <value>LD_LIBRARY_PATH=/usr/lib/hadoop/lib/native:$JAVA_LIBRARY_PATH</value>
+  </property>
+
 </configuration>
