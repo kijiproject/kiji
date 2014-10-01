@@ -65,6 +65,12 @@ public final class TestingCassandraFactory implements CassandraFactory {
    */
   private static Session mCassandraSession = null;
 
+  /** Port used for Cassandra process. */
+  private static int mCassandraNativeTransportPort = -1;
+
+  /** Location of YAML file used by Cassandra process. */
+  private static File mCassandraYaml = null;
+
   /**
    * Public constructor. This should not be directly invoked by users; you should
    * use CassandraFactory.get(), which retains a singleton instance.
@@ -183,6 +189,9 @@ public final class TestingCassandraFactory implements CassandraFactory {
         bw.close();
       }
 
+      mCassandraYaml = yamlFile;
+      mCassandraNativeTransportPort = nativeTransportPort;
+
       Preconditions.checkArgument(yamlFile.exists());
       System.setProperty("cassandra.config", "file:" + yamlFile.getAbsolutePath());
       System.setProperty("cassandra-foreground", "true");
@@ -233,6 +242,28 @@ public final class TestingCassandraFactory implements CassandraFactory {
       throw new KijiIOException(
           "Started embedded C* service, but cannot connect to cluster. " + exc);
     }
+  }
+
+  /**
+   * Get the location of the temporary cassandra.yaml file used by the embedded Cassandra process.
+   *
+   * Useful for users who need to know details about the running Cassandra process.
+   *
+   * @return the YAML file location.
+   */
+  public static File getCassandraYaml() {
+    return mCassandraYaml;
+  }
+
+  /**
+   * Get the native transport port used by the embedded Cassandra process.
+   *
+   * Useful for users who need to connect to the process (without parsing the cassandra.yaml file).
+   *
+   * @return the native transport port.
+   */
+  public static int getCassandraNativeTransportPort() {
+    return mCassandraNativeTransportPort;
   }
 
   /**
