@@ -80,7 +80,7 @@
         </executions>
 
         <configuration>
-          <complianceLevel>1.6</complianceLevel>
+          <complianceLevel>1.7</complianceLevel>
           <showWeaveInfo>true</showWeaveInfo>
           <weaveDependencies>
             <weaveDependency>
