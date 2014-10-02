@@ -114,7 +114,7 @@ public abstract class CassandraAdmin implements Closeable {
 
       // TODO: Check whether keyspace is > 48 characters long and if so provide Kiji error to user.
       String queryText = "CREATE KEYSPACE IF NOT EXISTS " + keyspace
-          + " WITH REPLICATION = {'class' : 'SimpleStrategy', 'replication_factor': 1}";
+          + " WITH REPLICATION = {'class' : 'SimpleStrategy', 'replication_factor': 3}";
       ResultSet resultSet = getSession().execute(queryText);
       LOG.info(resultSet.toString());
     }
