@@ -309,18 +309,6 @@ public final class CassandraAtomicKijiPutter implements AtomicKijiPutter {
             String.format("Unknown family '%s' in table %s.", family, tableURI));
       }
 
-      final ColumnLayout columnLayout = familyLayout.getColumnMap().get(qualifier);
-      if (columnLayout == null) {
-        throw new IllegalArgumentException(
-            String.format("Unknown qualifier '%s' in family '%s' of table %s.",
-                qualifier, family, tableURI));
-      }
-
-      if (columnLayout.getDesc().getColumnSchema().getType() == SchemaType.COUNTER) {
-        throw new UnsupportedOperationException(
-            "Cassandra Kiji does not support puts to counter columns.");
-      }
-
       final ColumnId localityGroupId = familyLayout.getLocalityGroup().getId();
       if (mTableName == null) {
         // first put in transaction; set the table.

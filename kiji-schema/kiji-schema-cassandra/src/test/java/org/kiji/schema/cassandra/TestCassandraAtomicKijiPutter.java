@@ -44,6 +44,7 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableWriter;
+import org.kiji.schema.avro.Node;
 import org.kiji.schema.layout.KijiTableLayouts;
 
 public class TestCassandraAtomicKijiPutter {
@@ -184,9 +185,36 @@ public class TestCassandraAtomicKijiPutter {
     }
   }
 
+  @Test
+  public void testPutToMapType() throws Exception {
+    final KijiDataRequest request = KijiDataRequest.create("networks", "foo");
+
+    final Node node0 = Node.newBuilder().setLabel("node0").build();
+    final Node node1 = Node.newBuilder().setLabel("node1").build();
+
+    mWriter.put(mEntityId, "networks", "foo", node0);
+    assertEquals(
+        node0,
+        mReader.get(mEntityId, request).getMostRecentValue("networks", "foo")
+    );
+
+    mPutter.begin(mEntityId);
+    mPutter.put("networks", "foo", node1);
+
+    assertEquals(
+        node0,
+        mReader.get(mEntityId, request).getMostRecentValue("networks", "foo")
+    );
+    mPutter.commit();
+    assertEquals(
+        node1,
+        mReader.get(mEntityId, request).getMostRecentValue("networks", "foo")
+    );
+  }
+
   // TODO: Any test to make sure that everything is really atomic?
 
-  // TODO: Uncomment these tests when compare-and-set is ready.
+  // TODO (WDSCHEMA-337): Uncomment these tests when compare-and-set is ready.
   /*
   @Test
   public void testBasicCheckandCommit() throws Exception {
