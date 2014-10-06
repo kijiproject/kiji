@@ -41,7 +41,6 @@ import org.kiji.schema.AtomicKijiPutter;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.avro.SchemaType;
 import org.kiji.schema.cassandra.CassandraColumnName;
 import org.kiji.schema.cassandra.CassandraTableName;
 import org.kiji.schema.impl.DefaultKijiCellEncoderFactory;
@@ -50,7 +49,6 @@ import org.kiji.schema.impl.cassandra.CassandraKijiBufferedWriter.WriterLayoutCa
 import org.kiji.schema.layout.CassandraColumnNameTranslator;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout.FamilyLayout;
-import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout.FamilyLayout.ColumnLayout;
 import org.kiji.schema.layout.LayoutUpdatedException;
 import org.kiji.schema.layout.impl.CellEncoderProvider;
 import org.kiji.schema.layout.impl.ColumnId;
