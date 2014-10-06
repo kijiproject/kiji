@@ -254,10 +254,14 @@ public final class CassandraAtomicKijiPutter implements AtomicKijiPutter {
       'latest' timestamp semantics.  Cassandra has support for check and put style transactions
       since 2.0.6, but we can not take advantage of them since we can not know what timestamp we
       should check.
+
+      For now, we just warn.
      */
 
-    throw new UnsupportedOperationException(
-        "Cassandra AtomicKijiPutter does not support check and commit.");
+    LOG.warn("Cassandra AtomicKijiPutter does not support check and commit - just committing "
+        + "without checking.");
+    commit();
+    return true;
   }
 
   /** {@inheritDoc} */
