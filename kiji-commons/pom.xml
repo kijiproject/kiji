@@ -90,14 +90,6 @@
     </pluginManagement>
   </build>
 
-  <repositories>
-    <repository>
-      <id>kiji-releases</id>
-      <name>Kiji artifact releases</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
-    </repository>
-  </repositories>
-
   <scm>
     <connection>scm:git:git@github.com:kijiproject/kiji-commons.git</connection>
     <url>scm:git:git@github.com:kijiproject/kiji-commons.git</url>

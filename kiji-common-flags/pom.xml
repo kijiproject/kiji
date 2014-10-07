@@ -37,18 +37,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.8</version>
-        <configuration>
-          <reportOutputDirectory>target/apidocs</reportOutputDirectory>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>prepare-package</phase>
-            <goals>
-              <goal>javadoc</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>
@@ -79,43 +67,10 @@
     </dependency>
   </dependencies>
 
-  <distributionManagement>
-    <repository>
-      <id>kiji-maven</id>
-      <name>kiji-maven-releases</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
-    </repository>
-    <snapshotRepository>
-      <id>kiji-maven</id>
-      <name>kiji-maven-snapshots</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
-    </snapshotRepository>
-  </distributionManagement>
-
-  <repositories>
-    <repository>
-      <id>kiji-repos</id>
-      <name>kiji-repos</name>
-      <url>https://repo.wibidata.com/artifactory/kiji</url>
-    </repository>
-  </repositories>
-
-  <profiles>
-    <profile>
-      <id>kiji-nightly</id>
-      <distributionManagement>
-        <repository>
-          <id>kiji-nightly</id>
-          <name>kiji-nightly-releases</name>
-          <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-        </repository>
-        <snapshotRepository>
-          <id>kiji-nightly</id>
-          <name>kiji-nightly-snapshots</name>
-          <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-        </snapshotRepository>
-      </distributionManagement>
-    </profile>
-  </profiles>
+  <scm>
+    <connection>scm:git:git@github.com:kijiproject/kiji-common-flags.git</connection>
+    <url>scm:git:git@github.com:kijiproject/kiji-common-flags.git</url>
+    <developerConnection>scm:git:git@github.com:kijiproject/kiji-common-flags.git</developerConnection>
+  </scm>
 
 </project>

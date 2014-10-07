@@ -26,15 +26,14 @@
   <name>hadoop-configurator</name>
   <url>http://www.wibidata.com</url>
 
+  <parent>
+    <groupId>org.kiji.pom</groupId>
+    <artifactId>root-pom</artifactId>
+    <version>1.2.1-SNAPSHOT</version>
+  </parent>
+
   <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-    <java.version>1.6</java.version>
-    <maven.compiler.source>${java.version}</maven.compiler.source>
-    <maven.compiler.target>${java.version}</maven.compiler.target>
-
     <kiji-platforms.version>1.4.0-SNAPSHOT</kiji-platforms.version>
-    <scm.connection>scm:git:git@github.com:kijiproject/hadoop-configurator.git</scm.connection>
   </properties>
 
   <build>
@@ -42,47 +41,14 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>2.9</version>
-        <configuration>
-          <configLocation>${basedir}/src/main/checkstyle/checkstyle.xml</configLocation>
-          <suppressionsLocation>
-            ${basedir}/src/main/checkstyle/suppressions.xml
-          </suppressionsLocation>
-          <includeTestSourceDirectory>true</includeTestSourceDirectory>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>verify</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.8</version>
-        <configuration>
-          <links>
-            <link>http://archive.cloudera.com/cdh5/cdh/5/hadoop-2.3.0-cdh5.0.3/api</link>
-          </links>
-          <reportOutputDirectory>target/apidocs</reportOutputDirectory>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>prepare-package</phase>
-            <goals>
-              <goal>javadoc</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
       <plugin>
-        <!-- Gets around an issue with maven 3.0.4 -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.11</version>
       </plugin>
     </plugins>
   </build>
@@ -103,49 +69,10 @@
     </dependency>
   </dependencies>
 
-  <distributionManagement>
-    <repository>
-      <id>kiji-maven</id>
-      <name>kiji-maven-releases</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
-    </repository>
-    <snapshotRepository>
-      <id>kiji-maven</id>
-      <name>kiji-maven-snapshots</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
-    </snapshotRepository>
-  </distributionManagement>
-
   <scm>
-    <connection>${scm.connection}</connection>
-    <url>${scm.connection}</url>
-    <developerConnection>${scm.connection}</developerConnection>
+    <connection>scm:git:git@github.com:kijiproject/hadoop-configurator.git</connection>
+    <url>scm:git:git@github.com:kijiproject/hadoop-configurator.git</url>
+    <developerConnection>scm:git:git@github.com:kijiproject/hadoop-configurator.git</developerConnection>
   </scm>
-
-  <repositories>
-    <repository>
-      <id>kiji-repos</id>
-      <name>kiji-repos</name>
-      <url>https://repo.wibidata.com/artifactory/kiji</url>
-    </repository>
-  </repositories>
-
-  <profiles>
-    <profile>
-      <id>kiji-nightly</id>
-      <distributionManagement>
-        <repository>
-          <id>kiji-nightly</id>
-          <name>kiji-nightly-releases</name>
-          <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-        </repository>
-        <snapshotRepository>
-          <id>kiji-nightly</id>
-          <name>kiji-nightly-snapshots</name>
-          <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-        </snapshotRepository>
-      </distributionManagement>
-    </profile>
-  </profiles>
 
 </project>

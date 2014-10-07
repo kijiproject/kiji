@@ -53,4 +53,11 @@
     <module>kiji-cassandra-platform</module>
     <module>kiji-cassandra-test-platform</module>
   </modules>
+
+  <scm>
+    <connection>scm:git:git@github.com:kijiproject/kiji-platforms.git</connection>
+    <url>scm:git:git@github.com:kijiproject/kiji-platforms.git</url>
+    <developerConnection>scm:git:git@github.com:kijiproject/kiji-platforms.git</developerConnection>
+  </scm>
+
 </project>

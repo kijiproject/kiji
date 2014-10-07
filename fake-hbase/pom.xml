@@ -95,18 +95,10 @@
     </dependency>
   </dependencies>
 
-  <repositories>
-    <repository>
-      <id>kiji-repos</id>
-      <name>kiji-repos</name>
-      <url>https://repo.wibidata.com/artifactory/kiji</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-    </repository>
-  </repositories>
+  <scm>
+    <connection>scm:git:git@github.com:kijiproject/fake-hbase.git</connection>
+    <url>scm:git:git@github.com:kijiproject/fake-hbase.git</url>
+    <developerConnection>scm:git:git@github.com:kijiproject/fake-hbase.git</developerConnection>
+  </scm>
 
 </project>

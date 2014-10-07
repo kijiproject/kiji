@@ -32,15 +32,14 @@
   <name>The Kiji REST Servlet top-level project</name>
   <description>The Kiji REST Servlet</description>
   <inceptionYear>2013</inceptionYear>
+
   <properties>
-    <!-- use UTF-8 for everything -->
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <kiji-schema.version>1.6.0-SNAPSHOT</kiji-schema.version>
     <kiji-platforms.version>1.4.0-SNAPSHOT</kiji-platforms.version>
     <fake-hbase.version>0.3.0-SNAPSHOT</fake-hbase.version>
     <dropwizard.version>0.6.2</dropwizard.version>
   </properties>
+
   <modules>
     <module>build-resources</module>
     <module>kiji-rest</module>
@@ -156,20 +155,11 @@
       </plugins>
     </pluginManagement>
   </build>
-  <repositories>
-    <repository>
-      <id>kiji-repos</id>
-      <name>kiji-repos</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
-    </repository>
-    <repository>
-      <id>cloudera-repos</id>
-      <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
-    </repository>
-  </repositories>
+
   <scm>
     <connection>scm:git:git@github.com:kijiproject/kiji-rest.git</connection>
     <url>scm:git:git@github.com:kijiproject/kiji-rest.git</url>
     <developerConnection>scm:git:git@github.com:kijiproject/kiji-rest.git</developerConnection>
   </scm>
+
 </project>

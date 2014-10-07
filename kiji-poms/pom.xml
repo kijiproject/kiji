@@ -30,14 +30,12 @@
 
   <distributionManagement>
     <repository>
-      <id>kiji-maven</id>
-      <name>kiji-maven-releases</name>
+      <id>kiji-releases</id>
       <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
     </repository>
     <snapshotRepository>
-      <id>kiji-maven</id>
-      <name>kiji-maven-snapshots</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
+      <id>kiji-snapshots</id>
+      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
     </snapshotRepository>
   </distributionManagement>
 
@@ -47,21 +45,4 @@
     <developerConnection>scm:git:git@github.com:kijiproject/kiji-poms.git</developerConnection>
   </scm>
 
-  <profiles>
-    <profile>
-      <id>kiji-nightly</id>
-      <distributionManagement>
-        <repository>
-          <id>kiji-nightly</id>
-          <name>kiji-nightly-releases</name>
-          <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-        </repository>
-        <snapshotRepository>
-          <id>kiji-nightly</id>
-          <name>kiji-nightly-snapshots</name>
-          <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-        </snapshotRepository>
-      </distributionManagement>
-    </profile>
-  </profiles>
 </project>

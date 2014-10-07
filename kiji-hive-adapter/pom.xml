@@ -111,14 +111,6 @@
     </pluginManagement>
   </build>
 
-  <repositories>
-    <repository>
-      <id>kiji-repos</id>
-      <name>kiji-repos</name>
-      <url>https://repo.wibidata.com/artifactory/kiji</url>
-    </repository>
-  </repositories>
-
   <scm>
     <connection>scm:git:git@github.com:kijiproject/kiji-hive-adapter.git</connection>
     <url>scm:git:git@github.com:kijiproject/kiji-hive-adapter.git</url>

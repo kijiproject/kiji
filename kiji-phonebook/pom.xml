@@ -167,11 +167,10 @@
     </dependency>
   </dependencies>
 
-  <repositories>
-    <repository>
-      <id>kiji-repos</id>
-      <name>kiji-repos</name>
-      <url>https://repo.wibidata.com/artifactory/kiji</url>
-    </repository>
-  </repositories>
+  <scm>
+    <connection>scm:git:git@github.com:kijiproject/kiji-phonebook.git</connection>
+    <url>scm:git:git@github.com:kijiproject/kiji-phonebook.git</url>
+    <developerConnection>scm:git:git@github.com:kijiproject/kiji-phonebook.git</developerConnection>
+  </scm>
+
 </project>

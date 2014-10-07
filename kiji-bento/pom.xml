@@ -166,17 +166,6 @@
     </plugins>
   </build>
 
-  <repositories>
-    <repository>
-      <id>kiji-repos</id>
-      <name>kiji-repos</name>
-      <url>https://repo.wibidata.com/artifactory/kiji</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
-
   <scm>
     <connection>scm:git:git@github.com:kijiproject/kiji-bento.git</connection>
     <url>scm:git:git@github.com:kijiproject/kiji-bento.git</url>

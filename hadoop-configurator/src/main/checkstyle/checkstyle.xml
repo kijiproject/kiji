@@ -193,5 +193,7 @@
 
   <!-- allow warnings to be suppressed -->
   <module name="SuppressionCommentFilter" />
-  <module name="SuppressionFilter" />
+  <module name="SuppressionFilter">
+    <property name="file" value="src/main/checkstyle/suppressions.xml" />
+  </module>
 </module>

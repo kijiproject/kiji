@@ -659,33 +659,34 @@
   <repositories>
     <repository>
       <id>cloudera-repos</id>
-      <name>cloudera-repos</name>
       <url>https://repository.cloudera.com/content/groups/cloudera-repos</url>
+      <releases> <enabled>true</enabled> </releases>
+      <snapshots> <enabled>false</enabled> </snapshots>
     </repository>
     <repository>
-      <id>kiji-repos</id>
-      <name>kiji-repos</name>
-      <url>https://repo.wibidata.com/artifactory/kiji</url>
+      <id>kiji-releases</id>
+      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
+      <releases> <enabled>true</enabled> </releases>
+      <snapshots> <enabled>false</enabled> </snapshots>
     </repository>
   </repositories>
   <pluginRepositories>
     <pluginRepository>
-      <id>kiji-plugins</id>
-      <name>kiji-plugins</name>
-      <url>https://repo.wibidata.com/artifactory/kiji</url>
+      <id>kiji-releases</id>
+      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
+      <releases> <enabled>true</enabled> </releases>
+      <snapshots> <enabled>false</enabled> </snapshots>
     </pluginRepository>
   </pluginRepositories>
 
   <distributionManagement>
     <repository>
-      <id>kiji-maven</id>
-      <name>kiji-maven-releases</name>
+      <id>kiji-releases</id>
       <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
     </repository>
     <snapshotRepository>
-      <id>kiji-maven</id>
-      <name>kiji-maven-snapshots</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
+      <id>kiji-snapshots</id>
+      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
     </snapshotRepository>
   </distributionManagement>
 
@@ -696,21 +697,6 @@
   </scm>
 
   <profiles>
-    <profile>
-      <id>kiji-nightly</id>
-      <distributionManagement>
-        <repository>
-          <id>kiji-nightly</id>
-          <name>kiji-nightly-releases</name>
-          <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-        </repository>
-        <snapshotRepository>
-          <id>kiji-nightly</id>
-          <name>kiji-nightly-snapshots</name>
-          <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-        </snapshotRepository>
-      </distributionManagement>
-    </profile>
     <profile>
       <id>fast-findbugs</id>
       <build>

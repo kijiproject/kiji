@@ -35,12 +35,6 @@
   </modules>
 
   <properties>
-    <!-- Basic project properties -->
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <maven.compiler.source>1.6</maven.compiler.source>
-    <maven.compiler.target>1.6</maven.compiler.target>
-
     <!-- Versions for program dependencies -->
     <fake-hbase.version>0.3.0-SNAPSHOT</fake-hbase.version>
     <kiji-schema.version>1.6.0-SNAPSHOT</kiji-schema.version>
@@ -117,15 +111,6 @@
     </dependencies>
   </dependencyManagement>
 
-  <!-- Kiji artifacts can be retrieved from the following repositories -->
-  <repositories>
-    <repository>
-      <id>kiji-repos</id>
-      <name>kiji-repos</name>
-      <url>https://repo.wibidata.com/artifactory/kiji</url>
-    </repository>
-  </repositories>
-
   <build>
     <plugins>
       <plugin>
@@ -138,10 +123,26 @@
         </configuration>
       </plugin>
     </plugins>
-
   </build>
 
-  <!-- Section required for building and deploying this pom itself. -->
+  <repositories>
+    <repository>
+      <id>kiji-releases</id>
+      <name>kiji-repos</name>
+      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
+    </repository>
+  </repositories>
+
+  <distributionManagement>
+    <repository>
+      <id>kiji-releases</id>
+      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
+    </repository>
+    <snapshotRepository>
+      <id>kiji-snapshots</id>
+      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
+    </snapshotRepository>
+  </distributionManagement>
 
   <scm>
     <connection>scm:git:git@github.com:kijiproject/kiji-framework.git</connection>
@@ -149,29 +150,4 @@
     <developerConnection>scm:git:git@github.com:kijiproject/kiji-framework.git</developerConnection>
   </scm>
 
-  <distributionManagement>
-    <repository>
-      <id>kiji-maven</id>
-      <name>kiji-maven-releases</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
-    </repository>
-  </distributionManagement>
-
-  <profiles>
-    <profile>
-      <id>kiji-nightly</id>
-      <distributionManagement>
-        <repository>
-          <id>kiji-nightly</id>
-          <name>kiji-nightly-releases</name>
-          <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-        </repository>
-        <snapshotRepository>
-          <id>kiji-nightly</id>
-          <name>kiji-nightly-snapshots</name>
-          <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-        </snapshotRepository>
-      </distributionManagement>
-    </profile>
-  </profiles>
 </project>

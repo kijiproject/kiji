@@ -65,15 +65,10 @@
     </plugins>
   </build>
 
-  <dependencies>
-  </dependencies>
-
-  <repositories>
-    <repository>
-      <id>kiji-repos</id>
-      <name>kiji-repos</name>
-      <url>https://repo.wibidata.com/artifactory/kiji</url>
-    </repository>
-  </repositories>
+  <scm>
+    <connection>scm:git:git@github.com:kijiproject/annotations.git</connection>
+    <url>scm:git:git@github.com:kijiproject/annotations.git</url>
+    <developerConnection>scm:git:git@github.com:kijiproject/annotations.git</developerConnection>
+  </scm>
 
 </project>

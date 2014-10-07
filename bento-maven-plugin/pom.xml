@@ -127,4 +127,5 @@
     <url>scm:git:git@github.com:kijiproject/bento-maven-plugin.git</url>
     <developerConnection>scm:git:git@github.com:kijiproject/bento-maven-plugin.git</developerConnection>
   </scm>
+
 </project>
