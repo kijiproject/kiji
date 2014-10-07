@@ -90,7 +90,6 @@
           </execution>
         </executions>
         <configuration>
-          <bento.pypi.repository>http://pypi.wibidata.net/simple</bento.pypi.repository>
           <bento.platform>cdh5.0.3</bento.platform>
         </configuration>
       </plugin>

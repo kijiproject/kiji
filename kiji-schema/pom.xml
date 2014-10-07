@@ -76,9 +76,6 @@
               </goals>
             </execution>
           </executions>
-          <configuration>
-            <bento.pypi.repository>http://pypi.wibidata.net/simple</bento.pypi.repository>
-          </configuration>
         </plugin>
 
         <plugin>

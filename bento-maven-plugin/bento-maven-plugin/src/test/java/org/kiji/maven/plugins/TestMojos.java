@@ -47,7 +47,7 @@ public class TestMojos {
         false,
         false,
         null,
-        "http://pypi.wibidata.net/simple",
+        null,
         null,
         null
     ).execute();
