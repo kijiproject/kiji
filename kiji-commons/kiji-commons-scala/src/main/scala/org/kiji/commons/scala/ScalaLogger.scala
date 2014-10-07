@@ -38,10 +38,19 @@ class ScalaLogger private (
   def getLogger(): Logger = mLog
 
   def error(msg: => String): Unit = if (isErrorEnabled()) { mLog.error(msg) }
+  def error(msg: => String, thr: Throwable): Unit = if (isErrorEnabled()) { mLog.error(msg, thr) }
+
   def warn(msg: => String): Unit = if (isWarnEnabled()) { mLog.warn(msg) }
+  def warn(msg: => String, thr: Throwable): Unit = if (isWarnEnabled()) { mLog.warn(msg, thr) }
+
   def info(msg: => String): Unit = if (isInfoEnabled()) { mLog.info(msg) }
+  def info(msg: => String, thr: Throwable): Unit = if (isInfoEnabled()) { mLog.info(msg, thr) }
+
   def debug(msg: => String): Unit = if (isDebugEnabled()) { mLog.debug(msg) }
+  def debug(msg: => String, thr: Throwable): Unit = if (isDebugEnabled()) { mLog.debug(msg, thr) }
+
   def trace(msg: => String): Unit = if(isTraceEnabled()) { mLog.trace(msg) }
+  def trace(msg: => String, thr: Throwable): Unit = if(isTraceEnabled()) { mLog.trace(msg, thr) }
 
   def isErrorEnabled(): Boolean = mLog.isErrorEnabled()
   def isWarnEnabled(): Boolean = mLog.isWarnEnabled()
