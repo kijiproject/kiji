@@ -676,11 +676,12 @@ def _install_sudo_script(
         return
 
     # Copy the script to the desired location.
-    copy_script_to_dest_cmd = ['sudo', 'cp', script_abspath, script_destination]
-    assert subprocess.check_call(args=copy_script_to_dest_cmd) == 0, \
-        'Failed to copy file %s to: %s' % (script_abspath, script_destination)
+    if script_abspath != script_destination:
+        copy_script_to_dest_cmd = ['sudo', 'cp', script_abspath, script_destination]
+        assert subprocess.check_call(args=copy_script_to_dest_cmd) == 0, \
+            'Failed to copy file %s to: %s' % (script_abspath, script_destination)
 
-    logging.info('Installed %s to %s', script_abspath, script_destination)
+        logging.info('Installed %s to %s', script_abspath, script_destination)
 
     return script_destination
 
