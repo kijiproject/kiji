@@ -239,6 +239,8 @@ class BentoSystem(object):
                 bento cluster will run.
             verbose: Set to true to print the response from the docker daemon.
         """
+        logging.info('Pulling the latest Docker images for %s from DockerHub. Please be patient ' \
+            'as this may take a while.' % platform_version)
         response = self.docker_client.pull(
             repository=self.bento_image,
             tag=platform_version,
