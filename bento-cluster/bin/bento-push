@@ -19,14 +19,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds a bento docker image.
+# Build and push bento docker images to docker hub.
 #
 # USAGE
 #
-#   bento-build [-p platform-version]
+#   bento-push
 #
-# platform-version (-p) defaults to cdh5.1.3
-
 # ------------------------------------------------------------------------------
 
 set -o nounset   # Fail when referencing undefined variables
@@ -107,18 +105,14 @@ if [[ ${docker_version} < 1.0.0 ]] ; then
   exit 1
 fi
 
-platform_version="cdh5.1.3"
-
-while getopts ":p:" opt; do
-  case $opt in
-    p)
-      platform_version="${OPTARG}"
-      ;;
-    \?)
-      echo "Unknown option: -${OPTARG}" >&2
-      ;;
-  esac
-done
-
 $docker build -t "kijiproject/bento-cluster-base:cdh5" ${BENTO_CLUSTER_HOME}/docker-cdh5-base
-$docker build -t "kijiproject/bento-cluster:${platform_version}" ${BENTO_CLUSTER_HOME}/docker-${platform_version}
+
+$docker build -t "kijiproject/bento-cluster:cdh5" ${BENTO_CLUSTER_HOME}/docker-cdh5
+$docker build -t "kijiproject/bento-cluster:cdh5.1.0" ${BENTO_CLUSTER_HOME}/docker-cdh5.1.0
+$docker build -t "kijiproject/bento-cluster:cdh5.1.2" ${BENTO_CLUSTER_HOME}/docker-cdh5.1.2
+$docker build -t "kijiproject/bento-cluster:cdh5.1.3" ${BENTO_CLUSTER_HOME}/docker-cdh5.1.3
+
+$docker push kijiproject/bento-cluster:cdh5
+$docker push kijiproject/bento-cluster:cdh5.1.0
+$docker push kijiproject/bento-cluster:cdh5.1.2
+$docker push kijiproject/bento-cluster:cdh5.1.3
