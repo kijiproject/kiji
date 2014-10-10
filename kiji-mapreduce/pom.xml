@@ -47,7 +47,7 @@
     <module>build-resources</module>
     <module>platform-api</module>
     <module>cdh4mr1-bridge</module>
-    <module>hadoop2-cdh5-bridge</module>
+    <module>cdh5-bridge</module>
     <module>kiji-mapreduce</module>
     <module>kiji-mapreduce-cassandra</module>
     <module>profiling</module>

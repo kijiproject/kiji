@@ -48,17 +48,17 @@ import org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl;
 import org.kiji.annotations.ApiAudience;
 
 /**
- * Hadoop 2 and HBase 0.96 implementation of the KijiMRPlatformBridge API.
+ * CDH5 implementation of the KijiMRPlatformBridge API.
  */
 @ApiAudience.Private
-public final class Hadoop2CDH5xKijiMRBridge extends KijiMRPlatformBridge {
+public final class CDH5KijiMRBridge extends KijiMRPlatformBridge {
   /** KVComparator used in #compareKeyValues. */
   private final KeyValue.KVComparator mKVComparator;
 
   /**
    * No-arg constructor.  Will be instantiated via reflection.
    */
-  Hadoop2CDH5xKijiMRBridge() {
+  CDH5KijiMRBridge() {
     mKVComparator = new KeyValue.KVComparator();
   }
 

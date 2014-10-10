@@ -21,19 +21,19 @@ package org.kiji.mapreduce.platform;
 
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.kiji.annotations.ApiAudience;
 import org.kiji.delegation.Priority;
 
 /**
- * Factory for Hadoop 2 and HBase 0.96 KijiMRPlatformBridge implementation.
+ * Factory for CDH5 KijiMRPlatformBridge implementation.
+ *
+ * <p>This is the only CDH5 bridge. Future CDH5 releases will
+ * automatically fall back to this bridge.
+ *
+ * This is also the current bridge for Hadoop 2 and HBase 0.95-0.98.</p>
  */
 @ApiAudience.Private
-public final class Hadoop2CDH5xKijiMRBridgeFactory extends KijiMRPlatformBridgeFactory {
-  private static final Logger LOG =
-      LoggerFactory.getLogger(Hadoop2CDH5xKijiMRBridgeFactory.class);
+public final class CDH5KijiMRBridgeFactory extends KijiMRPlatformBridgeFactory {
 
   /** {@inheritDoc} */
   @Override
@@ -42,7 +42,7 @@ public final class Hadoop2CDH5xKijiMRBridgeFactory extends KijiMRPlatformBridgeF
     try {
       Class<? extends KijiMRPlatformBridge> bridgeClass =
           (Class<? extends KijiMRPlatformBridge>) Class.forName(
-              "org.kiji.mapreduce.platform.Hadoop2CDH5xKijiMRBridge");
+              "org.kiji.mapreduce.platform.CDH5KijiMRBridge");
       return bridgeClass.newInstance();
     } catch (Exception e) {
       throw new RuntimeException("Could not instantiate platform bridge", e);
@@ -55,10 +55,11 @@ public final class Hadoop2CDH5xKijiMRBridgeFactory extends KijiMRPlatformBridgeF
     String hadoopVer = org.apache.hadoop.util.VersionInfo.getVersion();
     String hbaseVer = org.apache.hadoop.hbase.util.VersionInfo.getVersion();
 
-    if (hadoopVer.matches("2\\..*") && hbaseVer.matches("0\\.96\\..*")) {
-      return Priority.NORMAL;
-    } else if (hadoopVer.matches("2\\..*-cdh5\\..*")) {
-      // Hadoop 2.x-cdh5.* matches correctly and should be close; use this bridge if necessary.
+    if (hadoopVer.matches("\\..*-cdh5\\..*") && hbaseVer.matches("\\..*-cdh5\\..*")) {
+      // This is the bridge for CDH5.
+      return Priority.HIGH;
+    } else if (hadoopVer.matches("2\\..*") && hbaseVer.matches("0\\.9[568]\\..*")) {
+      // This bridge may work for Hadoop 2 and HBase 0.95/0.96/0.98.
       return Priority.NORMAL;
     } else {
       // Can't provide for this implementation.

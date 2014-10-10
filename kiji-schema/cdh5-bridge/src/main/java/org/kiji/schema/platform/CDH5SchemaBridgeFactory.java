@@ -25,12 +25,12 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.delegation.Priority;
 
 /**
- * Factory for CDH5-specific SchemaPlatformBridge implementation.
+ * Factory for CDH5 SchemaPlatformBridge implementation.
  *
  * <p>This is the only CDH5 bridge. Future CDH5 releases will
  * automatically fall back to this bridge.
  *
- * This is also the current bridge for Hadoop 2 and HBase 0.96-0.98.</p>
+ * This is also the current bridge for Hadoop 2 and HBase 0.95-0.98.</p>
  */
 @ApiAudience.Private
 public final class CDH5SchemaBridgeFactory extends SchemaPlatformBridgeFactory {
@@ -55,15 +55,12 @@ public final class CDH5SchemaBridgeFactory extends SchemaPlatformBridgeFactory {
     String hadoopVer = org.apache.hadoop.util.VersionInfo.getVersion();
     String hbaseVer = org.apache.hadoop.hbase.util.VersionInfo.getVersion();
 
-    if (hadoopVer.matches("2\\..*-cdh5\\..*")
-        && hbaseVer.matches("0\\.9[568]\\..*-cdh5\\..*")) {
-      // This is our only bridge for CDH5; this is the
-      // best platform bridge available.
+    if (hadoopVer.matches("\\..*-cdh5\\..*") && hbaseVer.matches("\\..*-cdh5\\..*")) {
+      // This is the bridge for CDH5.
       return Priority.HIGH;
-    } else if (hadoopVer.matches("2\\..*")
-        && hbaseVer.matches("0\\.9[68]\\..*")) {
-      // This is our only bridge for HBase 0.96 and HBase 0.98.
-      return Priority.LOW;
+    } else if (hadoopVer.matches("2\\..*") && hbaseVer.matches("0\\.9[568]\\..*")) {
+      // This bridge may work for Hadoop 2 and HBase 0.95/0.96/0.98.
+      return Priority.NORMAL;
     } else {
       // Can't provide for this implementation.
       return Priority.DISABLED;

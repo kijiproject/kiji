@@ -19,7 +19,7 @@
   -->
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>kiji-mapreduce-hadoop2-cdh5-bridge</artifactId>
+  <artifactId>kiji-mapreduce-cdh5-bridge</artifactId>
   <packaging>jar</packaging>
 
   <parent>
@@ -29,8 +29,8 @@
     <relativePath>..</relativePath>
   </parent>
 
-  <name>CDH5.x Platform Bridge (Hadoop 2.x and HBase 0.96/0.98)</name>
-  <description>Bridge API provider for CDH5.x</description>
+  <name>Kiji MapReduce CDH5 Platform Bridge</name>
+  <description>Bridge API provider for CDH5</description>
 
   <build>
     <plugins>

@@ -222,7 +222,7 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>kiji-mapreduce-hadoop2-cdh5-bridge</artifactId>
+      <artifactId>kiji-mapreduce-cdh5-bridge</artifactId>
       <version>${project.version}</version>
       <scope>runtime</scope>
     </dependency>

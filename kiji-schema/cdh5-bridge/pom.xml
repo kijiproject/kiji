@@ -30,7 +30,7 @@
   </parent>
 
   <name>KijiSchema CDH5 Platform Bridge</name>
-  <description>Bridge API provider for CDH5 with MR2</description>
+  <description>Bridge API provider for CDH5</description>
 
   <build>
     <plugins>
