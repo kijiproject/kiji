@@ -134,7 +134,8 @@ public class TestKijiHFileOutputFormat {
   private static List<KeyValue> loadHFile(Path path, Configuration conf) throws IOException {
     final FileSystem fs = path.getFileSystem(conf);
     final CacheConfig cacheConf = new CacheConfig(conf);
-    final HFile.Reader reader = HFile.createReader(fs, path, cacheConf);
+    //TODO(WIBI-1872): HBase 0.96 incompatible changes requiring a bridge.
+    final HFile.Reader reader = HFile.createReader(fs, path, cacheConf, conf);
     final HFileScanner scanner = reader.getScanner(false, false);
     final List<KeyValue> kvs = Lists.newArrayListWithCapacity((int) reader.getEntries());
     boolean hasNext = scanner.seekTo();
