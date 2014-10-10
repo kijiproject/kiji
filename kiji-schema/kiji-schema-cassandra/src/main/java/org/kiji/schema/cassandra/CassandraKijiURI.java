@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.List;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -443,6 +444,15 @@ public final class CassandraKijiURI extends KijiURI {
     super.appendClusterIdentifier(sb, preserveOrdering);
     ImmutableList<String> contactPoints =
         preserveOrdering ? mContactPoints : mContactPointsNormalized;
+
+    if (mUsername != null) {
+      Preconditions.checkNotNull(mPassword);
+      sb.append(mUsername);
+      sb.append(":");
+      sb.append(mPassword);
+      sb.append("@");
+    }
+
     if (contactPoints.size() == 1) {
       sb.append(contactPoints.get(0));
     } else {

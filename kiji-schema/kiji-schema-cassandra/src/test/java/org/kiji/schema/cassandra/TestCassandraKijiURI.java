@@ -435,6 +435,8 @@ public class TestCassandraKijiURI {
     assertEquals(uri, CassandraKijiURI.newBuilder(uri).build().toString());
     uri = "kiji-cassandra://zkhost:1234/chost:5678/.unset/table/col/";
     assertEquals(uri, CassandraKijiURI.newBuilder(uri).build().toString());
+    uri = "kiji-cassandra://(zkhost1,zkhost2):1234/user:pass@chost:5678/instance/table/col/";
+    assertEquals(uri, CassandraKijiURI.newBuilder(uri).build().toString());
   }
 
   @Test
