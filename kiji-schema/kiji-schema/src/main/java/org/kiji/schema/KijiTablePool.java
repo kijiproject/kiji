@@ -74,6 +74,10 @@ import org.kiji.schema.util.ResourceUtils;
  * <p>
  *   This class is thread-safe, but the individual KijiTables that are returned from it are not.
  * </p>
+ *
+ * <p>
+ *   The KijiTablePool must be closed when you are done with it.
+ * </p>
  */
 @ApiAudience.Public
 @ApiStability.Evolving
