@@ -43,8 +43,6 @@
     <kiji-delegation.version>1.1.2-SNAPSHOT</kiji-delegation.version>
     <kiji-common-flags.version>1.1.1-SNAPSHOT</kiji-common-flags.version>
     <kiji-commons.version>0.1.0-SNAPSHOT</kiji-commons.version>
-
-    <bento-maven-plugin.version>0.1.0-SNAPSHOT</bento-maven-plugin.version>
   </properties>
 
   <modules>
@@ -64,20 +62,6 @@
   <build>
     <pluginManagement>
       <plugins>
-        <plugin>
-          <groupId>org.kiji.maven.plugins</groupId>
-          <artifactId>bento-maven-plugin</artifactId>
-          <version>${bento-maven-plugin.version}</version>
-          <executions>
-            <execution>
-              <goals>
-                <goal>start</goal>
-                <goal>stop</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-
         <plugin>
           <!-- must supply build-resources module with checkstyle/checkstyle.xml
                and suppressions.xml to use this -->
