@@ -35,9 +35,9 @@
   <inceptionYear>2014</inceptionYear>
 
   <properties>
-    <hadoop.version>2.3.0-cdh5.1.0</hadoop.version>
-    <hbase.version>0.98.1-cdh5.1.0</hbase.version>
-    <zookeeper.version>3.4.5-cdh5.1.0</zookeeper.version>
+    <hadoop.version>2.3.0-cdh5.1.3</hadoop.version>
+    <hbase.version>0.98.1-cdh5.1.3</hbase.version>
+    <zookeeper.version>3.4.5-cdh5.1.3</zookeeper.version>
   </properties>
 
   <build>

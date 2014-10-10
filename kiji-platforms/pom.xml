@@ -44,8 +44,6 @@
     <module>kiji-cdh4-3-test-platform</module>
     <module>kiji-cdh4-4-platform</module>
     <module>kiji-cdh4-4-test-platform</module>
-    <module>kiji-cdh5-0-platform</module>
-    <module>kiji-cdh5-0-test-platform</module>
     <module>kiji-cdh5-1-platform</module>
     <module>kiji-cdh5-1-test-platform</module>
     <module>kiji-compile-platform</module>

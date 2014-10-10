@@ -40,7 +40,7 @@
   <dependencies>
     <dependency>
       <groupId>org.kiji.platforms</groupId>
-      <artifactId>kiji-cdh5-0-test-platform</artifactId>
+      <artifactId>kiji-cdh5-1-test-platform</artifactId>
       <type>pom</type>
       <version>${project.version}</version>
       <scope>compile</scope>

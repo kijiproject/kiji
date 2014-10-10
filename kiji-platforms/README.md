@@ -44,7 +44,6 @@ deploy against a Hadoop version specified in a Kiji platform definition. The
 following platform definitions are provided:
 
 * kiji-cdh5-1-platform (Latest CDH5.1 update)
-* kiji-cdh5-0-platform (Latest CDH5.0 update)
 * kiji-cdh4-4-platform (Latest CDH4.4 update)
 * kiji-cdh4-3-platform (Latest CDH4.3 update)
 * kiji-cdh4-2-platform (Latest CDH4.2 update)
