@@ -43,6 +43,8 @@ import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.io.compress.Compression;
 import org.apache.hadoop.hbase.io.hfile.CacheConfig;
 import org.apache.hadoop.hbase.io.hfile.HFile;
+import org.apache.hadoop.hbase.io.hfile.HFileContext;
+import org.apache.hadoop.hbase.io.hfile.HFileContextBuilder;
 import org.apache.hadoop.hbase.regionserver.BloomType;
 import org.apache.hadoop.hbase.security.access.Permission.Action;
 import org.apache.hadoop.hbase.security.access.UserPermission;
@@ -108,10 +110,15 @@ public final class CDH5SchemaBridge extends SchemaPlatformBridge {
       FileSystem fs, Path path, int blockSizeBytes, String compressionType)
       throws IOException {
 
-     return HFile.getWriterFactory(conf, new CacheConfig(conf))
-         .withPath(fs, path)
+     //TODO(WIBI-1872): HBase 0.96 incompatible changes requiring a bridge.
+     final HFileContext context = new HFileContextBuilder()
          .withBlockSize(blockSizeBytes)
          .withCompression(Compression.getCompressionAlgorithmByName(compressionType))
+         .build();
+
+     return HFile.getWriterFactory(conf, new CacheConfig(conf))
+         .withPath(fs, path)
+         .withFileContext(context)
          .withComparator(KeyValue.COMPARATOR)
          .create();
   }
