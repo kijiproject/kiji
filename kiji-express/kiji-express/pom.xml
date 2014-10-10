@@ -21,6 +21,17 @@
   </parent>
 
   <dependencies>
+    <!--
+      This dependency must be at the top of the dependencies section to guarantee shadowing of
+      org.apache.hadoop.fs.FileUtil and org.apache.hadoop.fs.RawLocalFileSystem. This dependency
+      MUST also come before kiji-compile-platform.
+    -->
+    <dependency>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-test-platform</artifactId>
+      <type>pom</type>
+    </dependency>
+
     <!-- Scala dependencies. -->
     <dependency>
       <groupId>org.scala-lang</groupId>
@@ -143,12 +154,6 @@
     <dependency>
       <groupId>org.kiji.testing</groupId>
       <artifactId>fake-hbase</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.kiji.platforms</groupId>
-      <artifactId>kiji-test-platform</artifactId>
-      <type>pom</type>
     </dependency>
 
     <dependency>

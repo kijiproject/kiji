@@ -20,8 +20,8 @@
   -->
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>kiji-test-platform</artifactId>
-  <packaging>pom</packaging>
+  <artifactId>kiji-platforms-test-fixes</artifactId>
+  <packaging>jar</packaging>
 
   <parent>
     <groupId>org.kiji.platforms</groupId>
@@ -30,31 +30,13 @@
     <relativePath>..</relativePath>
   </parent>
 
-  <name>kiji-cdh5-platform</name>
-  <description>Kiji platform test dependency for libraries</description>
-  <inceptionYear>2014</inceptionYear>
-
-  <build>
-  </build>
-
   <dependencies>
-    <!--
-      This dependency must be placed at the top of the dependencies section to shadow hadoop
-      classes. Speeds up tests that use hadoop's LocalJobRunner.
-    -->
     <dependency>
       <groupId>org.kiji.platforms</groupId>
-      <artifactId>kiji-platforms-test-fixes</artifactId>
+      <artifactId>kiji-compile-platform</artifactId>
       <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.kiji.platforms</groupId>
-      <artifactId>kiji-cdh5-1-test-platform</artifactId>
       <type>pom</type>
-      <version>${project.version}</version>
-      <scope>compile</scope>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 </project>

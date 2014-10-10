@@ -22,6 +22,19 @@
 
   <dependencies>
     <!--
+      This dependency must be at the top of the dependencies section to guarantee shadowing of
+      org.apache.hadoop.fs.FileUtil and org.apache.hadoop.fs.RawLocalFileSystem. This dependency
+      MUST also come before kiji-compile-platform.
+    -->
+    <dependency>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-test-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!--
       Dependencies, alphabetized by groupId:artifactId:type:version
     -->
     <dependency>
@@ -101,13 +114,6 @@
       <artifactId>kiji-express</artifactId>
       <type>test-jar</type>
       <version>${kiji-express.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.platforms</groupId>
-      <artifactId>kiji-test-platform</artifactId>
-      <type>pom</type>
-      <version>${kiji-platforms.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

@@ -36,6 +36,7 @@
   <inceptionYear>2012</inceptionYear>
 
   <modules>
+    <module>kiji-platforms-test-fixes</module>
     <module>kiji-cdh4-1-platform</module>
     <module>kiji-cdh4-1-test-platform</module>
     <module>kiji-cdh4-2-platform</module>
