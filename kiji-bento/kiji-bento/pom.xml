@@ -167,14 +167,14 @@
     <dependency>
       <groupId>org.kiji.express</groupId>
       <artifactId>kiji-express-examples</artifactId>
-      <version>${kiji-express-examples.version}</version>
+      <version>${kiji-express.version}</version>
       <classifier>release</classifier>
       <type>tar.gz</type>
     </dependency>
     <dependency>
       <groupId>org.kiji.express</groupId>
       <artifactId>kiji-express-tools</artifactId>
-      <version>${kiji-express-tools.version}</version>
+      <version>${kiji-express.version}</version>
       <classifier>release</classifier>
       <type>tar.gz</type>
     </dependency>
@@ -269,20 +269,6 @@
       <groupId>org.kiji.rest</groupId>
       <artifactId>kiji-rest-cdh5</artifactId>
       <version>${kiji-rest.version}</version>
-      <classifier>release</classifier>
-      <type>tar.gz</type>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.scoring</groupId>
-      <artifactId>kiji-scoring</artifactId>
-      <version>${kiji-scoring.version}</version>
-      <classifier>release</classifier>
-      <type>tar.gz</type>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.kiji-bento</groupId>
-      <artifactId>bento-checkin</artifactId>
-      <version>${project.version}</version>
       <classifier>release</classifier>
       <type>tar.gz</type>
     </dependency>

@@ -73,14 +73,6 @@
     <dependencySet>
       <outputDirectory>.</outputDirectory>
       <includes>
-        <include>org.kiji.bento:bento-cluster:tar.gz</include>
-      </includes>
-      <unpack>true</unpack>
-      <useProjectArtifact>false</useProjectArtifact>
-    </dependencySet>
-    <dependencySet>
-      <outputDirectory>.</outputDirectory>
-      <includes>
         <include>org.kiji.mapreduce:kiji-mapreduce:tar.gz</include>
       </includes>
       <unpack>true</unpack>
@@ -146,22 +138,6 @@
       <outputDirectory>.</outputDirectory>
       <includes>
         <include>org.kiji.rest:kiji-rest-cdh5:tar.gz</include>
-      </includes>
-      <unpack>true</unpack>
-      <useProjectArtifact>false</useProjectArtifact>
-    </dependencySet>
-    <dependencySet>
-      <outputDirectory>.</outputDirectory>
-      <includes>
-        <include>org.kiji.scoring:kiji-scoring:tar.gz</include>
-      </includes>
-      <unpack>true</unpack>
-      <useProjectArtifact>false</useProjectArtifact>
-    </dependencySet>
-    <dependencySet>
-      <outputDirectory>.</outputDirectory>
-      <includes>
-        <include>org.kiji.kiji-bento:bento-checkin:tar.gz</include>
       </includes>
       <unpack>true</unpack>
       <useProjectArtifact>false</useProjectArtifact>

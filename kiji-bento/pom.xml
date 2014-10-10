@@ -37,8 +37,6 @@
 
   <properties>
     <codename>fugu</codename>
-    <bento-cluster.version>2.0.0-SNAPSHOT</bento-cluster.version>
-    <kiji-checkin.version>1.1.0-SNAPSHOT</kiji-checkin.version>
     <kiji-schema.version>1.6.0-SNAPSHOT</kiji-schema.version>
     <kiji-schema-shell.version>1.4.0-SNAPSHOT</kiji-schema-shell.version>
     <kiji-phonebook.version>1.2.0-SNAPSHOT</kiji-phonebook.version>
@@ -49,17 +47,11 @@
     <kiji-modeling.version>0.11.0-SNAPSHOT</kiji-modeling.version>
     <kiji-express.version>2.1.0-SNAPSHOT</kiji-express.version>
     <kiji-express-music.version>2.1.0-SNAPSHOT</kiji-express-music.version>
-    <kiji-express-examples.version>${kiji-express.version}</kiji-express-examples.version>
-    <kiji-express-tools.version>${kiji-express.version}</kiji-express-tools.version>
     <kiji-rest.version>1.5.0-SNAPSHOT</kiji-rest.version>
     <kiji-scoring.version>0.18.0-SNAPSHOT</kiji-scoring.version>
-    <kiji-scoring-server.version>0.16.0-SNAPSHOT</kiji-scoring-server.version>
-    <kiji-model-repository.version>0.11.0-SNAPSHOT</kiji-model-repository.version>
-    <kiji-common-flags.version>1.1.1-SNAPSHOT</kiji-common-flags.version>
   </properties>
 
   <modules>
-    <module>bento-checkin</module>
     <module>kiji-bento</module>
   </modules>
 
@@ -82,7 +74,7 @@
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>versions-maven-plugin</artifactId>
         <configuration>
-          <includeProperties>bento-cluster.version,kiji-checkin.version,kiji-schema.version,kiji-schema-shell.version,kiji-phonebook.version,kiji-mapreduce.version,kiji-mapreduce-lib.version,kiji-hive-adapter.version,kiji-music.version,kiji-express.version,kiji-express-music.version,kiji-express-examples.version,kiji-rest.version,kiji-scoring.version,kiji-modeling.version</includeProperties>
+          <includeProperties>kiji-schema.version,kiji-schema-shell.version,kiji-phonebook.version,kiji-mapreduce.version,kiji-mapreduce-lib.version,kiji-hive-adapter.version,kiji-music.version,kiji-express.version,kiji-express-music.version,kiji-rest.version</includeProperties>
         </configuration>
         <dependencies>
           <!--
@@ -109,7 +101,7 @@
           <dependency>
             <groupId>org.kiji.express</groupId>
             <artifactId>kiji-express-examples</artifactId>
-            <version>${kiji-express-examples.version}</version>
+            <version>${kiji-express.version}</version>
           </dependency>
           <dependency>
             <groupId>org.kiji.examples.phonebook</groupId>
@@ -150,11 +142,6 @@
             <groupId>org.kiji.rest</groupId>
             <artifactId>kiji-rest</artifactId>
             <version>${kiji-rest.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.kiji.scoring</groupId>
-            <artifactId>kiji-scoring</artifactId>
-            <version>${kiji-scoring.version}</version>
           </dependency>
           <dependency>
             <groupId>org.kiji.modeling</groupId>
