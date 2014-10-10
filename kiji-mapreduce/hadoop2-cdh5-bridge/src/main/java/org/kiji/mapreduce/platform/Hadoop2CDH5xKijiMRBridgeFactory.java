@@ -31,9 +31,9 @@ import org.kiji.delegation.Priority;
  * Factory for Hadoop 2 and HBase 0.96 KijiMRPlatformBridge implementation.
  */
 @ApiAudience.Private
-public final class Hadoop2HBase96xKijiMRBridgeFactory extends KijiMRPlatformBridgeFactory {
+public final class Hadoop2CDH5xKijiMRBridgeFactory extends KijiMRPlatformBridgeFactory {
   private static final Logger LOG =
-      LoggerFactory.getLogger(Hadoop2HBase96xKijiMRBridgeFactory.class);
+      LoggerFactory.getLogger(Hadoop2CDH5xKijiMRBridgeFactory.class);
 
   /** {@inheritDoc} */
   @Override
@@ -42,7 +42,7 @@ public final class Hadoop2HBase96xKijiMRBridgeFactory extends KijiMRPlatformBrid
     try {
       Class<? extends KijiMRPlatformBridge> bridgeClass =
           (Class<? extends KijiMRPlatformBridge>) Class.forName(
-              "org.kiji.mapreduce.platform.Hadoop2HBase96xKijiMRBridge");
+              "org.kiji.mapreduce.platform.Hadoop2CDH5xKijiMRBridge");
       return bridgeClass.newInstance();
     } catch (Exception e) {
       throw new RuntimeException("Could not instantiate platform bridge", e);

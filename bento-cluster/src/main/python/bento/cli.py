@@ -328,7 +328,7 @@ def main(args):
     create_parser.add_argument(
         '-p',
         '--platform-version',
-        default='cdh5.0.3',
+        default='cdh5.1.3',
         help='Version of the hadoop/hbase stack to run in the bento cluster.'
     )
     create_parser.add_argument(
@@ -427,7 +427,7 @@ def main(args):
     pull_parser.add_argument(
         '-p',
         '--platform-version',
-        default='cdh5.0.3',
+        default='cdh5.1.3',
         help='Version of the hadoop/hbase stack to run in the bento cluster.'
     )
     pull_parser.set_defaults(func=bento_pull)

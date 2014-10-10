@@ -53,7 +53,7 @@
 
     <dependency>
       <groupId>org.kiji.platforms</groupId>
-      <artifactId>kiji-cdh5-0-platform</artifactId>
+      <artifactId>kiji-cdh5-1-platform</artifactId>
       <type>pom</type>
       <version>${kiji-platforms.version}</version>
       <scope>compile</scope>

@@ -51,14 +51,14 @@ import org.kiji.annotations.ApiAudience;
  * Hadoop 2 and HBase 0.96 implementation of the KijiMRPlatformBridge API.
  */
 @ApiAudience.Private
-public final class Hadoop2HBase96xKijiMRBridge extends KijiMRPlatformBridge {
+public final class Hadoop2CDH5xKijiMRBridge extends KijiMRPlatformBridge {
   /** KVComparator used in #compareKeyValues. */
   private final KeyValue.KVComparator mKVComparator;
 
   /**
    * No-arg constructor.  Will be instantiated via reflection.
    */
-  Hadoop2HBase96xKijiMRBridge() {
+  Hadoop2CDH5xKijiMRBridge() {
     mKVComparator = new KeyValue.KVComparator();
   }
 
