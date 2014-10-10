@@ -163,7 +163,8 @@ class HFileTool extends BaseTool {
     val conf = HBaseConfiguration.create()
     val cacheConf = new CacheConfig(conf)
     val fs = FileSystem.get(conf)
-    val reader: HFile.Reader = HFile.createReader(fs, path, cacheConf)
+    //TODO(WIBI-1872): HBase 0.96 incompatible changes requiring a bridge.
+    val reader: HFile.Reader = HFile.createReader(fs, path, cacheConf, conf)
     try {
       val cacheBlocks = false
       val positionalRead = false

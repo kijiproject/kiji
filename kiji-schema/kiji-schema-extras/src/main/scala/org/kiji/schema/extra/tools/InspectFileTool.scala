@@ -147,7 +147,7 @@ class InspectFileTool extends BaseTool {
   private def readHFile(path: Path): Unit = {
     val cacheConf = new CacheConfig(getConf)
     val fs = FileSystem.get(getConf)
-    val reader: HFile.Reader = HFile.createReader(fs, path, cacheConf)
+    val reader: HFile.Reader = HFile.createReader(fs, path, cacheConf, getConf)
     try {
       val cacheBlocks = false
       val positionalRead = false
