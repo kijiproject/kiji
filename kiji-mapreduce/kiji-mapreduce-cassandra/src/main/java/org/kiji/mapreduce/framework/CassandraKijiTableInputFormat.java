@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.PlainTextAuthProvider;
 import com.datastax.driver.core.Session;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -105,13 +106,24 @@ public final class CassandraKijiTableInputFormat
       try {
         // Create a session with a custom load-balancing policy that will ensure that we send
         // queries for system.local and system.peers to the same node.
-        Cluster cluster = Cluster
+        final List<String> hosts = inputTableURI.getContactPoints();
+        final String[] hostStrings = hosts.toArray(new String[hosts.size()]);
+        int port = inputTableURI.getContactPort();
+        final Cluster.Builder clusterBuilder = Cluster
             .builder()
-            .addContactPoints(inputTableURI.getContactPoints()
-                .toArray(new String[inputTableURI.getContactPoints().size()]))
-            .withPort(inputTableURI.getContactPort())
+            .addContactPoints(hostStrings)
+            .withPort(port);
+
+        if (null != inputTableURI.getUsername()) {
+          clusterBuilder.withAuthProvider(
+              new PlainTextAuthProvider(inputTableURI.getUsername(), inputTableURI.getPassword())
+          );
+        }
+
+        final Cluster cluster = clusterBuilder
             .withLoadBalancingPolicy(new ConsistentHostOrderPolicy())
             .build();
+
         Session session = cluster.connect();
 
         // Get a list of all of the subsplits.  A "subsplit" contains the following:
