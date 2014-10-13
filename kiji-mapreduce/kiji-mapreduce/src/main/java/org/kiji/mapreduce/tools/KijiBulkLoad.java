@@ -22,9 +22,10 @@ package org.kiji.mapreduce.tools;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -34,8 +35,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hbase.HConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
@@ -50,8 +54,7 @@ import org.kiji.schema.util.ResourceUtils;
 /** Bulk loads HFiles into a Kiji table. */
 @ApiAudience.Private
 public final class KijiBulkLoad extends BaseTool {
-  /** ExecutorService to execute the callables when bulk-loading. */
-  private ExecutorService mExecutorService = Executors.newCachedThreadPool();
+  private static final Logger LOG = LoggerFactory.getLogger(KijiBulkLoad.class);
 
   @Flag(name="hfile", usage="Path of the directory containing HFile(s) to bulk-load. "
       + "Typically --hfile=hdfs://hdfs-cluster-address/path/to/hfile.dir/")
@@ -60,13 +63,15 @@ public final class KijiBulkLoad extends BaseTool {
   @Flag(name="table", usage="URI of the Kiji table to bulk-load into.")
   private String mTableURIFlag = null;
 
-  @Flag(name="timeout-milliseconds", usage="Timeout in milliseconds to wait for a bulk-load to "
-      + "succeed. Default 10 seconds (10000 milliseconds).")
-  private final Long mLoadTimeoutMilliseconds = 10000L; // 10 seconds
+  @Flag(name="timeout-seconds", usage="Timeout in seconds to wait for a bulk-load to "
+      + "succeed. Default is 60 seconds")
+  private final Long mTimeoutSeconds = 60L;
 
-  @Flag(name="chmod-interactive", usage="When false, does not prompt for confirmation before "
-      + "chmod'ing the hfile directory.")
-  private Boolean mChmodInteractive = true;
+  @Flag(name="chmod-background", usage="When true, while bulk loading, periodically scan the "
+      + "hfile directory recursively to add all read-write permissions to files created by "
+      + "splits so that they will be usable by HBase. See "
+      + "https://issues.apache.org/jira/browse/HBASE-6422.")
+  private Boolean mChmodBackground = false;
 
   /** URI of the Kiji table to bulk-load into. */
   private KijiURI mTableURI = null;
@@ -93,22 +98,46 @@ public final class KijiBulkLoad extends BaseTool {
   }
 
   /**
-   * Recursively sets the permissions to 777 on the HFiles.  There is no built-in way in the
-   * Hadoop Java API to recursively set permissions on a directory, so we implement it here.
+   * Recursively grant additional read and write permissions to all. There is no
+   * built-in way in the Hadoop Java API to recursively set permissions on a directory,
+   * so we implement it here.
    *
    * @param path The Path to the directory to chmod.
    * @throws IOException on IOException.
    */
-  private void recursiveGrantAllHFilePermissions(Path path) throws IOException {
+  private void recursiveGrantAllReadWritePermissions(Path path) throws IOException {
     FileSystem hdfs = path.getFileSystem(getConf());
-    // Set the permissions on the path itself.
-    hdfs.setPermission(path, FsPermission.createImmutable((short) 0777));
+    recursiveGrantAllReadWritePermissions(hdfs, hdfs.getFileStatus(path));
+  }
+
+  /**
+   * Helper method used by recursiveGrantAllReadWritePermissions to actually grant the
+   * additional read and write permissions to all.  It deals with FileStatus objects
+   * since that is the object that supports listStatus.
+   *
+   * @param hdfs The FileSystem on which the file exists.
+   * @param status The status of the file whose permissions are checked and on whose children
+   *     this method is called recursively.
+   * @throws IOException on IOException.
+   */
+  private void recursiveGrantAllReadWritePermissions(FileSystem hdfs, FileStatus status)
+      throws IOException {
+    final FsPermission currentPermissions = status.getPermission();
+    if (!currentPermissions.getOtherAction().implies(FsAction.READ_WRITE)) {
+      LOG.info("Adding a+rw to permissions for {}: {}", status.getPath(), currentPermissions);
+      hdfs.setPermission(
+          status.getPath(),
+          new FsPermission(
+              currentPermissions.getUserAction(),
+              currentPermissions.getGroupAction().or(FsAction.READ_WRITE),
+              currentPermissions.getOtherAction().or(FsAction.READ_WRITE)));
+    }
     // Recurse into any files and directories in the path.
     // We must use listStatus because listFiles does not list subdirectories.
-    FileStatus[] fileStatuses = hdfs.listStatus(path);
-    for (FileStatus fileStatus : fileStatuses) {
-      if (!fileStatus.getPath().equals(path)) {
-        recursiveGrantAllHFilePermissions(fileStatus.getPath());
+    FileStatus[] subStatuses = hdfs.listStatus(status.getPath());
+    for (FileStatus subStatus : subStatuses) {
+      if (!subStatus.equals(status)) {
+        recursiveGrantAllReadWritePermissions(hdfs, subStatus);
       }
     }
   }
@@ -149,60 +178,77 @@ public final class KijiBulkLoad extends BaseTool {
         // the table URI.  KijiTable does not expose its internal Configuration and
         // Kiji.getConf() is deprecated, so we have to construct one externally.
         final Configuration conf = getConf();
+
         conf.set(HConstants.ZOOKEEPER_QUORUM,
             Joiner.on(",").join(mTableURI.getZookeeperQuorumOrdered()));
         conf.setInt(HConstants.ZOOKEEPER_CLIENT_PORT, mTableURI.getZookeeperClientPort());
 
-        final HFileLoader hFileLoader = HFileLoader.create(conf);
+        final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
+        Future<?> chmodTask = null;
+        try {
+          // We have to continually run chmod a+rw so that files newly created by splits will
+          // be usable by hbase.  See https://issues.apache.org/jira/browse/HBASE-6422.
+          // HBase proposes to solve this with the Secure Bulk Loader, but, for now, this
+          // band-aid works.
+          if (mChmodBackground) {
+            final Runnable chmodRunnable = new Runnable() {
+              final static int MAX_CONSECUTIVE_ERRORS=5;
 
-        // Create a new Callable for loading HFiles.  This is used later to execute the HFile
-        // loading in a separate thread, so we can check if it's done and, if necessary, chmod 777
-        // the HFile directory concurrently while it runs.
-        Callable<Void> hFileLoadCallable = new Callable<Void>() {
-          public Void call() throws Exception {
-            hFileLoader.load(mHFile, table);
-            return null;
+              private int mNumConsecutiveErrors = 0;
+
+              @Override
+              public void run() {
+                try {
+                  recursiveGrantAllReadWritePermissions(mHFile);
+                  mNumConsecutiveErrors = 0;
+                } catch(IOException ex) {
+                  LOG.warn("recursiveGrantAllReadWritePermissions raised exception: {}", ex);
+                  mNumConsecutiveErrors += 1;
+                  if (mNumConsecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+                    throw new RuntimeException("too many IOExceptions", ex);
+                  }
+                }
+              }
+            };
+            chmodTask = executorService.scheduleAtFixedRate(chmodRunnable, 0, 1, TimeUnit.SECONDS);
           }
-        };
-
-        Future<Void> hFileLoadTask = mExecutorService.submit(hFileLoadCallable);
-        Long startTime = System.currentTimeMillis();
-        // Wait until mLoadTimeoutMilliseconds has passed.  We do not use Future#get(long timeout)
-        // because that will cancel the future if it isn't done.
-        while (
-            System.currentTimeMillis() < startTime + mLoadTimeoutMilliseconds
-            && !hFileLoadTask.isDone()) {
-          Thread.sleep(100);
-        }
-        if (hFileLoadTask.isDone()) {
-          return SUCCESS;
-        }
-        // If it did not complete in mLoadTimeoutMilliseconds, try to chmod the directory.
-        if (mChmodInteractive) {
-          if (!inputConfirmation(
-              "First attempt at bulk-load timed out after " + mLoadTimeoutMilliseconds
-                  + " milliseconds.  Do you want to chmod -R 777 the HFile directory?",
-              mHFile.getName()
-          )) {
-            getPrintStream().println("Bulk-load timed out, not retrying.");
-            return FAILURE;
-          } else {
-            recursiveGrantAllHFilePermissions(mHFile);
-            try {
-              hFileLoadTask.get(mLoadTimeoutMilliseconds, TimeUnit.MILLISECONDS);
-            } catch (TimeoutException e) {
-              getPrintStream().println("Bulk-load failed due to a second timeout.");
-              return FAILURE;
+          // NOTE: HFileLoader never uses conf.
+          final HFileLoader hFileLoader = HFileLoader.create(conf);
+          // launch the load on a separate thread and wait to cancel if timeout is exceeded
+          final Callable<Void> hFileLoadCallable = new Callable<Void>() {
+            public Void call() throws Exception {
+              hFileLoader.load(mHFile, table);
+              return null;
             }
-          }
-        } else {
-          recursiveGrantAllHFilePermissions(mHFile);
+          };
+          final Future<Void> hFileLoadTask = executorService.submit(hFileLoadCallable);
           try {
-            hFileLoadTask.get(mLoadTimeoutMilliseconds, TimeUnit.MILLISECONDS);
-          } catch (TimeoutException e) {
-            getPrintStream().println("Bulk-load failed due to a second timeout.");
+            hFileLoadTask.get(mTimeoutSeconds, TimeUnit.SECONDS);
+          } catch (TimeoutException ex) {
+            getPrintStream().println(
+                "Bulk-load failed due to a timeout after " + mTimeoutSeconds + "s.");
+            hFileLoadTask.cancel(true);
             return FAILURE;
+          } catch (ExecutionException executionException) {
+            // try to unpack the exception that bulk load raised
+            Exception cause = null;
+            try {
+              cause = (Exception) executionException.getCause();
+              if (cause == null) {
+                // There was no cause? Fall back to the original ExecutionException.
+                cause = executionException;
+              }
+            } catch (ClassCastException castException) {
+              // Cause wasn't an exception? Fall back to the original ExecutionException.
+              cause = executionException;
+            }
+            throw cause;
           }
+        } finally {
+          if (chmodTask != null) {
+            chmodTask.cancel(false);
+          }
+          executorService.shutdown();
         }
         return SUCCESS;
       } finally {
