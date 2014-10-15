@@ -27,11 +27,17 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.BigIntegerNode
+import com.fasterxml.jackson.databind.node.BinaryNode
 import com.fasterxml.jackson.databind.node.BooleanNode
+import com.fasterxml.jackson.databind.node.DecimalNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.JsonNodeType
+import com.fasterxml.jackson.databind.node.MissingNode
+import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.POJONode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
@@ -50,6 +56,166 @@ object JsonUtils {
     objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     objectMapper
   }
+
+  /**
+   * Compare two Json nodes for equality.
+   *
+   * Differs from built in node.equals(node2) in the handling of number nodes with different types.
+   * Jackson's built in equals methods require type equality in addition to value equality, which
+   * differs from the json spec which makes no distinction between types of numbers. This method
+   * compares number nodes by value only.
+   *
+   * Behavior is undefined if input nodes include integral number values outside the bounds of Long
+   * or floating point number values outside the bounds of Double.
+   *
+   * @param left First node to compare for equality.
+   * @param right Second node to compare for equality.
+   * @return Whether the two input nodes are equal to each other.
+   */
+  def equals(left: JsonNode, right: JsonNode): Boolean = {
+    if (left.eq(right)) {
+      // left and right are the same JVM object; they are necessarily equal.
+      true
+    } else if (left == null || right == null) {
+      // left and right are not the same JVM object and one is null; they are necessarily not equal.
+      false
+    } else {
+      // left and right are not the same JVM object and neither is null; compare their values.
+      left match {
+        // Most node types compare fine, so we use their built in equals methods.
+        case l: TextNode => l.equals(right)
+        case l: BooleanNode => l.equals(right)
+        case l: NullNode => l.equals(right)
+        case l: POJONode => l.equals(right)
+        case l: MissingNode => l.equals(right)
+        // TODO: Investigate how BinaryNodes compare since they are represented as Strings in Json.
+        case l: BinaryNode => l.equals(right)
+        // Numbers require special comparison logic to ensure that Long(5) equals Int(5).
+        case l: NumericNode => {
+          right match {
+            case r: NumericNode => numbersEqual(l, r)
+            case _ => false
+          }
+        }
+        // Collection nodes built in comparison logic is correct, but must be rewritten so that the
+        // fixed number comparisons apply during recursive calls.
+        case l: ArrayNode => right match {
+          case r: ArrayNode => {
+            if (l.size() != r.size()) {
+              false
+            } else {
+              val lElements: Iterator[JsonNode] = l.elements().asScala
+              val rElements: Iterator[JsonNode] = r.elements().asScala
+              lElements.zip(rElements).forall { pair: (JsonNode, JsonNode) =>
+                val (lElem, rElem) = pair
+                equals(lElem, rElem)
+              }
+            }
+          }
+          case _ => false
+        }
+        case l: ObjectNode => right match {
+          case r: ObjectNode => {
+            if (l.size() != r.size()) {
+              false
+            } else {
+              val lFields: Set[String] = l.fieldNames().asScala.toSet
+              val rFields: Set[String] = r.fieldNames().asScala.toSet
+              (lFields == rFields) && lFields.forall { field: String =>
+                val lElem: JsonNode = l.get(field)
+                val rElem: JsonNode = r.get(field)
+                equals(lElem, rElem)
+              }
+            }
+          }
+          case _ => false
+        }
+      }
+    }
+  }
+
+  private val LongMax: BigInteger = BigInt(Long.MaxValue).bigInteger
+  private val LongMin: BigInteger = BigInt(Long.MinValue).bigInteger
+
+  /**
+   * Check if a NumericNode's value fits within a Long.
+   *
+   * Input is expected to be an integral number.
+   *
+   * @param number NumericNode to bounds check.
+   * @return Whether the input value can be represented as a Long.
+   */
+  private def fitsInLong(number: NumericNode): Boolean = {
+    require(number.isIntegralNumber)
+    number match {
+      case big: BigIntegerNode => {
+        big.bigIntegerValue().compareTo(LongMax) <= 0 &&
+            big.bigIntegerValue().compareTo(LongMin) >= 0
+      }
+      case _ => true // All other cases fit in long.
+    }
+  }
+
+  private val DoubleMax: java.math.BigDecimal = BigDecimal(Double.MaxValue).bigDecimal
+  private val DoubleMin: java.math.BigDecimal = BigDecimal(Double.MinValue).bigDecimal
+
+  /**
+   * Check if a NumericNode's value fits within a Double.
+   *
+   * Input is expected to be a floating point number.
+   *
+   * Does not check for precision of decimal numbers. A DecimalNode containing a value smaller than
+   * Double.MaxValue, but more precise than can be represented by a Double will pass.
+   *
+   * @param number NumericNode to bounds check.
+   * @return Whether the input value can be represented as a Double.
+   */
+  private def fitsInDouble(number: NumericNode): Boolean = {
+    require(number.isFloatingPointNumber)
+    number match {
+      case big: DecimalNode => {
+        big.decimalValue().compareTo(DoubleMax) <= 0 &&
+            big.decimalValue().compareTo(DoubleMin) >= 0
+      }
+      case _ => true // All other cases fit in double.
+    }
+  }
+
+  /**
+   * Helper for equals which compares two NumericNodes by value, ignoring type.
+   *
+   * Does not work with integral number values outside the bounds of Long or floating point values
+   * outside the bounds of Double.
+   *
+   * @param left First numeric node to check for equality.
+   * @param right Second numeric node to check for equality.
+   * @return Whether the value of the input nodes are equal.
+   */
+  private def numbersEqual(left: NumericNode, right: NumericNode): Boolean = {
+    if (left.isIntegralNumber) {
+      require(fitsInLong(left), s"Number out of bounds '$left'.")
+      if (right.isIntegralNumber) {
+        require(fitsInLong(right), s"Number out of bounds '$right'.")
+        numbersEqual(left.asLong, right.asLong)
+      } else {
+        require(fitsInDouble(right), s"Number out of bounds '$right'.")
+        numbersEqual(left.asLong, right.asDouble)
+      }
+    } else {
+      require(fitsInDouble(left), s"Number out of bounds '$left'.")
+      if (right.isIntegralNumber) {
+        require(fitsInLong(right), s"Number out of bounds '$right'.")
+        numbersEqual(left.asDouble, right.asLong)
+      } else {
+        require(fitsInDouble(right), s"Number out of bounds '$right'.")
+        numbersEqual(left.asDouble, right.asDouble)
+      }
+    }
+  }
+  private def numbersEqual(left: Long, right: Long): Boolean = left == right
+  private def numbersEqual(left: Long, right: Double): Boolean = left == right
+  private def numbersEqual(left: Double, right: Long): Boolean = left == right
+  private def numbersEqual(left: Double, right: Double): Boolean = left == right
 
   /**
    * Checks if a JsonNode is a null reference or is a Json encoded null value.

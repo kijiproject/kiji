@@ -19,11 +19,18 @@
 
 package org.kiji.commons.scala.json
 
-import scala.collection.JavaConverters.seqAsJavaListConverter
-
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.BooleanNode
+import com.fasterxml.jackson.databind.node.DoubleNode
+import com.fasterxml.jackson.databind.node.FloatNode
+import com.fasterxml.jackson.databind.node.IntNode
+import com.fasterxml.jackson.databind.node.LongNode
+import com.fasterxml.jackson.databind.node.NullNode
+import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.ShortNode
+import com.fasterxml.jackson.databind.node.TextNode
 import org.junit.Assert
 import org.junit.Test
 
@@ -32,7 +39,7 @@ import org.kiji.commons.scala.json.JsonUtils.AvroToJson
 import org.kiji.commons.scala.json.JsonUtils.JsonToAvro
 
 class TestJsonUtils {
-  import TestJsonUtils._
+  import org.kiji.commons.scala.json.TestJsonUtils._
 
   @Test
   def findsNulls() {
@@ -331,10 +338,127 @@ class TestJsonUtils {
         record.toJson.toAvro[FakeRecord](record.getSchema).toString
     )
   }
+
+  @Test
+  def testEquals(): Unit = {
+    def test(left: JsonNode, right: JsonNode, expected: Boolean): Unit = {
+      Assert.assertEquals(expected, JsonUtils.equals(left, right))
+    }
+
+    test(text("a"), text("a"), true)
+    test(text("a"), text("b"), false)
+    test(text("b"), text("a"), false)
+    test(text("a"), num(1), false)
+    test(text("1"), num(1), false)
+    test(text("a"), bool(true), false)
+    test(text("true"), bool(true), false)
+    test(text("abc"), arr(text("a"), text("b"), text("c")), false)
+    test(text("abc"), arr(text("abc")), false)
+
+    test(bool(true), bool(true), true)
+    test(bool(true), bool(false), false)
+    test(bool(false), bool(true), false)
+    test(bool(false), bool(false), true)
+
+    test(NullNode.getInstance(), NullNode.getInstance(), true)
+    test(NullNode.getInstance(), text("null"), false)
+    test(NullNode.getInstance(), bool(true), false)
+    test(NullNode.getInstance(), bool(false), false)
+    test(NullNode.getInstance(), num(0), false)
+
+    test(new ShortNode(5), new ShortNode(5), true)
+    test(new ShortNode(5), new IntNode(5), true)
+    test(new ShortNode(5), new LongNode(5l), true)
+    test(new ShortNode(5), new FloatNode(5.0f), true)
+    test(new ShortNode(5), new DoubleNode(5.0d), true)
+    test(new ShortNode(5), new ShortNode(4), false)
+    test(new ShortNode(5), new IntNode(4), false)
+    test(new ShortNode(5), new LongNode(4l), false)
+    test(new ShortNode(5), new FloatNode(4.0f), false)
+    test(new ShortNode(5), new DoubleNode(4.0d), false)
+
+    test(new IntNode(5), new ShortNode(5), true)
+    test(new IntNode(5), new IntNode(5), true)
+    test(new IntNode(5), new LongNode(5l), true)
+    test(new IntNode(5), new FloatNode(5.0f), true)
+    test(new IntNode(5), new DoubleNode(5.0d), true)
+    test(new IntNode(5), new ShortNode(4), false)
+    test(new IntNode(5), new IntNode(4), false)
+    test(new IntNode(5), new LongNode(4l), false)
+    test(new IntNode(5), new FloatNode(4.0f), false)
+    test(new IntNode(5), new DoubleNode(4.0d), false)
+
+    test(new LongNode(5l), new ShortNode(5), true)
+    test(new LongNode(5l), new IntNode(5), true)
+    test(new LongNode(5l), new LongNode(5l), true)
+    test(new LongNode(5l), new FloatNode(5.0f), true)
+    test(new LongNode(5l), new DoubleNode(5.0d), true)
+    test(new LongNode(5l), new ShortNode(4), false)
+    test(new LongNode(5l), new IntNode(4), false)
+    test(new LongNode(5l), new LongNode(4l), false)
+    test(new LongNode(5l), new FloatNode(4.0f), false)
+    test(new LongNode(5l), new DoubleNode(4.0d), false)
+
+    test(new FloatNode(5.0f), new ShortNode(5), true)
+    test(new FloatNode(5.0f), new IntNode(5), true)
+    test(new FloatNode(5.0f), new LongNode(5l), true)
+    test(new FloatNode(5.0f), new FloatNode(5.0f), true)
+    test(new FloatNode(5.0f), new DoubleNode(5.0d), true)
+    test(new FloatNode(5.0f), new ShortNode(4), false)
+    test(new FloatNode(5.0f), new IntNode(4), false)
+    test(new FloatNode(5.0f), new LongNode(4l), false)
+    test(new FloatNode(5.0f), new FloatNode(4.0f), false)
+    test(new FloatNode(5.0f), new DoubleNode(4.0d), false)
+
+    test(new DoubleNode(5.0d), new ShortNode(5), true)
+    test(new DoubleNode(5.0d), new IntNode(5), true)
+    test(new DoubleNode(5.0d), new LongNode(5l), true)
+    test(new DoubleNode(5.0d), new FloatNode(5.0f), true)
+    test(new DoubleNode(5.0d), new DoubleNode(5.0d), true)
+    test(new DoubleNode(5.0d), new ShortNode(4), false)
+    test(new DoubleNode(5.0d), new IntNode(4), false)
+    test(new DoubleNode(5.0d), new LongNode(4l), false)
+    test(new DoubleNode(5.0d), new FloatNode(4.0f), false)
+    test(new DoubleNode(5.0d), new DoubleNode(4.0d), false)
+
+    test(arr(new ShortNode(5)), arr(new IntNode(5)), true)
+    test(arr(new ShortNode(5), text("a")), arr(new IntNode(5)), false)
+
+    test(obj("a" -> new ShortNode(5)), obj("a" -> new IntNode(5)), true)
+    test(
+      obj("a" -> new ShortNode(5), "b" -> text("b")),
+      obj("a" -> new IntNode(5)),
+      false
+    )
+
+    test(
+      arr(
+        obj(
+          "a" -> text("a"),
+          "b" -> bool(true),
+          "c" -> new ShortNode(5)
+        )
+      ),
+      arr(
+        obj(
+          "a" -> text("a"),
+          "b" -> bool(true),
+          "c" -> new ShortNode(5)
+        )
+      ),
+      true
+    )
+  }
 }
 
 object TestJsonUtils {
   val emptyObject: JsonNode = JsonUtils.parseJsonString("{}")
+
+  def text(t: String): TextNode = JsonUtils.textNode(t)
+  def bool(b: Boolean): BooleanNode = JsonUtils.booleanNode(b)
+  def num(i: Int): NumericNode = JsonUtils.numberNode(i)
+  def arr(es: JsonNode*): ArrayNode = JsonUtils.arrayNode(es)
+  def obj(es: (String, JsonNode)*): ObjectNode = JsonUtils.objectNode(es.toMap)
 
   // TODO move this and expectException to a TestingUtils class.
   def expectSuccess[T, U](
