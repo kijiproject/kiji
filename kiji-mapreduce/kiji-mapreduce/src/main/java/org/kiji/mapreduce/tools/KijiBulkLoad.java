@@ -160,7 +160,7 @@ public final class KijiBulkLoad extends BaseTool {
     mHFile = new Path(mHFileFlag);
   }
 
-  /** {@inheritDoc} */
+  // For some reason checkstyle complains if we include an explicit @inheritDoc annotation here.
   @Override
   protected int run(List<String> nonFlagArgs) throws Exception {
     final Kiji kiji = Kiji.Factory.open(mTableURI, getConf());
@@ -192,16 +192,17 @@ public final class KijiBulkLoad extends BaseTool {
           // band-aid works.
           if (mChmodBackground) {
             final Runnable chmodRunnable = new Runnable() {
-              final static int MAX_CONSECUTIVE_ERRORS=5;
+              static final int MAX_CONSECUTIVE_ERRORS=5;
 
               private int mNumConsecutiveErrors = 0;
 
+              /** {@inheritDoc} */
               @Override
               public void run() {
                 try {
                   recursiveGrantAllReadWritePermissions(mHFile);
                   mNumConsecutiveErrors = 0;
-                } catch(IOException ex) {
+                } catch (IOException ex) {
                   LOG.warn("recursiveGrantAllReadWritePermissions raised exception: {}", ex);
                   mNumConsecutiveErrors += 1;
                   if (mNumConsecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
