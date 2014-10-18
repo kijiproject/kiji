@@ -157,11 +157,17 @@ public final class ScanTool extends BaseTool {
       Map<FamilyLayout, List<String>> mapTypeFamilies,
       Map<FamilyLayout, List<ColumnLayout>> groupTypeColumns)
       throws IOException {
-    final KijiScannerOptions scannerOptions =
-        new KijiScannerOptions()
-            .setStartRow(startRow)
-            .setStopRow(limitRow);
-    final KijiRowScanner scanner = reader.getScanner(request, scannerOptions);
+    final KijiRowScanner scanner;
+    // Don't use ScannerOptions unless necessary.
+    if (null == startRow && null == limitRow) {
+      scanner = reader.getScanner(request);
+    } else {
+      final KijiScannerOptions scannerOptions =
+          new KijiScannerOptions()
+              .setStartRow(startRow)
+              .setStopRow(limitRow);
+      scanner = reader.getScanner(request, scannerOptions);
+    }
     try {
       int rowsOutput = 0;
       for (KijiRowData row : scanner) {
