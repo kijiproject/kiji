@@ -34,6 +34,7 @@ for bento_instance in bento_system.list_bentos():
 import json
 import logging
 import os
+import pkgutil
 import socket
 import subprocess
 import sys
@@ -56,136 +57,20 @@ DEFAULT_BENTO_PLATFORM = 'cdh5.1.3'
 DEFAULT_TIMEOUT_MS = 120000
 DEFAULT_POLL_INTERVAL = 0.1
 
-BENTO_ENV_TEMPLATE = """\
-#!/usr/bin/env bash
-# -*- coding: utf-8 -*-
-# -*- mode: shell -*-
 
-# Canonicalize a path into an absolute, symlink free path.
-#
-# Portable implementation of the GNU coreutils "readlink -f path".
-# The '-f' option of readlink does not exist on MacOS, for instance.
-#
-# Args:
-#   param $1: path to canonicalize.
-# Stdout:
-#   Prints the canonicalized path on stdout.
-function resolve_symlink() {
-  local target_file=$1
+def _load_resource(resource_name):
+    loader = pkgutil.get_loader("bento")
+    avpr_path = os.path.join(os.path.dirname(loader.path), resource_name)
+    return loader.get_data(avpr_path).decode()
 
-  if [[ -z "${target_file}" ]]; then
-    echo ""
-    return 0
-  fi
 
-  cd "$(dirname "${target_file}")"
-  target_file=$(basename "${target_file}")
-
-  # Iterate down a (possible) chain of symlinks
-  local count=0
-  while [[ -L "${target_file}" ]]; do
-    if [[ "${count}" -gt 1000 ]]; then
-      # Just stop here, we've hit 1,000 recursive symlinks. (cycle?)
-      break
-    fi
-
-    target_file=$(readlink "${target_file}")
-    cd $(dirname "${target_file}")
-    target_file=$(basename "${target_file}")
-    count=$(( ${count} + 1 ))
-  done
-
-  # Compute the canonicalized name by finding the physical path
-  # for the directory we're in and appending the target file.
-  local phys_dir=$(pwd -P)
-  echo "${phys_dir}/${target_file}"
-}
-
-# ------------------------------------------------------------------------------
-
-bento_env_path="${BASH_SOURCE:-$0}"
-bento_env_path=$(resolve_symlink "${bento_env_path}")
-bento_conf_dir=$(dirname "${bento_env_path}")
-
-export HADOOP_CONF_DIR="${bento_conf_dir}/hadoop/"
-export HBASE_CONF_DIR="${bento_conf_dir}/hbase/"
-
-# Linux environments obey the HOSTALIASES environment variable:
-if [[ "$(uname)" == "Linux" ]]; then
-  if [[ -z "${HOSTALIASES}" ]]; then
-    echo "WARNING: The HOSTALIASES environment variable is not set." 1>&2
-    echo "WARNING: This may prevent applications from resolving the Bento host name." 1>&2
-    echo "WARNING: Please update your bash configuration and add: " 1>&2
-    echo "WARNING:     export HOSTALIASES=${HOME}/.hosts" 1>&2
-
-    # Make sure the file exists
-    touch "${HOME}/.hosts"
-    export HOSTALIASES="${HOME}/.hosts"
-  fi
-fi
-"""
-
-CORE_SITE_TEMPLATE = """\
-<?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
-<configuration>
-  <property>
-    <name>fs.defaultFS</name>
-    <value>hdfs://%(bento_host)s:8020</value>
-  </property>
-</configuration>
-"""
-MAPRED_SITE_TEMPLATE = """\
-<?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
-
-<configuration>
-  <property>
-    <name>mapreduce.framework.name</name>
-    <value>yarn</value>
-  </property>
-
-  <property>
-    <name>mapreduce.jobhistory.address</name>
-    <value>%(bento_host)s:10020</value>
-  </property>
-</configuration>
-"""
-YARN_SITE_TEMPLATE = """\
-<?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
-<configuration>
-  <property>
-    <name>yarn.resourcemanager.hostname</name>
-    <value>%(bento_host)s</value>
-  </property>
-  <property>
-    <name>yarn.application.classpath</name>
-    <value>/etc/hadoop/conf,/usr/lib/hadoop/*,/usr/lib/hadoop/lib/*,/usr/lib/hadoop-hdfs/*,/usr/lib/hadoop-hdfs/lib/*,/usr/lib/hadoop-yarn/*,/usr/lib/hadoop-yarn/lib/*,/usr/lib/hadoop-mapreduce/*,/usr/lib/hadoop-mapreduce/lib/*,/usr/lib/hadoop-yarn/*,/usr/lib/hadoop-yarn/lib/*</value>
-  </property>
-  <property>
-    <name>yarn.nodemanager.remote-app-log-dir</name>
-    <value>/var/log/hadoop-yarn/apps</value>
-  </property>
-</configuration>
-"""
-HBASE_SITE_TEMPLATE = """\
-<?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
-<configuration>
-  <property>
-    <name>hbase.zookeeper.property.clientPort</name>
-    <value>2181</value>
-  </property>
-  <property>
-    <name>hbase.zookeeper.quorum</name>
-    <value>%(bento_host)s</value>
-  </property>
-</configuration>
-"""
-SUDOERS_RULE_TEMPLATE = """\
-%%bento ALL = (ALL) NOPASSWD: %(script_path)s
-"""
+BENTO_ENV_TEMPLATE = _load_resource("bento-env-template.sh")
+CORE_SITE_TEMPLATE = _load_resource("core-site-template.xml")
+HDFS_SITE_TEMPLATE = _load_resource("hdfs-site-template.xml")
+MAPRED_SITE_TEMPLATE = _load_resource("mapred-site-template.xml")
+YARN_SITE_TEMPLATE = _load_resource("yarn-site-template.xml")
+HBASE_SITE_TEMPLATE = _load_resource("hbase-site-template.xml")
+SUDOERS_RULE_TEMPLATE = _load_resource("bento-sudoers-template")
 
 
 class BentoSystem(object):
@@ -567,6 +452,9 @@ class Bento(object):
         with open(os.path.join(hadoop_output_dir, 'core-site.xml'), 'wt', encoding='utf-8') \
                 as core_site_file:
             core_site_file.write(CORE_SITE_TEMPLATE % dict(bento_host=self.bento_hostname))
+        with open(os.path.join(hadoop_output_dir, 'hdfs-site.xml'), 'wt', encoding='utf-8') \
+                as hdfs_site_file:
+            hdfs_site_file.write(HDFS_SITE_TEMPLATE)
         with open(os.path.join(hadoop_output_dir, 'mapred-site.xml'), 'wt', encoding='utf-8') \
                 as mapred_site_file:
             mapred_site_file.write(MAPRED_SITE_TEMPLATE % dict(bento_host=self.bento_hostname))

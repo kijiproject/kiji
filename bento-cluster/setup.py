@@ -9,7 +9,7 @@ from setuptools import setup
 def main(args):
     setup(
         name="kiji-bento-cluster",
-        version="2.0.8",
+        version="2.0.9",
 
         # Lists the Python modules provided by this package:
         packages=[
@@ -19,6 +19,19 @@ def main(args):
         # Mapping from Python package to source directory in the project:
         package_dir={
             "bento": "src/main/python/bento",
+        },
+
+        # Templates to include.
+        package_data={
+            "bento": [
+                "bento-env-template.sh",
+                "bento-sudoers-template",
+                "core-site-template.xml",
+                "hdfs-site-template.xml",
+                "yarn-site-template.xml",
+                "mapred-site-template.xml",
+                "hbase-site-template.xml",
+            ],
         },
 
         # Scripts to install in the bin/ folder and made available on the PATH:

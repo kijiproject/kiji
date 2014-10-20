@@ -1,0 +1,1 @@
+%%bento ALL = (ALL) NOPASSWD: %(script_path)s

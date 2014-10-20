@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+  <property>
+    <name>dfs.replication</name>
+    <value>1</value>
+  </property>
+  <property>
+    <name>dfs.blocksize</name>
+    <value>134217728</value>
+  </property>
+  <property>
+    <name>dfs.client.use.datanode.hostname</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>fs.permissions.umask-mode</name>
+    <value>022</value>
+  </property>
+  <property>
+    <name>dfs.namenode.acls.enabled</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>dfs.client.read.shortcircuit</name>
+    <value>true</value>
+  </property>
+  <property>
+    <name>dfs.domain.socket.path</name>
+    <value>/var/run/hadoop-hdfs/dn._PORT</value>
+  </property>
+  <property>
+    <name>dfs.client.read.shortcircuit.skip.checksum</name>
+    <value>true</value>
+  </property>
+  <property>
+    <name>dfs.client.domain.socket.data.traffic</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>dfs.datanode.hdfs-blocks-metadata.enabled</name>
+    <value>true</value>
+  </property>
+</configuration>
