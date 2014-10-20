@@ -8,6 +8,7 @@ import argparse
 import json
 import logging
 import os
+import ssl
 import sys
 import time
 
@@ -21,11 +22,31 @@ from bento import cluster
 
 
 def _get_docker_client(args):
+    base_url = None
     if args.docker_address is None:
-        return None
+        base_url = os.environ.get('DOCKER_HOST')
     else:
-        return docker.Client(base_url=args.docker_address, version='1.10')
+        base_url = args.docker_address
 
+    cert_path = os.environ.get('DOCKER_CERT_PATH', '')
+    if cert_path == '':
+        cert_path = os.path.join(os.environ.get('HOME', ''), '.docker')
+    tls_config = None
+    if os.environ.get('DOCKER_TLS_VERIFY', '0') != '0':
+        parts = base_url.split('://', 1)
+        base_url = '%s://%s' % ('https', parts[1])
+
+        client_cert = (os.path.join(cert_path, 'cert.pem'), os.path.join(cert_path, 'key.pem'))
+        ca_cert = os.path.join(cert_path, 'ca.pem')
+
+        tls_config = docker.tls.TLSConfig(
+            ssl_version=ssl.PROTOCOL_TLSv1,
+            verify=True,
+            assert_hostname=False,
+            client_cert=client_cert,
+            ca_cert=ca_cert,
+        )
+    return docker.Client(base_url=base_url, tls=tls_config)
 
 def _get_bento_system(args):
     return cluster.BentoSystem(docker_client=_get_docker_client(args))

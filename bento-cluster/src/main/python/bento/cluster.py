@@ -204,15 +204,7 @@ class BentoSystem(object):
             docker_client: A docker client to use to manage the bento docker image/container.
             bento_image: Name of the bento docker image to use.
         """
-        # Avoid using a mutable default argument.
-        if docker_client is None:
-            docker_host = os.environ.get('DOCKER_HOST')
-            if docker_host is None:
-                self._docker_client = docker.Client()
-            else:
-                self._docker_client = docker.Client(docker_host)
-        else:
-            self._docker_client = docker_client
+        self._docker_client = docker_client
         self._bento_image = bento_image
 
     @property
@@ -344,15 +336,7 @@ class Bento(object):
             hosts_file_path: Path to the hosts file to update with dns entries.
         """
         self._bento_container = bento_container
-        # Avoid using a mutable default argument.
-        if docker_client is None:
-            docker_host = os.environ.get('DOCKER_HOST')
-            if docker_host is None:
-                self._docker_client = docker.Client()
-            else:
-                self._docker_client = docker.Client(docker_host)
-        else:
-            self._docker_client = docker_client
+        self._docker_client = docker_client
         if client_config_dir is None:
             self._client_config_dir = os.path.join(os.environ['HOME'], '.bento', bento_container)
         else:
