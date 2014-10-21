@@ -164,14 +164,16 @@ def bento_status(args):
     """
     bento_cluster = _get_bento(args)
     try:
+        started = bento_cluster.is_container_running
         logging.info(
             'Bento container %s.',
-            'started' if bento_cluster.is_container_running else 'stopped',
+            'started' if started else 'stopped',
         )
-        logging.info(
-            'Bento services %s.',
-            'started' if bento_cluster.is_running else 'stopped',
-        )
+        if started:
+            logging.info(
+                'Bento services %s.',
+                'started' if bento_cluster.is_running else 'stopped',
+            )
     except docker.errors.APIError as ae:
         if 'No such container' in ae.explanation.decode('utf-8'):
             logging.info('Bento does not exist: %s', args.bento_name)
