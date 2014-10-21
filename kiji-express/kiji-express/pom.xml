@@ -130,6 +130,18 @@
     </dependency>
 
     <dependency>
+      <groupId>com.aphyr</groupId>
+      <artifactId>riemann-java-client</artifactId>
+      <version>0.2.10</version>
+      <exclusions>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
     </dependency>

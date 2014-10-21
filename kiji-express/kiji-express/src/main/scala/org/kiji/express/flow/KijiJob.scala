@@ -20,6 +20,8 @@
 package org.kiji.express.flow
 
 import java.io.Serializable
+import java.net.InetAddress
+import java.net.InetSocketAddress
 import java.util.Properties
 
 import scala.collection.JavaConverters.asScalaIteratorConverter
@@ -37,7 +39,12 @@ import cascading.stats.hadoop.HadoopStepStats
 import cascading.stats.local.LocalStepStats
 import cascading.tap.Tap
 import cascading.tuple.collect.SpillableProps
+import com.aphyr.riemann.Proto
+import com.aphyr.riemann.Proto.Attribute
+import com.aphyr.riemann.Proto.Event
+import com.aphyr.riemann.client.RiemannClient
 import com.google.common.base.Preconditions
+import com.google.common.collect.Lists
 import com.twitter.chill.config.ConfiguredInstantiator
 import com.twitter.chill.config.ScalaAnyRefMapConfig
 import com.twitter.scalding.Args
@@ -336,6 +343,66 @@ class KijiJob(args: Args)
   }
 
   /**
+   * Record the history of this job into all relevant Kiji instances. This includes all Kiji
+   * instances which are read from or written to by flows in this Job.
+   *
+   * @param startTime in milliseconds since the epoch at which the job started.
+   * @param endTime in milliseconds since the epoch at which the job ended.
+   * @param jobSuccess whether the job was successful.
+   */
+  private def recordRiemannMetrics(startTime: Long, endTime: Long, jobSuccess: Boolean) {
+
+    val riemannAddress = args.optional("riemann-address")
+    if (riemannAddress.isEmpty) { return }
+
+    val flowCounterMap: Map[String, Long] = flowCounters.map {
+      triple: (String, String, Long) => {
+        val (group, counter, count) = triple
+        ("%s:%s".format(group, counter), count)
+      }
+    }.toMap
+
+    val builder: Event.Builder = Proto.Event.newBuilder()
+    builder.setDescription(args.toString())
+    builder.setMetricSint64(endTime - startTime)
+
+    val startAttribute: Attribute.Builder =
+      Proto.Attribute.newBuilder()
+        .setKey("start-time")
+        .setValue(startTime.toString)
+    val endAttribute: Attribute.Builder =
+      Proto.Attribute.newBuilder()
+        .setKey("end-time")
+        .setValue(endTime.toString)
+    val countersAttribute: Attribute.Builder =
+      Proto.Attribute.newBuilder()
+        .setKey("counters")
+        .setValue(flowCounterMap.toString())
+    builder.addAttributes(startAttribute)
+    builder.addAttributes(endAttribute)
+    builder.addAttributes(countersAttribute)
+
+    if (jobSuccess) {
+      builder.addTags("success")
+    } else {
+      builder.addTags("failure")
+    }
+
+    builder.setHost(InetAddress.getLocalHost.getHostName)
+    builder.setService(s"kiji.express.${this.getClass.getSimpleName}")
+
+    val parts: Array[String] = riemannAddress.get.split(':')
+    assert(parts.length == 2, "Riemann address must be specified as 'host:port'.")
+    val riemann: RiemannClient = RiemannClient.tcp(parts(0), Integer.parseInt(parts(1)))
+    try {
+      riemann.connect()
+      riemann.sendEvents(builder.build())
+    } finally {
+      riemann.disconnect()
+    }
+  }
+
+  /**
    * Record the history of this job into the given Kiji instance.
    *
    * @param startTime in milliseconds since the epoch at which the job started.
@@ -380,6 +447,7 @@ class KijiJob(args: Args)
     val jobSuccess: Boolean = super.run
     val endTime: Long = System.currentTimeMillis()
     recordJobHistory(startTime, endTime, jobSuccess)
+    recordRiemannMetrics(startTime, endTime, jobSuccess)
 
     // Output registered histograms
     histograms.foreach { histogram: HistogramConfig =>

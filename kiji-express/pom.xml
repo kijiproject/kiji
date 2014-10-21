@@ -350,6 +350,13 @@
       <releases> <enabled>true</enabled> </releases>
       <snapshots> <enabled>false</enabled> </snapshots>
     </repository>
+
+    <repository>
+      <id>clojars.org</id>
+      <url>http://clojars.org/repo</url>
+      <snapshots> <enabled>false</enabled> </snapshots>
+      <releases> <enabled>true</enabled> </releases>
+    </repository>
   </repositories>
 
   <scm>
