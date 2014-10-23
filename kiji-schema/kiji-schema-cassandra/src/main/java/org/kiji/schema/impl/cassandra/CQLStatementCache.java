@@ -128,7 +128,9 @@ public class CQLStatementCache {
                 /** {@inheritDoc} */
                 @Override
                 public PreparedStatement load(final StatementKey key) {
-                  return mSession.prepare(key.createUnpreparedStatement());
+                  final RegularStatement statement = key.createUnpreparedStatement();
+                  LOG.debug("Preparing statement: {}.", statement);
+                  return mSession.prepare(statement);
                 }
               });
 
@@ -593,7 +595,6 @@ public class CQLStatementCache {
 
       for (final String column : mEntityIDColumns) {
         insert.value(column, bindMarker());
-
       }
 
       insert
