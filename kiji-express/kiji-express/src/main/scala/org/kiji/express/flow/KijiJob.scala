@@ -355,16 +355,9 @@ class KijiJob(args: Args)
     val riemannAddress = args.optional("riemann-address")
     if (riemannAddress.isEmpty) { return }
 
-    val flowCounterMap: Map[String, Long] = flowCounters.map {
-      triple: (String, String, Long) => {
-        val (group, counter, count) = triple
-        ("%s:%s".format(group, counter), count)
-      }
-    }.toMap
-
-    val builder: Event.Builder = Proto.Event.newBuilder()
-    builder.setDescription(args.toString())
-    builder.setMetricSint64(endTime - startTime)
+    val mainEventBuilder: Event.Builder = Proto.Event.newBuilder()
+    mainEventBuilder.setDescription(args.toString())
+    mainEventBuilder.setMetricSint64(endTime - startTime)
 
     val startAttribute: Attribute.Builder =
       Proto.Attribute.newBuilder()
@@ -374,29 +367,38 @@ class KijiJob(args: Args)
       Proto.Attribute.newBuilder()
         .setKey("end-time")
         .setValue(endTime.toString)
-    val countersAttribute: Attribute.Builder =
-      Proto.Attribute.newBuilder()
-        .setKey("counters")
-        .setValue(flowCounterMap.toString())
-    builder.addAttributes(startAttribute)
-    builder.addAttributes(endAttribute)
-    builder.addAttributes(countersAttribute)
+    mainEventBuilder.addAttributes(startAttribute)
+    mainEventBuilder.addAttributes(endAttribute)
 
     if (jobSuccess) {
-      builder.addTags("success")
+      mainEventBuilder.addTags("success")
     } else {
-      builder.addTags("failure")
+      mainEventBuilder.addTags("failure")
     }
 
-    builder.setHost(InetAddress.getLocalHost.getHostName)
-    builder.setService(s"kiji.express.${this.getClass.getSimpleName}")
+    mainEventBuilder.setHost(InetAddress.getLocalHost.getHostName)
+    mainEventBuilder.setService(s"kiji.express.${this.getClass.getSimpleName}")
+
+    val counterEvents = flowCounters
+        .foldLeft(List[Event]())({ (counterEvents: List[Event], entry: (String, String, Long)) =>
+          val (group, counter, count) = entry
+
+          val counterEvent = Proto.Event.newBuilder()
+              .setHost(InetAddress.getLocalHost.getHostName)
+              .setService(s"kiji.express.${this.getClass.getSimpleName}.${group}.${counter}")
+              .setMetricSint64(count)
+              .build()
+
+          // Append the new counter event to the accumulated list.
+          counterEvents.:+(counterEvent)
+        })
 
     val parts: Array[String] = riemannAddress.get.split(':')
     assert(parts.length == 2, "Riemann address must be specified as 'host:port'.")
     val riemann: RiemannClient = RiemannClient.tcp(parts(0), Integer.parseInt(parts(1)))
     try {
       riemann.connect()
-      riemann.sendEvents(builder.build())
+      riemann.sendEvents(counterEvents.:+(mainEventBuilder.build()): _*)
     } finally {
       riemann.disconnect()
     }
