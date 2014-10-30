@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.datastax.driver.core.exceptions.AlreadyExistsException;
+import com.google.common.base.Preconditions;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,9 +35,8 @@ import org.kiji.schema.KijiAlreadyExistsException;
 import org.kiji.schema.KijiInstaller;
 import org.kiji.schema.KijiInvalidNameException;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.cassandra.CassandraFactory;
+import org.kiji.schema.cassandra.CassandraKijiURI;
 import org.kiji.schema.hbase.HBaseFactory;
-import org.kiji.schema.util.ResourceUtils;
 
 /** Installs or uninstalls Kiji instances from an Cassandra cluster. */
 @ApiAudience.Public
@@ -59,27 +59,25 @@ public final class CassandraKijiInstaller extends KijiInstaller {
       Map<String, String> properties,
       Configuration conf
     ) throws IOException {
-    final CassandraFactory cassandraFactory = CassandraFactory.Provider.get();
-    if (uri.getInstance() == null) {
+    Preconditions.checkArgument(uri instanceof CassandraKijiURI,
+        "Kiji URI for a new Cassandra Kiji installation must be a CassandraKijiURI: '{}'.", uri);
+    final CassandraKijiURI cassandraURI = (CassandraKijiURI) uri;
+    if (cassandraURI.getInstance() == null) {
       throw new KijiInvalidNameException(String.format(
-          "Kiji URI '%s' does not specify a Kiji instance name", uri));
+          "Kiji URI '%s' does not specify a Kiji instance name", cassandraURI));
     }
-
     try {
-      LOG.info(String.format("Installing Cassandra Kiji instance '%s'.", uri));
+      LOG.info(String.format("Installing Cassandra Kiji instance '%s'.", cassandraURI));
 
-      CassandraAdminFactory cassandraAdminFactory = cassandraFactory.getCassandraAdminFactory(uri);
-      LOG.debug("Creating CassandraAdmin for Kiji installation.");
-      CassandraAdmin cassandraAdmin = cassandraAdminFactory.create(uri);
-
-      // Install the system, meta, and schema tables.
-      CassandraSystemTable.install(cassandraAdmin, uri, properties);
-      CassandraMetaTable.install(cassandraAdmin, uri);
-      CassandraSchemaTable.install(cassandraAdmin, uri);
+      try (CassandraAdmin admin = CassandraAdmin.create(cassandraURI)) {
+        // Install the system, meta, and schema tables.
+        CassandraSystemTable.install(admin, cassandraURI, properties);
+        CassandraMetaTable.install(admin, cassandraURI);
+        CassandraSchemaTable.install(admin, cassandraURI);
+      }
 
       // Grant the current user all privileges on the instance just created, if security is enabled.
-      //final Kiji kiji = CassandraKijiFactory.get().open(uri, cassandraAdmin, lockFactory);
-      final Kiji kiji = CassandraKijiFactory.get().open(uri);
+      final Kiji kiji = CassandraKijiFactory.get().open(cassandraURI);
       try {
         if (kiji.isSecurityEnabled()) {
           throw new UnsupportedOperationException("Kiji Cassandra does not implement security.");
@@ -87,14 +85,11 @@ public final class CassandraKijiInstaller extends KijiInstaller {
       } finally {
         kiji.release();
       }
-
     } catch (AlreadyExistsException aee) {
       throw new KijiAlreadyExistsException(String.format(
-          "Cassandra Kiji instance '%s' already exists.", uri), uri);
+          "Cassandra Kiji instance '%s' already exists.", cassandraURI), cassandraURI);
     }
-    // TODO (SCHEMA-706): Add security checks when we have a plan for security in Cassandra Kiji.
-
-    LOG.info(String.format("Installed Cassandra Kiji instance '%s'.", uri));
+    LOG.info(String.format("Installed Cassandra Kiji instance '%s'.", cassandraURI));
   }
 
   /** {@inheritDoc} */
@@ -104,44 +99,40 @@ public final class CassandraKijiInstaller extends KijiInstaller {
       HBaseFactory hbaseFactory,
       Configuration conf
   ) throws IOException {
-    if (uri.getInstance() == null) {
+    Preconditions.checkArgument(uri instanceof CassandraKijiURI,
+        "Kiji URI for a new Cassandra Kiji installation must be a CassandraKijiURI: '{}'.", uri);
+    final CassandraKijiURI cassandraURI = (CassandraKijiURI) uri;
+    if (cassandraURI.getInstance() == null) {
       throw new KijiInvalidNameException(String.format(
-          "Kiji URI '%s' does not specify a Kiji instance name", uri));
+          "Kiji URI '%s' does not specify a Kiji instance name", cassandraURI));
     }
-    final CassandraAdminFactory adminFactory =
-        CassandraFactory.Provider.get().getCassandraAdminFactory(uri);
 
-    LOG.info(String.format("Removing the Cassandra Kiji instance '%s'.", uri.getInstance()));
+    LOG.info(String.format("Uninstalling Kiji instance '%s'.", cassandraURI.getInstance()));
 
-    final Kiji kiji = CassandraKijiFactory.get().open(uri);
+    final Kiji kiji = CassandraKijiFactory.get().open(cassandraURI);
     try {
       // TODO (SCHEMA-706): Add security checks when we have a plan for security in Cassandra Kiji.
 
       for (String tableName : kiji.getTableNames()) {
-        LOG.info("Deleting Kiji table " + tableName + "...");
+        LOG.info("Deleting Kiji table {}.", tableName);
         kiji.deleteTable(tableName);
       }
       // Delete the user tables:
-      final CassandraAdmin admin = adminFactory.create(uri);
-      try {
-
+      try (CassandraAdmin admin = CassandraAdmin.create(cassandraURI)) {
         // Delete the system tables:
-        CassandraSystemTable.uninstall(admin, uri);
-        CassandraMetaTable.uninstall(admin, uri);
-        CassandraSchemaTable.uninstall(admin, uri);
+        CassandraSystemTable.uninstall(admin, cassandraURI);
+        CassandraMetaTable.uninstall(admin, cassandraURI);
+        CassandraSchemaTable.uninstall(admin, cassandraURI);
 
-      } finally {
-        ResourceUtils.closeOrLog(admin);
+        // Assert that there are no tables left and delete the keyspace.
+        assert (admin.keyspaceIsEmpty());
+        admin.deleteKeyspace();
       }
-
-      // Assert that there are no tables left and delete the keyspace.
-      assert(admin.keyspaceIsEmpty());
-      admin.deleteKeyspace();
 
     } finally {
       kiji.release();
     }
-    LOG.info(String.format("Removed Cassandra Kiji instance '%s'.", uri.getInstance()));
+    LOG.info(String.format("Kiji instance '%s' uninstalled.", cassandraURI.getInstance()));
   }
 
   /**

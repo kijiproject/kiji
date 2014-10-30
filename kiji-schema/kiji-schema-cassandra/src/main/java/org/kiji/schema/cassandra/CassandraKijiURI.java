@@ -197,7 +197,6 @@ public final class CassandraKijiURI extends KijiURI {
     /**
      * Constructs a new builder for CassandraKijiURIs.
      *
-     * @param scheme of the URI.
      * @param zookeeperQuorum The initial zookeeper quorum.
      * @param zookeeperClientPort The initial zookeeper client port.
      * @param contactPoints The host names of Cassandra contact points.
@@ -210,7 +209,6 @@ public final class CassandraKijiURI extends KijiURI {
      */
 
     private CassandraKijiURIBuilder(
-        final String scheme,
         final Iterable<String> zookeeperQuorum,
         final int zookeeperClientPort,
         final Iterable<String> contactPoints,
@@ -221,7 +219,13 @@ public final class CassandraKijiURI extends KijiURI {
         final String tableName,
         final Iterable<KijiColumnName> columnNames
     ) {
-      super(scheme, zookeeperQuorum, zookeeperClientPort, instanceName, tableName, columnNames);
+      super(
+          CASSANDRA_SCHEME,
+          zookeeperQuorum,
+          zookeeperClientPort,
+          instanceName,
+          tableName,
+          columnNames);
       mContactPoints = ImmutableList.copyOf(contactPoints);
       mContactPort = contactPort;
       mUsername = username;
@@ -233,7 +237,7 @@ public final class CassandraKijiURI extends KijiURI {
      * Constructs a new builder for CassandraKijiURIs.
      */
     public CassandraKijiURIBuilder() {
-      super();
+      super(CASSANDRA_SCHEME);
       mContactPoints = ImmutableList.of(DEFAULT_CONTACT_POINT);
       mContactPort = DEFAULT_CONTACT_PORT;
     }
@@ -389,6 +393,10 @@ public final class CassandraKijiURI extends KijiURI {
     /** {@inheritDoc} */
     @Override
     public CassandraKijiURIBuilder parse(final URI uri) {
+      Preconditions.checkArgument(uri.getScheme().equals(CASSANDRA_SCHEME),
+          "CassandraKijiURIParser can not parse a URI with scheme '%s'.", uri.getScheme());
+
+
       // Parse the ZooKeeper portion of the authority.
       final ZooKeeperAuthorityParser zooKeeperAuthorityParser
           = ZooKeeperAuthorityParser.getAuthorityParser(uri);
@@ -416,7 +424,6 @@ public final class CassandraKijiURI extends KijiURI {
       final PathParser segmentParser = new PathParser(uri, 1);
 
       return new CassandraKijiURIBuilder(
-          uri.getScheme(),
           zooKeeperAuthorityParser.getZookeeperQuorum(),
           zooKeeperAuthorityParser.getZookeeperClientPort(),
           cassandraAuthorityParser.getHosts(),
@@ -525,7 +532,6 @@ public final class CassandraKijiURI extends KijiURI {
     }
 
     return new CassandraKijiURIBuilder(
-        uri.getScheme(),
         uri.getZookeeperQuorumOrdered(),
         uri.getZookeeperClientPort(),
         contactPoints,

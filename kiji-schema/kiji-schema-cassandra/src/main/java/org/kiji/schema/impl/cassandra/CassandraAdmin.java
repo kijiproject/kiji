@@ -21,9 +21,14 @@ package org.kiji.schema.impl.cassandra;
 
 import java.io.Closeable;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.concurrent.ThreadSafe;
+
+import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Metadata;
+import com.datastax.driver.core.PlainTextAuthProvider;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
@@ -37,27 +42,28 @@ import com.google.common.cache.LoadingCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.avro.RowKeyFormat2;
+import org.kiji.schema.cassandra.CassandraKijiURI;
 import org.kiji.schema.cassandra.CassandraTableName;
 
 /**
  * Lightweight wrapper to mimic the functionality of HBaseAdmin (and provide other functionality).
  *
  * This class exists mostly so that we are not passing around instances of
- * com.datastax.driver.core.Session everywhere.
- *
- * TODO: Handle reference counting, closing of Session.
- *
+ * {@link com.datastax.driver.core.Session} everywhere.
  */
-public abstract class CassandraAdmin implements Closeable {
+@ApiAudience.Private
+@ThreadSafe
+public final class CassandraAdmin implements Closeable {
   private static final Logger LOG = LoggerFactory.getLogger(CassandraAdmin.class);
 
   /** Current C* session for the Kiji instance.. */
   private final Session mSession;
 
   /** URI for this instance. **/
-  private final KijiURI mKijiURI;
+  private final CassandraKijiURI mKijiURI;
 
   /** Keep a cache of all of the prepared CQL statements. */
   private final CassandraStatementCache mStatementCache;
@@ -76,18 +82,49 @@ public abstract class CassandraAdmin implements Closeable {
               });
 
   /**
-   * Constructor for use by classes that extend this class.  Creates a CassandraAdmin object for a
-   * given Kiji instance.
+   * CassandraAdmin private constructor.
    *
-   * @param session Session for this Kiji instance.
-   * @param kijiURI URI for this Kiji instance.
+   * @param kijiURI The Cassandra Kiji URI of the instance.
+   * @param session A connection to the Cassandra cluster.
+   * @param statementCache The CQL statement cache.
    */
-  protected CassandraAdmin(Session session, KijiURI kijiURI) {
-    Preconditions.checkNotNull(session);
-    this.mSession = session;
-    this.mKijiURI = kijiURI;
-    createKeyspaceIfMissingForURI(mKijiURI);
-    mStatementCache = new CassandraStatementCache(mSession);
+  private CassandraAdmin(
+      final CassandraKijiURI kijiURI,
+      final Session session,
+      final CassandraStatementCache statementCache
+  ) {
+    mKijiURI = Preconditions.checkNotNull(kijiURI);
+    mSession = Preconditions.checkNotNull(session);
+    mStatementCache = Preconditions.checkNotNull(statementCache);
+    createKeyspaceIfMissingForURI(kijiURI);
+  }
+
+  /**
+   * Creates a CassandraAdmin object for a given Kiji instance.
+   *
+   * @param kijiURI URI for the Kiji cluster.
+   * @return A new CassandraAdmin.
+   */
+  public static CassandraAdmin create(final CassandraKijiURI kijiURI) {
+    final List<String> hosts = kijiURI.getContactPoints();
+    final String[] hostStrings = hosts.toArray(new String[hosts.size()]);
+    int port = kijiURI.getContactPort();
+    final Cluster.Builder clusterBuilder = Cluster
+        .builder()
+        .addContactPoints(hostStrings)
+        .withPort(port);
+
+    if (null != kijiURI.getUsername()) {
+      clusterBuilder.withAuthProvider(
+          new PlainTextAuthProvider(kijiURI.getUsername(), kijiURI.getPassword()));
+    }
+
+    final Session session = clusterBuilder.build().connect();
+    LOG.debug("Creating connection to Cassandra: '{}'. Cluster: '{}'.",
+        kijiURI, session.getCluster().getClusterName());
+
+    final CassandraStatementCache statementCache = new CassandraStatementCache(session);
+    return new CassandraAdmin(kijiURI, session, statementCache);
   }
 
   /**
@@ -110,13 +147,12 @@ public abstract class CassandraAdmin implements Closeable {
     // Do a check first for the existence of the appropriate keyspace.  If it exists already, then
     // don't try to create it.
     if (!keyspaceExists(keyspace)) {
-      LOG.info(String.format("Creating keyspace %s for Kiji instance %s.", keyspace, kijiURI));
+      LOG.debug(String.format("Creating keyspace %s for Kiji instance %s.", keyspace, kijiURI));
 
       // TODO: Check whether keyspace is > 48 characters long and if so provide Kiji error to user.
       String queryText = "CREATE KEYSPACE IF NOT EXISTS " + keyspace
           + " WITH REPLICATION = {'class' : 'SimpleStrategy', 'replication_factor': 3}";
-      ResultSet resultSet = getSession().execute(queryText);
-      LOG.info(resultSet.toString());
+      getSession().execute(queryText);
     }
     // Check that the keyspace actually exists!
     assert(keyspaceExists(keyspace));
@@ -204,7 +240,10 @@ public abstract class CassandraAdmin implements Closeable {
   /** {@inheritDoc} */
   @Override
   public void close() {
+    LOG.debug("Closing connection to Cassandra: '{}'. Cluster: '{}'.",
+        mKijiURI, mSession.getCluster().getClusterName());
     getSession().getCluster().close();
+    getSession().close();
   }
 
   /**

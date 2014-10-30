@@ -1,5 +1,5 @@
 /**
- * (c) Copyright 2012 WibiData, Inc.
+ * (c) Copyright 2014 WibiData, Inc.
  *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
@@ -21,16 +21,18 @@ package org.kiji.schema.impl.cassandra;
 
 import org.junit.Test;
 
+import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiInvalidNameException;
 import org.kiji.schema.KijiNotInstalledException;
 import org.kiji.schema.KijiURI;
+import org.kiji.schema.cassandra.CassandraKijiClientTest;
 
 /** Tests for KijiInstaller. */
-public class TestCassandraKijiInstaller {
+public class TestCassandraKijiInstaller extends CassandraKijiClientTest {
   @Test
   public void testInstallThenUninstall() throws Exception {
     final KijiURI uri =
-        KijiURI.newBuilder("kiji-cassandra://.fake.kiji-installer/chost:1234/test").build();
+        KijiURI.newBuilder(createTestCassandraURI()).withInstanceName("test").build();
     CassandraKijiInstaller.get().install(uri, null);
     CassandraKijiInstaller.get().uninstall(uri, null);
   }
@@ -38,22 +40,21 @@ public class TestCassandraKijiInstaller {
   @Test(expected = KijiInvalidNameException.class)
   public void testInstallNullInstance() throws Exception {
     final KijiURI uri =
-        KijiURI.newBuilder("kiji-cassandra://.fake.kiji-installer/chost:1234/").build();
+        KijiURI.newBuilder(createTestCassandraURI()).withInstanceName(null).build();
     CassandraKijiInstaller.get().install(uri, null);
   }
 
   @Test(expected = KijiInvalidNameException.class)
   public void testUninstallNullInstance() throws Exception {
-    final KijiURI uri =
-        KijiURI.newBuilder("kiji-cassandra://.fake.kiji-installer/chost:1234/").build();
+    final Kiji kiji = getKiji();
+    final KijiURI uri = KijiURI.newBuilder(kiji.getURI()).withInstanceName(null).build();
     CassandraKijiInstaller.get().uninstall(uri, null);
   }
 
   @Test(expected = KijiNotInstalledException.class)
   public void testUninstallMissingInstance() throws Exception {
-    final KijiURI uri = KijiURI
-        .newBuilder("kiji-cassandra://.fake.kiji-installer/chost:1234/anInstanceThatNeverExisted")
-        .build();
+    final KijiURI uri =
+        KijiURI.newBuilder(createTestCassandraURI()).withInstanceName("non_existent").build();
     CassandraKijiInstaller.get().uninstall(uri, null);
   }
 }

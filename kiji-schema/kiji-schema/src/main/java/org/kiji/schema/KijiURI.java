@@ -287,7 +287,17 @@ public class KijiURI {
      * See {@link KijiURI#newBuilder()} for specific values.
      */
     protected KijiURIBuilder() {
-      mScheme = KIJI_SCHEME;
+      this(KIJI_SCHEME);
+    }
+
+    /**
+     * Constructs a new builder for KijiURIs with default values and the given scheme.
+     * See {@link KijiURI#newBuilder()} for specific values.
+     *
+     * @param scheme The scheme to use for the built Kiji URI.
+     */
+    protected KijiURIBuilder(final String scheme) {
+      mScheme = scheme;
       mZookeeperQuorum = ZooKeeperAuthorityParser.ENV_ZOOKEEPER_QUORUM;
       mZookeeperClientPort = ZooKeeperAuthorityParser.ENV_ZOOKEEPER_CLIENT_PORT;
       mInstanceName = KConstants.DEFAULT_INSTANCE_NAME;

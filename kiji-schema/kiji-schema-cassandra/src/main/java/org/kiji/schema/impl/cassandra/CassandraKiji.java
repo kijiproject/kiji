@@ -46,6 +46,7 @@ import org.kiji.schema.KijiSystemTable;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.avro.RowKeyFormat;
 import org.kiji.schema.avro.TableLayoutDesc;
+import org.kiji.schema.cassandra.CassandraKijiURI;
 import org.kiji.schema.cassandra.CassandraTableName;
 import org.kiji.schema.impl.Versions;
 import org.kiji.schema.layout.InvalidLayoutException;
@@ -80,7 +81,7 @@ public final class CassandraKiji implements Kiji {
   private final CassandraAdmin mAdmin;
 
   /** URI for this CassandraKiji instance. */
-  private final KijiURI mURI;
+  private final CassandraKijiURI mURI;
 
   /** States of a Kiji instance. */
   private static enum State {
@@ -144,7 +145,7 @@ public final class CassandraKiji implements Kiji {
    * @param admin CassandraAdmin wrapper around open C* session.
    * @throws java.io.IOException on I/O error.
    */
-  CassandraKiji(KijiURI kijiURI, CassandraAdmin admin) throws IOException {
+  CassandraKiji(CassandraKijiURI kijiURI, CassandraAdmin admin) throws IOException {
 
     // Validate arguments.
     mAdmin = Preconditions.checkNotNull(admin);
@@ -262,7 +263,7 @@ public final class CassandraKiji implements Kiji {
 
   /** {@inheritDoc} */
   @Override
-  public KijiURI getURI() {
+  public CassandraKijiURI getURI() {
     return mURI;
   }
 

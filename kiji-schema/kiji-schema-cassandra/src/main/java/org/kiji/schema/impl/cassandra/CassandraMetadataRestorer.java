@@ -41,7 +41,6 @@ import org.kiji.schema.KijiSystemTable;
 import org.kiji.schema.avro.MetadataBackup;
 import org.kiji.schema.avro.TableBackup;
 import org.kiji.schema.avro.TableLayoutBackupEntry;
-import org.kiji.schema.cassandra.CassandraFactory;
 import org.kiji.schema.util.ResourceUtils;
 
 /**
@@ -148,28 +147,18 @@ public class CassandraMetadataRestorer {
    * @param kiji the connected Kiji instance.
    * @throws java.io.IOException if there is an error communicating with HBase.
    */
-  public void restoreTables(MetadataBackup backup, Kiji kiji) throws IOException {
-
-    final CassandraAdmin admin = CassandraFactory
-        .Provider
-        .get()
-        .getCassandraAdminFactory(kiji.getURI())
-        .create(kiji.getURI());
-
+  public void restoreTables(MetadataBackup backup, CassandraKiji kiji) throws IOException {
+    final CassandraAdmin admin = kiji.getCassandraAdmin();
     final KijiMetaTable metaTable = kiji.getMetaTable();
-    try {
-      CassandraMetaTable.uninstall(admin, kiji.getURI());
-      CassandraMetaTable.install(admin, kiji.getURI());
+    CassandraMetaTable.uninstall(admin, kiji.getURI());
+    CassandraMetaTable.install(admin, kiji.getURI());
 
-      final Map<String, TableBackup> tables = backup.getMetaTable().getTables();
-      for (Map.Entry<String, TableBackup> layoutEntry : tables.entrySet()) {
-        final String tableName = layoutEntry.getKey();
-        LOG.debug("Found table backup entry for " + tableName);
-        final TableBackup tableBackup = layoutEntry.getValue();
-        restoreTable(tableName, tableBackup, metaTable, kiji);
-      }
-    } finally {
-      ResourceUtils.closeOrLog(admin);
+    final Map<String, TableBackup> tables = backup.getMetaTable().getTables();
+    for (Map.Entry<String, TableBackup> layoutEntry : tables.entrySet()) {
+      final String tableName = layoutEntry.getKey();
+      LOG.debug("Found table backup entry for " + tableName);
+      final TableBackup tableBackup = layoutEntry.getValue();
+      restoreTable(tableName, tableBackup, metaTable, kiji);
     }
   }
 

@@ -48,6 +48,7 @@ import org.kiji.schema.avro.SystemTableEntry;
 import org.kiji.schema.avro.TableBackup;
 import org.kiji.schema.avro.TableLayoutBackupEntry;
 import org.kiji.schema.avro.TableLayoutDesc;
+import org.kiji.schema.impl.cassandra.CassandraKiji;
 import org.kiji.schema.impl.cassandra.CassandraMetadataRestorer;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
@@ -61,7 +62,7 @@ public class TestCassandraMetaTable extends CassandraKijiClientTest {
 
   @Test
   public void testBackupAndRestore() throws InterruptedException, IOException {
-    final Kiji kiji = getKiji();
+    final CassandraKiji kiji = getKiji();
     final KijiMetaTable metaTable = kiji.getMetaTable();
     final KijiSchemaTable schemaTable = kiji.getSchemaTable();
     final KijiSystemTable systemTable = kiji.getSystemTable();
@@ -176,5 +177,4 @@ public class TestCassandraMetaTable extends CassandraKijiClientTest {
     assertEquals(0, metaTable.listTables().size());
     assertEquals(0, metaTable.tableSet().size());
   }
-
 }

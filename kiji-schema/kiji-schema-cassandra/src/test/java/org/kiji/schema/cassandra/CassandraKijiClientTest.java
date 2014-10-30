@@ -19,13 +19,25 @@
 
 package org.kiji.schema.cassandra;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.ServerSocket;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.annotation.concurrent.GuardedBy;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import org.apache.cassandra.config.DatabaseDescriptor;
+import org.apache.cassandra.service.EmbeddedCassandraService;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -125,24 +137,28 @@ public class CassandraKijiClientTest {
    *
    * @return the KijiURI of a test HBase instance.
    */
-  public CassandraKijiURI createTestCassandraURI() {
+  public CassandraKijiURI createTestCassandraURI() throws IOException {
     final long fakeCassandraCounter = FAKE_CASSANDRA_INSTANCE_COUNTER.getAndIncrement();
     final String testName = String.format(
         "%s_%s",
         getClass().getSimpleName(),
-        mTestName.getMethodName()
-    );
+        mTestName.getMethodName());
+
+    if (CASSANDRA_ADDRESS != null) {
+      return CassandraKijiURI.newBuilder(CASSANDRA_ADDRESS).build();
+    }
 
     // Goes into the ZooKeeper section of the URI.
-    final String cassandraAddress =
-        (CASSANDRA_ADDRESS != null)
-        ? CASSANDRA_ADDRESS
-        : String.format(".fake.%s-%d", testName, fakeCassandraCounter);
+    final String zookeeperQuorum = String.format(".fake.%s-%d", testName, fakeCassandraCounter);
 
     CassandraKijiURI uri = CassandraKijiURI
-        .newBuilder(String.format("kiji-cassandra://%s/localhost/9042", cassandraAddress))
+        .newBuilder()
+        .withZookeeperQuorum(ImmutableList.of(zookeeperQuorum))
+        .withContactPoints(EmbeddedCassandra.getContactPoints())
+        .withContactPort(EmbeddedCassandra.getContactPort())
         .build();
-    LOG.info("Created test Cassandra URI: " + uri);
+
+    LOG.debug("Created test Cassandra URI: '{}'.", uri);
     return uri;
   }
 
@@ -153,9 +169,9 @@ public class CassandraKijiClientTest {
    * All generated Kiji instances are automatically cleaned up by CassandraKijiClientTest.
    *
    * @return a fresh new Kiji instance.
-   * @throws Exception on error.
+   * @throws IOException on error.
    */
-  public CassandraKiji createTestKiji() throws Exception {
+  public CassandraKiji createTestKiji() throws IOException {
     // Note: The C* keyspace for the instance has to be less than 48 characters long. Every C*
     // Kiji keyspace starts with "kiji_", so we have a total of 43 characters to work with - yikes!
     // Hopefully dropping off the class name is good enough to make this short enough.
@@ -209,25 +225,107 @@ public class CassandraKijiClientTest {
    */
   public synchronized CassandraKiji getKiji() throws IOException {
     if (null == mKiji) {
-      try {
-        mKiji = createTestKiji();
-      } catch (IOException ioe) {
-        throw ioe;
-      } catch (Exception exn) {
-        // TODO: Remove wrapping:
-        throw new IOException(exn);
-      }
+      mKiji = createTestKiji();
     }
     return mKiji;
   }
 
-  /** @return a valid identifier for the current test. */
-  public String getTestId() {
-    return mTestId;
-  }
+  private static class EmbeddedCassandra {
 
-  /** @return a local temporary directory. */
-  public File getLocalTempDir() {
-    return mLocalTempDir;
+    @GuardedBy("this")
+    private static EmbeddedCassandraService embeddedCassandraService;
+
+    public static List<String> getContactPoints() throws IOException {
+      ensureEmbeddedCassandra();
+      return ImmutableList.of(DatabaseDescriptor.getListenAddress().getHostName());
+    }
+
+    public static int getContactPort() throws IOException {
+      ensureEmbeddedCassandra();
+      return DatabaseDescriptor.getNativeTransportPort();
+    }
+
+    /**
+     * Start an embedded Cassandra service for testing, if it is not already started.
+     */
+    private static synchronized void ensureEmbeddedCassandra() throws IOException {
+      if (embeddedCassandraService != null) {
+        return;
+      }
+
+      LOG.info("Starting embedded Cassandra service.");
+
+      // Use a custom YAML file that specifies different ports from normal for RPC and thrift.
+      InputStream yamlStream = EmbeddedCassandra.class.getResourceAsStream("/cassandra.yaml");
+      Preconditions.checkState(yamlStream != null, "Unable to find resource '/cassandra.yaml'.");
+
+      // Update cassandra.yaml to use available ports.
+      String cassandraYaml = IOUtils.toString(yamlStream);
+
+      final int storagePort = findOpenPort(); // Normally 7000.
+      final int nativeTransportPort = findOpenPort(); // Normally 9042.
+
+      cassandraYaml = updateCassandraYaml(cassandraYaml, "__STORAGE_PORT__", storagePort);
+      cassandraYaml =
+          updateCassandraYaml(cassandraYaml, "__NATIVE_TRANSPORT_PORT__", nativeTransportPort);
+
+      // Write out the YAML contents to a temp file.
+      File yamlFile = File.createTempFile("cassandra", ".yaml");
+      LOG.info("Writing cassandra.yaml to {}", yamlFile);
+      try (FileWriter fw = new FileWriter(yamlFile);
+           BufferedWriter bw = new BufferedWriter(fw)) {
+        bw.write(cassandraYaml);
+      }
+
+      Preconditions.checkArgument(yamlFile.exists());
+      System.setProperty("cassandra.config", "file:" + yamlFile.getAbsolutePath());
+      System.setProperty("cassandra-foreground", "true");
+
+      // Make sure that all of the directories for the commit log, data, and caches are empty.
+      // Thank goodness there are methods to get this information (versus parsing the YAML
+      // directly).
+      List<String> directoriesToDelete =
+          Lists.newArrayList(Arrays.asList(DatabaseDescriptor.getAllDataFileLocations()));
+      directoriesToDelete.add(DatabaseDescriptor.getCommitLogLocation());
+      directoriesToDelete.add(DatabaseDescriptor.getSavedCachesLocation());
+      for (String directory : directoriesToDelete) {
+        FileUtils.deleteDirectory(new File(directory));
+      }
+
+      embeddedCassandraService = new EmbeddedCassandraService();
+      embeddedCassandraService.start();
+    }
+
+    /**
+     * Update a stringified cassandra.yaml containing a label with with a given port.
+     *
+     * @param yaml The stringified cassandra.yaml containing a label to substitue.
+     * @param label The label to substitute for the port.
+     * @param port The port to substitute for the label.
+     * @return The contents of the YAML file after the substitution.
+     */
+    private static String updateCassandraYaml(
+        String yaml,
+        String label,
+        int port
+    ) {
+      String yamlContentsAfterSub = yaml.replace(label, Integer.toString(port));
+      Preconditions.checkArgument(!yamlContentsAfterSub.equals(yaml));
+      return yamlContentsAfterSub;
+    }
+
+    /**
+     * Find an available port.
+     *
+     * @return An open port number.
+     * @throws IOException on I/O error.
+     */
+    private static int findOpenPort() throws IOException {
+      ServerSocket serverSocket = new ServerSocket(0);
+      int portNumber = serverSocket.getLocalPort();
+      serverSocket.setReuseAddress(true);
+      serverSocket.close();
+      return portNumber;
+    }
   }
 }

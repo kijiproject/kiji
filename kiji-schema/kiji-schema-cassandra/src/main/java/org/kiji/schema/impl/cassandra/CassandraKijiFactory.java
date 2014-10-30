@@ -22,13 +22,14 @@ package org.kiji.schema.impl.cassandra;
 import java.io.IOException;
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
 import org.apache.hadoop.conf.Configuration;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.delegation.Priority;
 import org.kiji.schema.KijiFactory;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.cassandra.CassandraFactory;
+import org.kiji.schema.cassandra.CassandraKijiURI;
 
 /** Factory for constructing instances of CassandraKiji. */
 @ApiAudience.Private
@@ -51,10 +52,10 @@ public final class CassandraKijiFactory implements KijiFactory {
   /** {@inheritDoc} */
   @Override
   public CassandraKiji open(KijiURI uri) throws IOException {
-    CassandraFactory cassandraFactory = CassandraFactory.Provider.get();
-    CassandraAdminFactory adminFactory = cassandraFactory.getCassandraAdminFactory(uri);
-    CassandraAdmin admin = adminFactory.create(uri);
-    return new CassandraKiji(uri, admin);
+    Preconditions.checkArgument(uri instanceof CassandraKijiURI,
+        "Kiji URI for a new Cassandra Kiji must be a CassandraKijiURI: '{}'.", uri);
+    final CassandraKijiURI cassandraURI = (CassandraKijiURI) uri;
+    return new CassandraKiji(cassandraURI, CassandraAdmin.create(cassandraURI));
   }
 
   /** {@inheritDoc} */
