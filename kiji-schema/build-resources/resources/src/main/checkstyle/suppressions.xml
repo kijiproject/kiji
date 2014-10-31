@@ -45,4 +45,7 @@
 
   <!-- Don't do any checks on the NullOutputStream code -->
   <suppress checks=".*" files="src/main/java/com/google/common/io/"/>
+
+  <!-- Don't do any checks on generated code. -->
+  <suppress checks=".*" files="/target/"/>
 </suppressions>

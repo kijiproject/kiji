@@ -34,4 +34,7 @@
   <!-- Param tests have small test classes that don't follow convention. -->
   <suppress checks="MemberNameCheck" files="src/test/java/org/kiji/scoring/params/"/>
   <suppress checks="VisibilityModifierCheck" files="src/test/java/org/kiji/scoring/params/"/>
+
+  <!-- Do not check generated code. -->
+  <suppress checks=".*" files="/target/"/>
 </suppressions>

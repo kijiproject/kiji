@@ -36,4 +36,7 @@
 
   <!-- Don't check this public member in Cassandra integration test. -->
   <suppress checks="VisibilityModifierCheck" files="src/test/java/org/kiji/mapreduce/framework/" />
+
+  <!-- Do not check generated code. -->
+  <suppress checks=".*" files="/target/"/>
 </suppressions>

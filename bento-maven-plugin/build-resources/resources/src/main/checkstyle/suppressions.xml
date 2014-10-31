@@ -28,4 +28,7 @@
 
   <!-- Nested blocks used to structure tests. -->
   <suppress checks="AvoidNestedBlocks" files="src/test/java/"/>
+
+  <!-- Do not check generated code. -->
+  <suppress checks=".*" files="/target/"/>
 </suppressions>

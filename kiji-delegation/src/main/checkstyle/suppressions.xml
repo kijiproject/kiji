@@ -33,4 +33,7 @@
 
   <!-- Don't worry about checkstyle on apache foundation code. -->
   <suppress checks=".*" files="src/main/java/org/apache/"/>
+
+  <!-- Do not check generated code. -->
+  <suppress checks=".*" files="/target/"/>
 </suppressions>
