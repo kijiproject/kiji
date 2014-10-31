@@ -45,7 +45,7 @@ public final class IteratorUtils {
    * @return An iterator which lazily deduplicates elements.
    */
   public static <T> Iterator<T> deduplicatingIterator(final Iterator<T> iterator) {
-    return new DeduplicatingIterator<T>(iterator);
+    return new DeduplicatingIterator<>(iterator);
   }
 
   /**
