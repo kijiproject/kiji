@@ -43,16 +43,6 @@
   </build>
 
   <dependencies>
-    <!--
-      This dependency must be placed at the top of the dependencies section to shadow hadoop
-      classes. Speeds up tests that use hadoop's LocalJobRunner.
-    -->
-    <dependency>
-      <groupId>org.kiji.platforms</groupId>
-      <artifactId>kiji-platforms-test-fixes</artifactId>
-      <version>${project.version}</version>
-      <scope>compile</scope>
-    </dependency>
 
     <dependency>
       <groupId>org.apache.hadoop</groupId>
