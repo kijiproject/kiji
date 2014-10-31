@@ -63,6 +63,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.commons.ResourceTracker;
 import org.kiji.schema.KijiSchemaTable;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.avro.MD5Hash;
@@ -74,7 +75,6 @@ import org.kiji.schema.platform.SchemaPlatformBridge;
 import org.kiji.schema.util.ByteStreamArray;
 import org.kiji.schema.util.ByteStreamArray.EncodingException;
 import org.kiji.schema.util.BytesKey;
-import org.kiji.schema.util.DebugResourceTracker;
 import org.kiji.schema.util.Hasher;
 import org.kiji.schema.util.Lock;
 import org.kiji.schema.util.ResourceUtils;
@@ -254,7 +254,7 @@ public final class HBaseSchemaTable implements KijiSchemaTable {
     final State oldState = mState.getAndSet(State.OPEN);
     Preconditions.checkState(oldState == State.UNINITIALIZED,
         "Cannot open SchemaTable instance in state %s.", oldState);
-    DebugResourceTracker.get().registerResource(this);
+    ResourceTracker.get().registerResource(this);
   }
 
   /**
@@ -547,7 +547,7 @@ public final class HBaseSchemaTable implements KijiSchemaTable {
     final State oldState = mState.getAndSet(State.CLOSED);
     Preconditions.checkState(oldState == State.OPEN,
         "Cannot close SchemaTable instance in state %s.", oldState);
-    DebugResourceTracker.get().unregisterResource(this);
+    ResourceTracker.get().unregisterResource(this);
     ResourceUtils.closeOrLog(mSchemaHashTable);
     ResourceUtils.closeOrLog(mSchemaIdTable);
     ResourceUtils.closeOrLog(mZKLock);

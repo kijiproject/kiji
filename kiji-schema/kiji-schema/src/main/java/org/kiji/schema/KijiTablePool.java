@@ -36,9 +36,9 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
+import org.kiji.commons.ResourceTracker;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.Clock;
-import org.kiji.schema.util.DebugResourceTracker;
 import org.kiji.schema.util.ResourceUtils;
 
 /**
@@ -254,7 +254,7 @@ public final class KijiTablePool implements Closeable {
     final State oldState = mState.getAndSet(State.OPEN);
     Preconditions.checkState(oldState == State.UNINITIALIZED,
         "Cannot open KijiTablePool instance in state %s.", oldState);
-    DebugResourceTracker.get().registerResource(this);
+    ResourceTracker.get().registerResource(this);
   }
 
   /**
@@ -322,7 +322,7 @@ public final class KijiTablePool implements Closeable {
     final State oldState = mState.getAndSet(State.CLOSED);
     Preconditions.checkState(oldState == State.OPEN,
         "Cannot close KijiTablePool instance in state %s.", oldState);
-    DebugResourceTracker.get().unregisterResource(this);
+    ResourceTracker.get().unregisterResource(this);
     if (null != mCleanupThread) {
       mCleanupThread.interrupt();
     }

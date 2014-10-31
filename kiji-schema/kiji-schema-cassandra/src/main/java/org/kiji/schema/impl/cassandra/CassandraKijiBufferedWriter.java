@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
+import org.kiji.commons.ResourceTracker;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiBufferedWriter;
 import org.kiji.schema.KijiColumnName;
@@ -54,7 +55,6 @@ import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout;
 import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout.FamilyLayout;
 import org.kiji.schema.layout.impl.CellEncoderProvider;
-import org.kiji.schema.util.DebugResourceTracker;
 
 /**
  * Cassandra implementation of a batch KijiTableWriter.
@@ -232,7 +232,7 @@ public class CassandraKijiBufferedWriter implements KijiBufferedWriter {
           "Cannot open CassandraKijiBufferedWriter instance in state %s.", mState);
       mState = State.OPEN;
     }
-    DebugResourceTracker.get().registerResource(this);
+    ResourceTracker.get().registerResource(this);
   }
 
   // -----------------------------------------------------------------------------------------------
@@ -524,7 +524,7 @@ public class CassandraKijiBufferedWriter implements KijiBufferedWriter {
       mState = State.CLOSED;
       mLayoutConsumerRegistration.close();
       mTable.release();
-      DebugResourceTracker.get().unregisterResource(this);
+      ResourceTracker.get().unregisterResource(this);
     }
   }
 }

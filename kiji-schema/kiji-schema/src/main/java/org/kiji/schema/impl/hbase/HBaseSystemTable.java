@@ -48,6 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.commons.ResourceTracker;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiNotInstalledException;
 import org.kiji.schema.KijiSystemTable;
@@ -59,7 +60,6 @@ import org.kiji.schema.impl.HTableInterfaceFactory;
 import org.kiji.schema.impl.Versions;
 import org.kiji.schema.platform.SchemaPlatformBridge;
 import org.kiji.schema.util.CloseableIterable;
-import org.kiji.schema.util.DebugResourceTracker;
 import org.kiji.schema.util.ProtocolVersion;
 import org.kiji.schema.util.ResourceUtils;
 
@@ -164,7 +164,7 @@ public final class HBaseSystemTable implements KijiSystemTable {
     final State oldState = mState.getAndSet(State.OPEN);
     Preconditions.checkState(oldState == State.UNINITIALIZED,
         "Cannot open SystemTable instance in state %s.", oldState);
-    DebugResourceTracker.get().registerResource(this);
+    ResourceTracker.get().registerResource(this);
   }
 
   /** {@inheritDoc} */
@@ -221,7 +221,7 @@ public final class HBaseSystemTable implements KijiSystemTable {
     final State oldState = mState.getAndSet(State.CLOSED);
     Preconditions.checkState(oldState == State.OPEN,
         "Cannot close KijiSystemTable instance in state %s.", oldState);
-    DebugResourceTracker.get().unregisterResource(this);
+    ResourceTracker.get().unregisterResource(this);
     mTable.close();
   }
 

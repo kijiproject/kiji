@@ -44,10 +44,10 @@ import org.slf4j.LoggerFactory;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
+import org.kiji.commons.ReferenceCountedCache;
 import org.kiji.schema.InternalKijiError;
 import org.kiji.schema.KijiIOException;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.util.ReferenceCountedCache;
 
 /**
  * Utility class which holds constants and utility methods for working with ZooKeeper.

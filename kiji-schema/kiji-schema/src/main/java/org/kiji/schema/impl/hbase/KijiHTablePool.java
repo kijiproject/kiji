@@ -48,10 +48,10 @@
 //import org.slf4j.LoggerFactory;
 //
 //import org.kiji.annotations.ApiAudience;
+//import org.kiji.commons.ResourceTracker;
 //import org.kiji.schema.KijiIOException;
 //import org.kiji.schema.hbase.KijiManagedHBaseTableName;
 //import org.kiji.schema.impl.HTableInterfaceFactory;
-//import org.kiji.schema.util.DebugResourceTracker;
 //
 ///**
 //* This private class is designed to serve as a replacement for HTablePool, to get around the
@@ -128,7 +128,7 @@
 //    config.testOnBorrow = true;
 //
 //    mPool = new GenericObjectPool<PooledHTable>(new PooledHTableFactory(), config);
-//    DebugResourceTracker.get().registerResource(this);
+//    ResourceTracker.get().registerResource(this);
 //  }
 //
 //  /**
@@ -155,7 +155,7 @@
 //      if (mPool.isClosed()) {
 //        throw new KijiIOException("Attempting to close an already closed table pool.");
 //      }
-//      DebugResourceTracker.get().unregisterResource(this);
+//      ResourceTracker.get().unregisterResource(this);
 //      mPool.close();
 //    } catch (Exception ex) {
 //      throw new KijiIOException(

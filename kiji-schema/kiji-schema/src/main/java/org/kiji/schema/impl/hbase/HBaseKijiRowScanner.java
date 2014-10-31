@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.commons.ResourceTracker;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.EntityIdFactory;
 import org.kiji.schema.KijiDataRequest;
@@ -44,7 +45,6 @@ import org.kiji.schema.KijiIOException;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.layout.impl.CellDecoderProvider;
-import org.kiji.schema.util.DebugResourceTracker;
 
 /**
  * The internal implementation of KijiRowScanner that reads from HTables.
@@ -80,7 +80,7 @@ public final class HBaseKijiRowScanner implements KijiRowScanner {
   }
 
   /** Tracks the state of this row scanner. */
-  private final AtomicReference<State> mState = new AtomicReference<State>(State.UNINITIALIZED);
+  private final AtomicReference<State> mState = new AtomicReference<>(State.UNINITIALIZED);
 
   /** Factory for entity IDs. */
   private final EntityIdFactory mEntityIdFactory;
@@ -244,7 +244,7 @@ public final class HBaseKijiRowScanner implements KijiRowScanner {
     final State oldState = mState.getAndSet(State.OPEN);
     Preconditions.checkState(oldState == State.UNINITIALIZED,
         "Cannot open KijiRowScanner instance in state %s.", oldState);
-    DebugResourceTracker.get().registerResource(this);
+    ResourceTracker.get().registerResource(this);
   }
 
   /**
@@ -291,7 +291,7 @@ public final class HBaseKijiRowScanner implements KijiRowScanner {
     final State oldState = mState.getAndSet(State.CLOSED);
     Preconditions.checkState(oldState == State.OPEN,
         "Cannot close KijiRowScanner instance in state %s.", oldState);
-    DebugResourceTracker.get().unregisterResource(this);
+    ResourceTracker.get().unregisterResource(this);
     mResultScanner.close();
     mHTable.close();
   }

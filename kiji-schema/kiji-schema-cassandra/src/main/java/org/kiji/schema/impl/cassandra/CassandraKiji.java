@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.commons.ResourceTracker;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiAlreadyExistsException;
 import org.kiji.schema.KijiMetaTable;
@@ -54,7 +55,6 @@ import org.kiji.schema.layout.impl.InstanceMonitor;
 import org.kiji.schema.security.CassandraKijiSecurityManager;
 import org.kiji.schema.security.KijiSecurityException;
 import org.kiji.schema.security.KijiSecurityManager;
-import org.kiji.schema.util.DebugResourceTracker;
 import org.kiji.schema.util.ProtocolVersion;
 import org.kiji.schema.util.ResourceUtils;
 import org.kiji.schema.util.VersionInfo;
@@ -85,12 +85,12 @@ public final class CassandraKiji implements Kiji {
   /** States of a Kiji instance. */
   private static enum State {
     /**
-     * Initialization begun but not completed.  Retain counter and DebugResourceTracker counters
+     * Initialization begun but not completed.  Retain counter and ResourceTracker counters
      * have not been incremented yet.
      */
     UNINITIALIZED,
     /**
-     * Finished initialization.  Both retain counters and DebugResourceTracker counters have been
+     * Finished initialization.  Both retain counters and ResourceTracker counters have been
      * incremented.  Resources are successfully opened and this Kiji's methods may be used.
      */
     OPEN,
@@ -211,7 +211,7 @@ public final class CassandraKiji implements Kiji {
     Preconditions.checkState(oldState == State.UNINITIALIZED,
         "Cannot open Kiji instance in state %s.", oldState);
 
-    DebugResourceTracker.get().registerResource(this);
+    ResourceTracker.get().registerResource(this);
   }
 
   /**
@@ -609,7 +609,7 @@ public final class CassandraKiji implements Kiji {
     ResourceUtils.closeOrLog(mZKClient);
 
     if (oldState != State.UNINITIALIZED) {
-      DebugResourceTracker.get().unregisterResource(this);
+      ResourceTracker.get().unregisterResource(this);
     }
 
     LOG.debug("{} closed.", this);

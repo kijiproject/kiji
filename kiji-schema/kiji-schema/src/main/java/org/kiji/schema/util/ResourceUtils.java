@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
+import org.kiji.commons.ReferenceCountable;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
@@ -176,7 +177,7 @@ public final class ResourceUtils {
   }
 
   /**
-   * Perform an action with a {@link org.kiji.schema.util.ReferenceCountable} resource and then
+   * Perform an action with a {@link org.kiji.commons.ReferenceCountable} resource and then
    * release the resource.
    *
    * @param <RESOURCE> Type of the resource.

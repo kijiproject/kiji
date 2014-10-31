@@ -222,7 +222,7 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${maven-surefire-plugin.version}</version>
           <configuration>
-            <argLine>-Dorg.kiji.schema.util.DebugResourceTracker.tracking_level=REFERENCES</argLine>
+            <argLine>-Dorg.kiji.commons.ResourceTracker.tracking_level=REFERENCES</argLine>
             <includes>
               <include>**/Test*.java</include>
             </includes>
@@ -367,7 +367,7 @@
           <artifactId>maven-failsafe-plugin</artifactId>
           <version>${maven-failsafe-plugin.version}</version>
           <configuration>
-            <argLine>-Dorg.kiji.schema.util.DebugResourceTracker.tracking_level=REFERENCES</argLine>
+            <argLine>-Dorg.kiji.commons.ResourceTracker.tracking_level=REFERENCES</argLine>
             <includes>
               <include>%regex[.*IntegrationTest.*]</include>
             </includes>

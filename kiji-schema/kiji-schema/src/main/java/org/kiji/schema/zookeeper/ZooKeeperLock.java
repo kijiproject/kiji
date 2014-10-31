@@ -36,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
-import org.kiji.schema.util.DebugResourceTracker;
+import org.kiji.commons.ResourceTracker;
 import org.kiji.schema.util.Lock;
 import org.kiji.schema.util.Time;
 
@@ -63,7 +63,7 @@ public final class ZooKeeperLock implements Lock {
     mZKClient = zkClient;
     mLockDir = lockDir;
     mLockPathPrefix = new File(lockDir, LOCK_NAME_PREFIX);
-    DebugResourceTracker.get().registerResource(this);
+    ResourceTracker.get().registerResource(this);
   }
 
   /** Watches the lock directory node. */
@@ -121,8 +121,7 @@ public final class ZooKeeperLock implements Lock {
           if (index == 0) {
             // We own the lock:
             LOG.debug("{}: lock acquired", this);
-            DebugResourceTracker.get().registerResource(
-                mCreatedPath,
+            ResourceTracker.get().registerResource(mCreatedPath,
                 String.format("Locked (acquired) ZooKeeper lock: %s.", this));
             return true;
           } else { // index >= 1
@@ -159,7 +158,7 @@ public final class ZooKeeperLock implements Lock {
   @Override
   public void unlock() throws IOException {
     synchronized (this) {
-      DebugResourceTracker.get().unregisterResource(mCreatedPath);
+      ResourceTracker.get().unregisterResource(mCreatedPath);
       unlockInternal();
     }
   }
@@ -195,10 +194,10 @@ public final class ZooKeeperLock implements Lock {
     synchronized (this) {
       if (mCreatedPath != null) {
         // This will trigger a leaked acquired lock resource error in the cleanup log by not
-        // unregistering mCreatedPath with the DebugResourceTracker.
+        // unregistering mCreatedPath with the ResourceTracker.
         unlockInternal();
       }
-      DebugResourceTracker.get().unregisterResource(this);
+      ResourceTracker.get().unregisterResource(this);
     }
   }
 }

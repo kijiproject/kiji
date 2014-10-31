@@ -55,6 +55,7 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.commons.ByteUtils;
+import org.kiji.commons.ResourceTracker;
 import org.kiji.schema.KijiNotInstalledException;
 import org.kiji.schema.KijiSchemaTable;
 import org.kiji.schema.KijiURI;
@@ -63,7 +64,6 @@ import org.kiji.schema.avro.SchemaTableBackup;
 import org.kiji.schema.avro.SchemaTableEntry;
 import org.kiji.schema.cassandra.CassandraTableName;
 import org.kiji.schema.util.BytesKey;
-import org.kiji.schema.util.DebugResourceTracker;
 import org.kiji.schema.util.Lock;
 import org.kiji.schema.zookeeper.ZooKeeperLock;
 import org.kiji.schema.zookeeper.ZooKeeperUtils;
@@ -285,7 +285,7 @@ public final class CassandraSchemaTable implements KijiSchemaTable {
     final State oldState = mState.getAndSet(State.OPEN);
     Preconditions.checkState(oldState == State.UNINITIALIZED,
         "Cannot open SchemaTable instance in state %s.", oldState);
-    DebugResourceTracker.get().registerResource(this);
+    ResourceTracker.get().registerResource(this);
 
     // Prepare queries that we'll use multiple times
     prepareQueryWriteHashTable();
@@ -667,7 +667,7 @@ public final class CassandraSchemaTable implements KijiSchemaTable {
     final State oldState = mState.getAndSet(State.CLOSED);
     Preconditions.checkState(oldState == State.OPEN,
         "Cannot close SchemaTable instance in state %s.", oldState);
-    DebugResourceTracker.get().unregisterResource(this);
+    ResourceTracker.get().unregisterResource(this);
     mZKLock.close();
     mZKClient.close();
   }

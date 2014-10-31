@@ -28,11 +28,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
+import org.kiji.commons.ReferenceCountable;
 import org.kiji.schema.avro.TableLayoutDesc;
 import org.kiji.schema.impl.hbase.HBaseKijiFactory;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.security.KijiSecurityManager;
-import org.kiji.schema.util.ReferenceCountable;
 
 /**
  * <p>Provides a handle to a Kiji instance that contains table information and access to

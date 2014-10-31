@@ -27,10 +27,10 @@ import org.apache.curator.test.TestingCluster;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
+import org.kiji.commons.ResourceTracker;
 import org.kiji.delegation.Priority;
 import org.kiji.schema.InternalKijiError;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.util.DebugResourceTracker;
 
 /**
  * A {@link ZooKeeperFactory} which uses an in-process ZooKeeper cluster when for 'fake'
@@ -72,7 +72,7 @@ public class TestingZooKeeperFactory implements ZooKeeperFactory {
         // run (instead of potentially many per individual test).
         final CuratorFramework zkConnection =
             ZooKeeperUtils.getZooKeeperClient(ZK_CLUSTER.getConnectString());
-        DebugResourceTracker.get().unregisterResource(zkConnection);
+        ResourceTracker.get().unregisterResource(zkConnection);
       }
     } catch (Exception e) {
       throw new InternalKijiError(e);

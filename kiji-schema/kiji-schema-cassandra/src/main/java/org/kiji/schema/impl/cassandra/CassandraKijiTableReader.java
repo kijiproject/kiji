@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.commons.ResourceTracker;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
@@ -57,7 +58,6 @@ import org.kiji.schema.layout.CellSpec;
 import org.kiji.schema.layout.ColumnReaderSpec;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.impl.CellDecoderProvider;
-import org.kiji.schema.util.DebugResourceTracker;
 
 /**
  * Reads from a kiji table by sending the requests directly to the C* tables.
@@ -272,7 +272,7 @@ public final class CassandraKijiTableReader implements KijiTableReader {
     final State oldState = mState.getAndSet(State.OPEN);
     Preconditions.checkState(oldState == State.UNINITIALIZED,
         "Cannot open KijiTableReader instance in state %s.", oldState);
-    DebugResourceTracker.get().registerResource(this);
+    ResourceTracker.get().registerResource(this);
   }
 
   /**
@@ -337,7 +337,7 @@ public final class CassandraKijiTableReader implements KijiTableReader {
     final State oldState = mState.getAndSet(State.OPEN);
     Preconditions.checkState(oldState == State.UNINITIALIZED,
         "Cannot open KijiTableReader instance in state %s.", oldState);
-    DebugResourceTracker.get().registerResource(this);
+    ResourceTracker.get().registerResource(this);
   }
 
   /** {@inheritDoc} */
@@ -514,6 +514,6 @@ public final class CassandraKijiTableReader implements KijiTableReader {
         "Cannot close KijiTableReader instance %s in state %s.", this, oldState);
     mLayoutConsumerRegistration.close();
     mTable.release();
-    DebugResourceTracker.get().unregisterResource(this);
+    ResourceTracker.get().unregisterResource(this);
   }
 }

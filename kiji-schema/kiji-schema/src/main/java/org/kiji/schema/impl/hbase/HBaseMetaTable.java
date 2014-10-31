@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.commons.ResourceTracker;
 import org.kiji.schema.KijiMetaTable;
 import org.kiji.schema.KijiSchemaTable;
 import org.kiji.schema.KijiTableKeyValueDatabase;
@@ -52,7 +53,6 @@ import org.kiji.schema.impl.HTableInterfaceFactory;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayoutDatabase;
 import org.kiji.schema.layout.impl.HBaseTableLayoutDatabase;
-import org.kiji.schema.util.DebugResourceTracker;
 
 /**
  * An implementation of the KijiMetaTable that uses the 'kiji-meta' HBase table as the backing
@@ -174,7 +174,7 @@ public final class HBaseMetaTable implements KijiMetaTable {
     final State oldState = mState.getAndSet(State.OPEN);
     Preconditions.checkState(oldState == State.UNINITIALIZED,
         "Cannot open MetaTable instance in state %s.", oldState);
-    DebugResourceTracker.get().registerResource(this);
+    ResourceTracker.get().registerResource(this);
   }
 
   /** {@inheritDoc} */
@@ -267,7 +267,7 @@ public final class HBaseMetaTable implements KijiMetaTable {
     final State oldState = mState.getAndSet(State.CLOSED);
     Preconditions.checkState(oldState == State.OPEN,
         "Cannot close MetaTable instance in state %s.", oldState);
-    DebugResourceTracker.get().unregisterResource(this);
+    ResourceTracker.get().unregisterResource(this);
     mTable.close();
   }
 

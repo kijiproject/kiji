@@ -41,6 +41,7 @@ import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.FilterList.Operator;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.commons.ResourceTracker;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiCell;
 import org.kiji.schema.KijiColumnName;
@@ -55,7 +56,6 @@ import org.kiji.schema.impl.hbase.HBaseDataRequestAdapter.NameTranslatingFilterC
 import org.kiji.schema.layout.HBaseColumnNameTranslator;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.impl.CellDecoderProvider;
-import org.kiji.schema.util.DebugResourceTracker;
 
 /**
  * A {@link KijiResult} backed by on-demand HBase scans.
@@ -139,7 +139,7 @@ public class HBasePagedKijiResult<T> implements KijiResult<T> {
   @Override
   public Iterator<KijiCell<T>> iterator() {
     if (!mDebugRegistered) {
-      DebugResourceTracker.get().registerResource(this);
+      ResourceTracker.get().registerResource(this);
       mDebugRegistered = true;
     }
     return Iterables.concat(mColumnResults.values()).iterator();
@@ -151,7 +151,7 @@ public class HBasePagedKijiResult<T> implements KijiResult<T> {
   public <U extends T> HBasePagedKijiResult<U> narrowView(final KijiColumnName column) {
     final KijiDataRequest narrowRequest = DefaultKijiResult.narrowRequest(column, mDataRequest);
 
-    return new HBasePagedKijiResult<U>(
+    return new HBasePagedKijiResult<>(
         mEntityId,
         narrowRequest,
         mTable,
@@ -167,7 +167,7 @@ public class HBasePagedKijiResult<T> implements KijiResult<T> {
       mCloser.close();
     } finally {
       if (mDebugRegistered) {
-        DebugResourceTracker.get().unregisterResource(this);
+        ResourceTracker.get().unregisterResource(this);
         mDebugRegistered = false;
       }
     }

@@ -42,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.commons.ResourceTracker;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiBufferedWriter;
 import org.kiji.schema.KijiCellEncoder;
@@ -57,7 +58,6 @@ import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout.FamilyLayout;
 import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout.FamilyLayout.ColumnLayout;
 import org.kiji.schema.layout.impl.CellEncoderProvider;
 import org.kiji.schema.platform.SchemaPlatformBridge;
-import org.kiji.schema.util.DebugResourceTracker;
 
 /**
  * <p>
@@ -193,7 +193,7 @@ public final class HBaseKijiBufferedWriter implements KijiBufferedWriter {
           "Cannot open HBaseKijiBufferedWriter instance in state %s.", mState);
       mState = State.OPEN;
     }
-    DebugResourceTracker.get().registerResource(this);
+    ResourceTracker.get().registerResource(this);
   }
 
   // ----------------------------------------------------------------------------------------------
@@ -493,7 +493,7 @@ public final class HBaseKijiBufferedWriter implements KijiBufferedWriter {
       Preconditions.checkState(mState == State.OPEN,
           "Cannot close BufferedWriter instance %s in state %s.", this, mState);
       mState = State.CLOSED;
-      DebugResourceTracker.get().unregisterResource(this);
+      ResourceTracker.get().unregisterResource(this);
       mLayoutConsumerRegistration.close();
       mHTable.close();
       mTable.release();

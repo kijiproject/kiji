@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.commons.ReferenceCountedCache;
 import org.kiji.schema.KijiIOException;
 import org.kiji.schema.KijiMetaTable;
 import org.kiji.schema.KijiSchemaTable;
@@ -39,7 +40,6 @@ import org.kiji.schema.layout.impl.TableLayoutMonitor.DefaultTableLayoutMonitor;
 import org.kiji.schema.layout.impl.TableLayoutMonitor.ReferencedTableLayoutMonitor;
 import org.kiji.schema.util.JvmId;
 import org.kiji.schema.util.ProtocolVersion;
-import org.kiji.schema.util.ReferenceCountedCache;
 import org.kiji.schema.zookeeper.InstanceUserRegistration;
 
 /**

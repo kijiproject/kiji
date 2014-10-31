@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.commons.ReferenceCountedCache;
 import org.kiji.schema.KijiIOException;
 import org.kiji.schema.KijiMetaTable;
 import org.kiji.schema.KijiSchemaTable;
@@ -45,7 +46,6 @@ import org.kiji.schema.impl.LayoutConsumer;
 import org.kiji.schema.impl.LayoutConsumer.Registration;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.JvmId;
-import org.kiji.schema.util.ReferenceCountedCache;
 import org.kiji.schema.util.ResourceUtils;
 import org.kiji.schema.zookeeper.TableLayoutTracker;
 import org.kiji.schema.zookeeper.TableLayoutUpdateHandler;
@@ -140,13 +140,13 @@ public interface TableLayoutMonitor extends Closeable {
       CLOSED,
     }
 
-    private final AtomicReference<State> mState = new AtomicReference<State>();
+    private final AtomicReference<State> mState = new AtomicReference<>();
 
     /**
      * A reference to the latest {@link KijiTableLayout} for the table.  Updated automatically by a
      * ZooKeeper watcher when the layout is updated.
      */
-    private final AtomicReference<KijiTableLayout> mLayout = new AtomicReference<KijiTableLayout>();
+    private final AtomicReference<KijiTableLayout> mLayout = new AtomicReference<>();
 
     /** Holds the set of LayoutConsumers who should be notified of layout updates. */
     private final Set<LayoutConsumer> mConsumers =

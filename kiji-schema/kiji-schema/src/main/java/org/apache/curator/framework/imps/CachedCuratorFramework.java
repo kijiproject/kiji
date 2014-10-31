@@ -21,13 +21,12 @@ package org.apache.curator.framework.imps;
 
 import java.io.IOException;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.curator.framework.CuratorFramework;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.commons.ReferenceCountedCache;
+import org.kiji.commons.ResourceTracker;
 import org.kiji.schema.InternalKijiError;
-import org.kiji.schema.util.DebugResourceTracker;
-import org.kiji.schema.util.ReferenceCountedCache;
 
 /**
  * A utility class which provides {@link CuratorFramework} implementations which share an underlying
@@ -36,7 +35,7 @@ import org.kiji.schema.util.ReferenceCountedCache;
  * {@link #create(ReferenceCountedCache, Object, String)}} will automatically manage releasing
  * reference counts from the underlying cache when closed. Additionally, the
  * {@link CuratorFramework}s created by this class will be registered with the
- * {@link DebugResourceTracker} mechanism.
+ * {@link ResourceTracker} mechanism.
  *
  * Must be in the {@code org.apache.curator.framework.imps} package in order to subclass
  * {@link NamespaceFacade}, which only provides a package private constructor.
@@ -96,7 +95,7 @@ public class CachedCuratorFramework {
       super(delegate);
       mCache = cache;
       mCacheKey = key;
-      DebugResourceTracker.get().registerResource(this);
+      ResourceTracker.get().registerResource(this);
     }
 
 
@@ -115,7 +114,7 @@ public class CachedCuratorFramework {
         // Impossible since {@link CuratorFramework#close()} does not throw IOException.
         throw new InternalKijiError(e);
       } finally {
-        DebugResourceTracker.get().unregisterResource(this);
+        ResourceTracker.get().unregisterResource(this);
       }
     }
   }
@@ -144,7 +143,7 @@ public class CachedCuratorFramework {
       super(delegate, namespace);
       mCache = cache;
       mCacheKey = key;
-      DebugResourceTracker.get().registerResource(this);
+      ResourceTracker.get().registerResource(this);
     }
 
     /** {@inheritDoc} */
@@ -162,7 +161,7 @@ public class CachedCuratorFramework {
         // Impossible since {@link CuratorFramework#close()} does not throw IOException.
         throw new InternalKijiError(e);
       } finally {
-        DebugResourceTracker.get().unregisterResource(this);
+        ResourceTracker.get().unregisterResource(this);
       }
     }
   }

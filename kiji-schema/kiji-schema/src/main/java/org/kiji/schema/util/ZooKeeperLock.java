@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.commons.ResourceTracker;
 import org.kiji.schema.RuntimeInterruptedException;
 import org.kiji.schema.layout.impl.ZooKeeperClient;
 
@@ -77,7 +78,7 @@ public final class ZooKeeperLock implements Lock, Closeable {
     this.mLockPathPrefix = new File(lockDir,  LOCK_NAME_PREFIX);
     // ZooKeeperClient.retain() should be the last line of the constructor.
     this.mZKClient.retain();
-    DebugResourceTracker.get().registerResource(this);
+    ResourceTracker.get().registerResource(this);
   }
 
   /** Watches the lock directory node. */
@@ -247,6 +248,6 @@ public final class ZooKeeperLock implements Lock, Closeable {
       unlock();
     }
     this.mZKClient.release();
-    DebugResourceTracker.get().unregisterResource(this);
+    ResourceTracker.get().unregisterResource(this);
   }
 }

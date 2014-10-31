@@ -25,8 +25,8 @@ import java.util.List;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
+import org.kiji.commons.ReferenceCountable;
 import org.kiji.schema.layout.KijiTableLayout;
-import org.kiji.schema.util.ReferenceCountable;
 
 /**
  * The KijiTable interface provides operations on KijiTables. To perform reads to and

@@ -44,11 +44,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.commons.ReferenceCountable;
 import org.kiji.schema.KijiIOException;
 import org.kiji.schema.RuntimeInterruptedException;
 import org.kiji.schema.util.Lock;
 import org.kiji.schema.util.LockFactory;
-import org.kiji.schema.util.ReferenceCountable;
 import org.kiji.schema.util.Time;
 import org.kiji.schema.util.ZooKeeperLock;
 

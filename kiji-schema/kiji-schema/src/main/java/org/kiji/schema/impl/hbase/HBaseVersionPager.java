@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.commons.ResourceTracker;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiColumnPagingNotEnabledException;
@@ -44,7 +45,6 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.schema.layout.HBaseColumnNameTranslator;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.impl.CellDecoderProvider;
-import org.kiji.schema.util.DebugResourceTracker;
 
 /**
  * Pages through the versions of a fully-qualified column.
@@ -166,7 +166,7 @@ public final class HBaseVersionPager implements KijiPager {
 
     // Only retain the table if everything else ran fine:
     mTable.retain();
-    DebugResourceTracker.get().registerResource(this);
+    ResourceTracker.get().registerResource(this);
   }
 
   /** {@inheritDoc} */
@@ -257,7 +257,7 @@ public final class HBaseVersionPager implements KijiPager {
   /** {@inheritDoc} */
   @Override
   public void close() throws IOException {
-    DebugResourceTracker.get().unregisterResource(this);
+    ResourceTracker.get().unregisterResource(this);
     mTable.release();
   }
 }

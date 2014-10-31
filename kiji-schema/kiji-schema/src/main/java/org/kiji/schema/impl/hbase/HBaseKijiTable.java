@@ -43,6 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.commons.ResourceTracker;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.EntityIdFactory;
 import org.kiji.schema.InternalKijiError;
@@ -67,7 +68,6 @@ import org.kiji.schema.impl.LayoutConsumer.Registration;
 import org.kiji.schema.layout.HBaseColumnNameTranslator;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.impl.TableLayoutMonitor;
-import org.kiji.schema.util.DebugResourceTracker;
 import org.kiji.schema.util.ResourceUtils;
 import org.kiji.schema.util.VersionInfo;
 
@@ -94,12 +94,12 @@ public final class HBaseKijiTable implements KijiTable {
   /** States of a kiji table instance. */
   private static enum State {
     /**
-     * Initialization begun but not completed.  Retain counter and DebugResourceTracker counters
+     * Initialization begun but not completed.  Retain counter and ResourceTracker counters
      * have not been incremented yet.
      */
     UNINITIALIZED,
     /**
-     * Finished initialization.  Both retain counters and DebugResourceTracker counters have been
+     * Finished initialization.  Both retain counters and ResourceTracker counters have been
      * incremented.  Resources are successfully opened and this HBaseKijiTable's methods may be
      * used.
      */
@@ -191,7 +191,7 @@ public final class HBaseKijiTable implements KijiTable {
     final State oldState = mState.getAndSet(State.OPEN);
     Preconditions.checkState(oldState == State.UNINITIALIZED,
         "Cannot open KijiTable instance in state %s.", oldState);
-    DebugResourceTracker.get().registerResource(this);
+    ResourceTracker.get().registerResource(this);
   }
 
   /**
@@ -422,7 +422,7 @@ public final class HBaseKijiTable implements KijiTable {
     ResourceUtils.closeOrLog(mLayoutMonitor);
     ResourceUtils.releaseOrLog(mKiji);
     if (oldState != State.UNINITIALIZED) {
-      DebugResourceTracker.get().unregisterResource(this);
+      ResourceTracker.get().unregisterResource(this);
     }
 
     LOG.debug("HBaseKijiTable '{}' closed.", mTableURI);
