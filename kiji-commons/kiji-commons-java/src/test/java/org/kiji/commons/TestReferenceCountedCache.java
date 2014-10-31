@@ -48,7 +48,7 @@ public class TestReferenceCountedCache {
   @Test
   public void referenceCountedCacheKeepsValuesCached() throws Exception {
     String key = "key";
-    ReferenceCountedCache<String, CloseableOnce> cache =
+    ReferenceCountedCache<String, CloseableOnce<String>> cache =
         ReferenceCountedCache.create(new KeyedCloseableOnceLoader<String>());
 
     CloseableOnce ref1 = cache.get(key);
@@ -65,7 +65,7 @@ public class TestReferenceCountedCache {
   @Test
   public void referenceCountedCacheInvalidatesUnreferencedEntries() throws Exception {
     String key = "key";
-    ReferenceCountedCache<String, CloseableOnce> cache =
+    ReferenceCountedCache<String, CloseableOnce<String>> cache =
         ReferenceCountedCache.create(new KeyedCloseableOnceLoader<String>());
 
     CloseableOnce ref = cache.get(key);
@@ -85,12 +85,12 @@ public class TestReferenceCountedCache {
     // This test basically throws a bunch of threads at a cache, and makes sure that the values
     // returned from the cache are valid (open, and created from the correct key).
 
-    final ReferenceCountedCache<Integer, CloseableOnce> cache =
+    final ReferenceCountedCache<Integer, CloseableOnce<Integer>> cache =
         ReferenceCountedCache.create(new KeyedCloseableOnceLoader<Integer>());
 
     final int numThreads = 100;
     final int contentionFactor = 100; // Roughly the number of threads which will be contending for
-                                      // each key at a time
+    // each key at a time
     final int numRounds = 1000; // Do it a bunch to trigger non-determinism
 
     final CyclicBarrier barrier = new CyclicBarrier(numThreads);
@@ -107,22 +107,22 @@ public class TestReferenceCountedCache {
 
     for (int i = 0; i < numThreads; i++) {
       callables.add(new Callable<Void>() {
-        @Override
-        public Void call() throws Exception {
-          for (int i = 0; i < numRounds; i++) {
-            List<Integer> shuffledKeys = Lists.newArrayList(keys);
-            Collections.shuffle(shuffledKeys, new Random(seed.incrementAndGet()));
-            barrier.await();
-            for (Integer key : shuffledKeys) {
-              CloseableOnce closeable = cache.get(key);
-              Assert.assertTrue(closeable.isOpen());
-              Assert.assertEquals(key, closeable.getKey());
-              cache.release(key);
-            }
-          }
-          return null;
-        }
-      });
+                      @Override
+                      public Void call() throws Exception {
+                        for (int i = 0; i < numRounds; i++) {
+                          List<Integer> shuffledKeys = Lists.newArrayList(keys);
+                          Collections.shuffle(shuffledKeys, new Random(seed.incrementAndGet()));
+                          barrier.await();
+                          for (Integer key : shuffledKeys) {
+                            CloseableOnce closeable = cache.get(key);
+                            Assert.assertTrue(closeable.isOpen());
+                            Assert.assertEquals(key, closeable.getKey());
+                            cache.release(key);
+                          }
+                        }
+                        return null;
+                      }
+                    });
     }
 
     for (Future<Void> result : executor.invokeAll(callables)) {
@@ -137,7 +137,7 @@ public class TestReferenceCountedCache {
 
   @Test
   public void referenceCountedCacheClosesCachedValuesOnClose() throws Exception {
-    ReferenceCountedCache<String, CloseableOnce> cache =
+    ReferenceCountedCache<String, CloseableOnce<String>> cache =
         ReferenceCountedCache.create(new KeyedCloseableOnceLoader<String>());
 
     CloseableOnce ref1 = cache.get("a");
@@ -161,20 +161,40 @@ public class TestReferenceCountedCache {
 
   @Test(expected = IllegalStateException.class)
   public void closeableOnceFailsWhenDoubleClosed() throws Exception {
-    Closeable closeable = new CloseableOnce<Object>(null);
+    Closeable closeable = new CloseableOnce<>(null);
     closeable.close();
     closeable.close();
+  }
+
+  @Test
+  public void testTrackingValues() throws Exception {
+    ReferenceCountedCache<String, Closeable> cache =
+        ReferenceCountedCache.<String, Closeable>createWithResourceTracking(
+            new KeyedCloseableOnceLoader<String>());
+
+    Closeable ref1 = cache.get("a");
+    Closeable ref2 = cache.get("b");
+
+    Assert.assertTrue(ResourceTracker.get().isResourceRegistered(ref1));
+    Assert.assertTrue(ResourceTracker.get().isResourceRegistered(ref2));
+
+    cache.release("a");
+    Assert.assertFalse(ResourceTracker.get().isResourceRegistered(ref1));
+    Assert.assertTrue(ResourceTracker.get().isResourceRegistered(ref2));
+
+    cache.close();
+    Assert.assertFalse(ResourceTracker.get().isResourceRegistered(ref1));
+    Assert.assertFalse(ResourceTracker.get().isResourceRegistered(ref2));
   }
 
   /**
    * A function which produces a new {@link CloseableOnce} when evaluated with a key.
    */
-  private static final class KeyedCloseableOnceLoader<K>
-      implements Function<K, CloseableOnce> {
+  public static final class KeyedCloseableOnceLoader<K> implements Function<K, CloseableOnce<K>> {
     @Nullable
     @Override
     public CloseableOnce<K> apply(@Nullable K key) {
-      return new CloseableOnce<K>(key);
+      return new CloseableOnce<>(key);
     }
   }
 
@@ -183,7 +203,7 @@ public class TestReferenceCountedCache {
    * {@link java.io.Closeable}, but it is convenient for testing the existence of duplicate
    * {@link #close()} calls.
    */
-  private static final class CloseableOnce<K> implements Closeable {
+  public static final class CloseableOnce<K> implements Closeable {
     private K mKey;
 
     /**

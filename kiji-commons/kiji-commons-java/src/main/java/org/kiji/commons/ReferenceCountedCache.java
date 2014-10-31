@@ -24,41 +24,53 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
+import javax.annotation.concurrent.NotThreadSafe;
 import javax.annotation.concurrent.ThreadSafe;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
 
 /**
  * A keyed cache which keeps track of how many outstanding users of the cached value exist.
- * When the reference count falls to 0, the cached value (which must implement
- * {@link java.io.Closeable}), is removed from the cache and closed.
  *
- * Clients of {@code ReferenceCountedCache} *must* have a corresponding {@link #release(K)} call
- * for every {@link #get(K)} after the cached object will no longer be used. After the
- * {@link #release(K)} call, the cached object must no longer be used.
+ * <p>
+ *   When the reference count falls to 0, the cached value (which must implement {@link Closeable}),
+ *   is removed from the cache and closed.
+ * </p>
  *
- * The {@code ReferenceCountedCache} may optionally be closed, which will preemptively close all
- * cached entries regardless of reference count. See the javadoc of {@link #close()} for caveats.
+ * <p>
+ *   Clients of {@code ReferenceCountedCache} *must* have a corresponding {@link #release} call
+ *   for every {@link #get} after the cached object will no longer be used. After the
+ *   {@link #release} call, the cached object must no longer be used.
+ * </p>
+ *
+ * <p>
+ *   The {@code ReferenceCountedCache} may optionally be closed, which will preemptively close all
+ *   cached entries regardless of reference count. See the javadoc of {@link #close()} for caveats.
+ * </p>
+ *
+ * <p>
+ *   The {@code ReferenceCountedCache} may optionally be created with tracking. Caches with tracking
+ *   will automatically register and unregister cached values with the {@link ResourceTracker}
+ *   when they are added and removed from the cache. Registration of values happens once for the
+ *   lifetime of the object (not every time the object is loaned out).
+ * </p>
  *
  * @param <K> key type of cache.
- * @param <V> value type (must implement {@link java.io.Closeable}) of cache.
+ * @param <V> value type (must implement {@link Closeable}) of cache.
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
 @ThreadSafe
 public final class ReferenceCountedCache<K, V extends Closeable> implements Closeable {
-  private static final Logger LOG = LoggerFactory.getLogger(ReferenceCountedCache.class);
-
   private final ConcurrentMap<K, CacheEntry<V>> mMap = Maps.newConcurrentMap();
 
-  private final Function<K, V> mCacheLoader;
+  private final Function<? super K, ? extends V> mCacheLoader;
+  private final boolean mTracking;
 
   /**
    * Flag to indicate whether this reference counted cache is still open. Must only be mutated
@@ -68,27 +80,66 @@ public final class ReferenceCountedCache<K, V extends Closeable> implements Clos
 
   /**
    * Private default constructor.
-   * @param cacheLoader function to compute cached values on demand. Should never return null.
+   *
+   * @param cacheLoader A function to compute cached values on demand. Should never return null.
+   * @param tracking Whether the cached values should be registered with the resource tracker.
    */
-  private ReferenceCountedCache(Function<K, V> cacheLoader) {
+  private ReferenceCountedCache(
+      final Function<? super K, ? extends V> cacheLoader,
+      final boolean tracking
+  ) {
     mCacheLoader = cacheLoader;
+    mTracking = tracking;
   }
 
   /**
    * Create a {@code ReferenceCountedCache} using the supplied function to create cached values
-   * on demand. The function may be evaluated with the same key multiple times in the case that
-   * the key becomes invalidated due to the reference count falling to 0. A function need not handle
-   * the case of a null key, but it should never return a null value for any key.
+   * on demand.
    *
-   * @param cacheLoader function to compute cached values on demand. Should never return null.
-   * @return a new {@link ReferenceCountedCache}.
-   * @param <K> key type of cache.
-   * @param <V> value type (must implement {@link java.io.Closeable}) of cache.
+   * <p>
+   *   The function may be evaluated with the same key multiple times in the case that the key
+   *   becomes invalidated due to the reference count falling to 0. A function need not handle the
+   *   case of a null key, but it should never return a null value for any key.
+   * </p>
+   *
+   * @param cacheLoader A function to compute cached values on demand. Should never return null.
+   * @return A new {@link ReferenceCountedCache}.
+   * @param <K> The key type of the cache.
+   * @param <V> The value type (must implement {@link Closeable}) of the cache.
    */
   public static <K, V extends Closeable> ReferenceCountedCache<K, V> create(
-      Function<K, V> cacheLoader
+      final Function<? super K, ? extends V> cacheLoader
   ) {
-    return new ReferenceCountedCache<K, V>(cacheLoader);
+    return new ReferenceCountedCache<>(cacheLoader, false);
+  }
+
+  /**
+   * Create a {@code ReferenceCountedCache} using the supplied function to create cached values
+   * on demand with resource tracking of cached values.
+   *
+   * <p>
+   *   The function may be evaluated with the same key multiple times in the case that the key
+   *   becomes invalidated due to the reference count falling to 0. A function need not handle the
+   *   case of a null key, but it should never return a null value for any key.
+   * </p>
+   *
+   * <p>
+   *   The cached values will be registered with the {@link ResourceTracker}, and automatically
+   *   unregistered when their reference count falls to 0 and they are removed from the cache. The
+   *   values will be registered once upon creation, not every time the value is borrowed. If the
+   *   value objects already perform resource tracking, then prefer using {@link #create} to avoid
+   *   double registration.
+   * </p>
+   *
+   * @param cacheLoader A function to compute cached values on demand. Should never return null.
+   * @return A new {@link ReferenceCountedCache}.
+   * @param <K> The key type of the cache.
+   * @param <V> The value type (must implement {@link Closeable}) of the cache.
+   */
+  public static <K, V extends Closeable> ReferenceCountedCache<K, V> createWithResourceTracking(
+      final Function<? super K, ? extends V> cacheLoader
+  ) {
+    return new ReferenceCountedCache<>(cacheLoader, true);
   }
 
   /*
@@ -105,7 +156,7 @@ public final class ReferenceCountedCache<K, V extends Closeable> implements Clos
    * @param key for which to retrieve cached value.
    * @return cached value associated with the key.
    */
-  public V get(K key) {
+  public V get(final K key) {
     Preconditions.checkState(mIsOpen, "ReferenceCountedCache is closed.");
     Preconditions.checkNotNull(key);
     while (true) {
@@ -124,7 +175,7 @@ public final class ReferenceCountedCache<K, V extends Closeable> implements Clos
         }
       } else {
         // No cached entry; attempt to make a new one.
-        final CacheEntry<V> newEntry = new CacheEntry<V>();
+        final CacheEntry<V> newEntry = new CacheEntry<>();
         synchronized (newEntry) {
           // Synchronize on `newEntry` so that no one else can use it in the time between
           // we insert it in the cache and we set the value.
@@ -133,6 +184,9 @@ public final class ReferenceCountedCache<K, V extends Closeable> implements Clos
             V value = mCacheLoader.apply(key);
             newEntry.setValue(value);
             newEntry.incrementAndGetCount();
+            if (mTracking) {
+              ResourceTracker.get().registerResource(value);
+            }
             return value;
           }
           // Someone else created it first; try again.
@@ -150,7 +204,7 @@ public final class ReferenceCountedCache<K, V extends Closeable> implements Clos
    * @param key to cache entry no longer being used by the client.
    * @throws java.io.IOException if closing the cached value throws an {@code IOException}.
    */
-  public void release(K key) throws IOException {
+  public void release(final K key) throws IOException {
     Preconditions.checkState(mIsOpen, "ReferenceCountedCache is closed.");
     Preconditions.checkNotNull(key);
     CacheEntry<V> entry = mMap.get(key);
@@ -160,7 +214,11 @@ public final class ReferenceCountedCache<K, V extends Closeable> implements Clos
       if (entry.decrementAndGetCount() == 0) {
         // We need to remove the entry from the cache and clean up the value.
         mMap.remove(key);
-        entry.getValue().close();
+        final V value = entry.getValue();
+        if (mTracking) {
+          ResourceTracker.get().unregisterResource(value);
+        }
+        value.close();
       }
     }
   }
@@ -183,7 +241,7 @@ public final class ReferenceCountedCache<K, V extends Closeable> implements Clos
    * called.
    *
    * @throws IOException if any entry throws an IOException while closing. An entry throwing an
-   *    IOException will prevent any further entries from being cleaned up.
+   *    IOException will prevent any further entries from being close.
    */
   @Override
   public void close() throws IOException {
@@ -191,9 +249,13 @@ public final class ReferenceCountedCache<K, V extends Closeable> implements Clos
     for (Map.Entry<K, CacheEntry<V>> entry : mMap.entrySet()) {
       // Attempt to remove the entry from the cache
       if (mMap.remove(entry.getKey(), entry.getValue())) {
-        // If successfull, close the value
+        // If successful, close the value
         CacheEntry<V> cacheEntry = entry.getValue();
         synchronized (cacheEntry) {
+          final V value = cacheEntry.getValue();
+          if (mTracking) {
+            ResourceTracker.get().unregisterResource(value);
+          }
           cacheEntry.getValue().close();
         }
       }
@@ -201,9 +263,9 @@ public final class ReferenceCountedCache<K, V extends Closeable> implements Clos
   }
 
   /**
-   * A cache entry which includes a value and a reference count. This class is *not* thread safe.
-   * All method calls should be externally synchronized.
+   * A cache entry which includes a value and a reference count.
    */
+  @NotThreadSafe
   private static final class CacheEntry<V> {
     private V mValue;
     private int mCount = 0;
@@ -214,7 +276,7 @@ public final class ReferenceCountedCache<K, V extends Closeable> implements Clos
      * @param value to set entry.
      * @return this.
      */
-    public CacheEntry<V> setValue(V value) {
+    public CacheEntry<V> setValue(final V value) {
       Preconditions.checkState(mValue == null, "Value already set.");
       mValue = Preconditions.checkNotNull(value);
       return this;
