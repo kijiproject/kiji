@@ -28,13 +28,12 @@ import org.apache.hadoop.conf.Configuration
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.schema.util.ReferenceCountable
+import org.kiji.commons.ReferenceCountable
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableReader
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
-import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.shell.api.Client
 
 /**

@@ -26,9 +26,9 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.commons.ReferenceCountable;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory;
 import org.kiji.schema.KijiColumnName;
-import org.kiji.schema.util.ReferenceCountable;
 import org.kiji.scoring.CounterManager;
 import org.kiji.scoring.KijiFreshnessPolicy;
 import org.kiji.scoring.ScoreFunction;

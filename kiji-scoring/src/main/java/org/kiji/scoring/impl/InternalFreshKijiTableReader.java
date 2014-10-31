@@ -45,6 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.commons.ReferenceCountable;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiColumnName;
@@ -59,7 +60,6 @@ import org.kiji.schema.KijiTableReaderPool;
 import org.kiji.schema.KijiTableReaderPool.Builder.WhenExhaustedAction;
 import org.kiji.schema.layout.ColumnReaderSpec;
 import org.kiji.schema.util.JvmId;
-import org.kiji.schema.util.ReferenceCountable;
 import org.kiji.scoring.CounterManager;
 import org.kiji.scoring.FreshKijiTableReader;
 import org.kiji.scoring.FreshKijiTableReader.Builder.StatisticGatheringMode;
