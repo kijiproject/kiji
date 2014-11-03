@@ -133,7 +133,7 @@ object ResourceUtils {
    * @param fn is the operation to perform using the resource.
    * @return the result of the operation.
    */
-  def doAndClose[T, C <: { def close(): Unit }](resource: => C)(fn: C => T): T = {
+  def doAndClose[T, C <: { def close(): Any }](resource: => C)(fn: C => T): T = {
     def after(c: C) { c.close() }
     doAnd(resource, after)(fn)
   }
