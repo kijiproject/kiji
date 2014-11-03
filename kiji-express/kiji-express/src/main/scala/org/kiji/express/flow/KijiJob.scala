@@ -100,6 +100,9 @@ class KijiJob(args: Args)
   /** FlowListener for collecting flowCounters from this Job. */
   private val counterListener: CounterListener = new CounterListener
 
+  /** Implicit kijiArgs def for use by ExpressContainerFactory. */
+  implicit final protected def kijiArgs: Args = args
+
   // We have to reference ResourcesShutdown from here, or else the class never gets loaded into
   // the jvm.
   ResourcesShutdown.initialize()

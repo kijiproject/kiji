@@ -23,7 +23,7 @@ import cascading.flow.FlowDef
 import cascading.pipe.Pipe
 import com.twitter.scalding.Mode
 import com.twitter.scalding.RichPipe
-import com.twitter.scalding.typed.TypedPipe
+import com.twitter.scalding.TypedPipe
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
@@ -41,6 +41,7 @@ import org.kiji.express.flow.TypedKijiSource
 @ApiStability.Stable
 @Inheritance.Sealed
 private[express] trait PipeConversions {
+  import PipeConversions._
   /**
    * Converts a Cascading Pipe to a KijiExpress KijiPipe. This method permits implicit conversions
    * from Pipe to KijiPipe.
@@ -96,4 +97,19 @@ private[express] trait PipeConversions {
       source: TypedKijiSource[T])(
       implicit flowDef: FlowDef,
       mode: Mode): TypedPipe[ExpressResult] = TypedPipe.from(source)(flowDef, mode)
+
+  /**
+   * Pimp my class to allow TypedPipe to have an .thenDo function, the same as RichPipe.
+   */
+  implicit def typedPipeWithThenDo[T](pipe: TypedPipe[T]): AndThen[TypedPipe[T]] = new AndThen(pipe)
+}
+
+object PipeConversions {
+  /**
+   * Class to add andThen and thenDo to a class.
+   */
+  class AndThen[T](obj: T) {
+    def andThen[B](then: T => B): B = then(obj)
+    def thenDo[B](then: T => B): B = then(obj)
+  }
 }
