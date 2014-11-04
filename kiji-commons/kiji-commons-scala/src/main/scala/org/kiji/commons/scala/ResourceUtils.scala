@@ -119,7 +119,7 @@ object ResourceUtils {
    * @param fn is the operation to perform using the resource.
    * @return the result of the operation.
    */
-  def doAndRelease[T, R <: ReferenceCountable[R]](resource: => R)(fn: R => T): T = {
+  def doAndRelease[T, R <: { def release(): Any }](resource: => R)(fn: R => T): T = {
     def after(r: R) { r.release() }
     doAnd(resource, after)(fn)
   }
