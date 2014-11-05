@@ -36,6 +36,7 @@ import org.junit.Test;
 
 import org.kiji.schema.DecoderNotFoundException;
 import org.kiji.schema.EntityId;
+import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder.ColumnsDef;
@@ -55,7 +56,8 @@ public class TestCassandraColumnReaderSpec extends CassandraKijiClientTest {
 
   @Before
   public void setup() throws IOException {
-    new InstanceBuilder(getKiji())
+    final Kiji kiji = getKiji();
+    new InstanceBuilder(kiji)
         .withTable(KijiTableLayouts.getLayout(KijiTableLayouts.READER_SCHEMA_TEST))
             .withRow("row")
                 .withFamily("family")

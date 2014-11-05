@@ -21,14 +21,11 @@ package org.kiji.schema.impl.cassandra;
 
 import java.io.Closeable;
 import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.concurrent.ThreadSafe;
 
-import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Metadata;
-import com.datastax.driver.core.PlainTextAuthProvider;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
@@ -47,6 +44,7 @@ import org.kiji.schema.KijiURI;
 import org.kiji.schema.avro.RowKeyFormat2;
 import org.kiji.schema.cassandra.CassandraKijiURI;
 import org.kiji.schema.cassandra.CassandraTableName;
+import org.kiji.schema.cassandra.util.SessionCache;
 
 /**
  * Lightweight wrapper to mimic the functionality of HBaseAdmin (and provide other functionality).
@@ -106,23 +104,7 @@ public final class CassandraAdmin implements Closeable {
    * @return A new CassandraAdmin.
    */
   public static CassandraAdmin create(final CassandraKijiURI kijiURI) {
-    final List<String> hosts = kijiURI.getContactPoints();
-    final String[] hostStrings = hosts.toArray(new String[hosts.size()]);
-    int port = kijiURI.getContactPort();
-    final Cluster.Builder clusterBuilder = Cluster
-        .builder()
-        .addContactPoints(hostStrings)
-        .withPort(port);
-
-    if (null != kijiURI.getUsername()) {
-      clusterBuilder.withAuthProvider(
-          new PlainTextAuthProvider(kijiURI.getUsername(), kijiURI.getPassword()));
-    }
-
-    final Session session = clusterBuilder.build().connect();
-    LOG.debug("Creating connection to Cassandra: '{}'. Cluster: '{}'.",
-        kijiURI, session.getCluster().getClusterName());
-
+    final Session session = SessionCache.getSession(kijiURI);
     final CassandraStatementCache statementCache = new CassandraStatementCache(session);
     return new CassandraAdmin(kijiURI, session, statementCache);
   }
@@ -242,7 +224,6 @@ public final class CassandraAdmin implements Closeable {
   public void close() {
     LOG.debug("Closing connection to Cassandra: '{}'. Cluster: '{}'.",
         mKijiURI, mSession.getCluster().getClusterName());
-    getSession().getCluster().close();
     getSession().close();
   }
 

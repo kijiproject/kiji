@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.concurrent.GuardedBy;
 
+import com.datastax.driver.core.Session;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -39,7 +40,9 @@ import org.apache.cassandra.service.EmbeddedCassandraService;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.TestName;
 import org.slf4j.Logger;
@@ -47,10 +50,10 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.checkin.CheckinUtils;
 import org.kiji.schema.Kiji;
+import org.kiji.schema.cassandra.util.SessionCache;
 import org.kiji.schema.impl.cassandra.CassandraKiji;
 import org.kiji.schema.impl.cassandra.CassandraKijiFactory;
 import org.kiji.schema.impl.cassandra.CassandraKijiInstaller;
-import org.kiji.schema.util.TestingFileUtils;
 
 /**
  * Base class for Cassandra tests that interact with kiji as a client.
@@ -88,6 +91,28 @@ public class CassandraKijiClientTest {
   public final TestName mTestName = new TestName();
   // CSON: VisibilityModifierCheck
 
+  /** Dummy session to hold open a cached connection to Cassandra. */
+  private static Session mSession = null;
+
+  /**
+   * This is a hack to open a cached session before each test class, so that the session can be
+   * opened once to avoid cache-thrashing.
+   */
+  @BeforeClass
+  public static void setupClass() throws IOException {
+    mSession =
+        SessionCache.getSession(
+            EmbeddedCassandra.getContactPoints(),
+            EmbeddedCassandra.getContactPort(),
+            null,
+            null);
+  }
+
+  @AfterClass
+  public static void teardownClass() throws IOException {
+    mSession.closeAsync();
+  }
+
   /** Counter for fake C* instances. */
   private static final AtomicLong FAKE_CASSANDRA_INSTANCE_COUNTER = new AtomicLong();
 
@@ -100,19 +125,16 @@ public class CassandraKijiClientTest {
   /** Kiji instances opened during test, and that must be released and cleaned up after. */
   private List<Kiji> mAllKijis = Lists.newArrayList();
 
-  /** Local temporary directory, automatically cleaned up after. */
-  private File mLocalTempDir = null;
-
   /** Default test Kiji instance. */
   private CassandraKiji mKiji = null;
 
   /**
    * Initializes the in-memory kiji for testing.
    *
-   * @throws Exception on error.
+   * @throws IOException on error.
    */
   @Before
-  public final void setupKijiTest() throws Exception {
+  public final void setupKijiTest() throws IOException {
     try {
       doSetupKijiTest();
     } catch (Exception exn) {
@@ -122,11 +144,10 @@ public class CassandraKijiClientTest {
     }
   }
 
-  private void doSetupKijiTest() throws Exception {
+  private void doSetupKijiTest() throws IOException {
     LOG.info("Setting up Cassandra Kiji client tests...");
     mTestId =
         String.format("%s_%s", getClass().getName().replace('.', '_'), mTestName.getMethodName());
-    mLocalTempDir = TestingFileUtils.createTempDir(mTestId, "temp-dir");
     mKiji = null;  // lazily initialized
     // Disable logging of commands to the upgrade server by accident.
     System.setProperty(CheckinUtils.DISABLE_CHECKIN_PROP, "true");
@@ -194,10 +215,10 @@ public class CassandraKijiClientTest {
 
   /**
    * Closes the in-memory kiji instance.
-   * @throws Exception If there is an error.
+   * @throws IOException If there is an error.
    */
   @After
-  public final void tearDownKijiTest() throws Exception {
+  public final void tearDownKijiTest() throws IOException {
     LOG.debug("Tearing down {}", mTestId);
     for (Kiji kiji : mAllKijis) {
       kiji.release();
@@ -205,8 +226,6 @@ public class CassandraKijiClientTest {
     }
     mAllKijis = null;
     mKiji = null;
-    FileUtils.deleteDirectory(mLocalTempDir);
-    mLocalTempDir = null;
     mTestId = null;
 
     // Force a garbage collection, to trigger finalization of resources and spot
@@ -220,8 +239,7 @@ public class CassandraKijiClientTest {
    *
    * @return the default Kiji instance to use for testing.
    *     Automatically released by KijiClientTest.
-   * @throws java.io.IOException on I/O error.  Should be Exception, but breaks too many tests for
-   *     now.
+   * @throws IOException on I/O error.
    */
   public synchronized CassandraKiji getKiji() throws IOException {
     if (null == mKiji) {
@@ -230,7 +248,10 @@ public class CassandraKijiClientTest {
     return mKiji;
   }
 
-  private static class EmbeddedCassandra {
+  /**
+   * Static, global, embedded Cassandra instance. Public for testing.
+   */
+  public static final class EmbeddedCassandra {
 
     @GuardedBy("this")
     private static EmbeddedCassandraService embeddedCassandraService;
