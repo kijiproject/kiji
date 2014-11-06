@@ -144,8 +144,16 @@ public final class CassandraKijiTableInputFormat
         // Get a list of all of the token ranges in the Cassandra cluster.
         List<InputSplit> inputSplitList = Lists.newArrayList();
 
+        // Get a target number of subsplits from the Hadoop configuration.
+        final int targetNumberOfSubSplits = conf.getInt(
+            CassandraKijiConfKeys.TARGET_NUMBER_OF_CASSANDRA_INPUT_SPLITS,
+            CassandraSubSplitCombiner.DEFAULT_NUMBER_OF_SPLITS
+        );
+
         // Java is annoying here about casting a list.
-        inputSplitList.addAll(cassandraSubSplitCombiner.combineSubsplits(subsplitsFromTokens));
+        inputSplitList.addAll(cassandraSubSplitCombiner.combineSubsplits(
+            subsplitsFromTokens,
+            targetNumberOfSubSplits));
         cluster.close();
         LOG.info(String.format("Created a total of %d InputSplits", inputSplitList.size()));
         for (InputSplit inputSplit : inputSplitList) {

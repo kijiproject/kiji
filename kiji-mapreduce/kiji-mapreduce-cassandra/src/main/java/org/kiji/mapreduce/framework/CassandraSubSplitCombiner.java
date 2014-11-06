@@ -39,6 +39,9 @@ import com.google.common.collect.Sets;
  */
 class CassandraSubSplitCombiner {
 
+  /** Default target for number of input splits when reading from Cassandra Kiji. */
+  public static final int DEFAULT_NUMBER_OF_SPLITS = 24;
+
   /**
    * Combine subsplits into InputSplits, attempting to group together subsplits that share replica
    * nodes.
@@ -102,7 +105,7 @@ class CassandraSubSplitCombiner {
    * @return A list of InputSplits.
    */
   public List<CassandraInputSplit> combineSubsplits(Collection<CassandraSubSplit> subsplits) {
-    return combineSubsplits(subsplits, 4);
+    return combineSubsplits(subsplits, DEFAULT_NUMBER_OF_SPLITS);
   }
 
   /**
