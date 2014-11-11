@@ -25,9 +25,9 @@ import org.slf4j.LoggerFactory;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
 
+/** Configuration keys used by Cassandra KijiMR in Hadoop Configuration objects. */
 @ApiAudience.Public
 @ApiStability.Evolving
-/** Configuration keys used by Cassandra KijiMR in Hadoop Configuration objects. */
 public final class CassandraKijiConfKeys {
   private static final Logger LOG = LoggerFactory.getLogger(CassandraKijiConfKeys.class);
 
