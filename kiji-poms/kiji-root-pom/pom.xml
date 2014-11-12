@@ -52,6 +52,7 @@
     <slf4j-api.version>1.7.5</slf4j-api.version>
     <slf4j-log4j12.version>1.7.5</slf4j-log4j12.version>
     <specs2.version>2.3.8</specs2.version>
+    <metrics.version>3.1.0</metrics.version>
 
     <!-- versions for maven plugins -->
     <bento-maven-plugin.version>0.1.0-SNAPSHOT</bento-maven-plugin.version>
