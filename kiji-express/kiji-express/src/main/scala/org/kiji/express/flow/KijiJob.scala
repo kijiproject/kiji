@@ -379,16 +379,26 @@ class KijiJob(args: Args)
       mainEventBuilder.addTags("failure")
     }
 
-    mainEventBuilder.setHost(InetAddress.getLocalHost.getHostName)
-    mainEventBuilder.setService(s"kiji.express.${this.getClass.getSimpleName}")
+    // Get the hostname of this machine. Graphite uses '.' as a separator, so all instances in the
+    // hostname are replaced with '_'.
+    val hostName: String = InetAddress.getLocalHost.getHostName.replace('.', '_')
+
+    mainEventBuilder.setHost(hostName)
+    mainEventBuilder.setService(
+        s"${RIEMANN_EVENT_PREFIX}.${this.getClass.getSimpleName}.${JOB_RIEMANN_EVENT_SUFFIX}"
+    )
 
     val counterEvents = flowCounters
         .foldLeft(List[Event]())({ (counterEvents: List[Event], entry: (String, String, Long)) =>
           val (group, counter, count) = entry
 
-          val counterEvent = Proto.Event.newBuilder()
-              .setHost(InetAddress.getLocalHost.getHostName)
-              .setService(s"kiji.express.${this.getClass.getSimpleName}.${group}.${counter}")
+      val groupName = group.replace('.', '_')
+
+      val serviceName = s"${RIEMANN_EVENT_PREFIX}.${this.getClass.getSimpleName}" +
+          s".${COUNTERS_RIEMANN_EVENT_SUFFIX}.${groupName}.${counter}"
+      val counterEvent = Proto.Event.newBuilder()
+              .setHost(hostName)
+              .setService(serviceName)
               .setMetricSint64(count)
               .build()
 
@@ -482,6 +492,15 @@ object KijiJob {
 
   /** Mapreduce configuration property for tmpjars. */
   val tmpjarsConfigProperty: String = "tmpjars"
+
+  /** Prefix for riemann events related to kiji-express. */
+  val RIEMANN_EVENT_PREFIX = "kiji.express"
+
+  /** Suffix for job completion riemann events. */
+  val JOB_RIEMANN_EVENT_SUFFIX = "job"
+
+  /** Suffix for counter value riemann events (also sent upon job completion). */
+  val COUNTERS_RIEMANN_EVENT_SUFFIX = "counters"
 
   private[express] class CounterListener extends FlowListener with Serializable {
 
