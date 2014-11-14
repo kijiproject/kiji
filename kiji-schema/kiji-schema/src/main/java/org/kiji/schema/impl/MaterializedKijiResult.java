@@ -114,6 +114,28 @@ public final class MaterializedKijiResult<T> implements KijiResult<T> {
     return new MaterializedKijiResult<T>(entityId, dataRequest, columns);
   }
 
+  /**
+   * Create a new materialized {@code KijiResult} backed by the provided {@code KijiCell}s.
+   *
+   * @param entityId The entity ID of the row containing this result.
+   * @param dataRequest The Kiji data request which defines the columns in this result.
+   * @param columns The materialized results. The cells must be in the order guaranteed by
+   *     {@code KijiResult}. Must be mutable, and should not be modified after passing in.
+   * @param <T> The type of {@code KijiCell} values in the view.
+   * @return A new materialized {@code KijiResult} backed by {@code KijiCell}s.
+   * @deprecated This version is deprecated in favor of the four argument version, which
+   * requires a KijiTableLayout parameter. This version is currently only in use by
+   * Kiji-Spark.
+   */
+  @deprecated
+  public static <T> MaterializedKijiResult<T> create(
+      final EntityId entityId,
+      final KijiDataRequest dataRequest,
+      final SortedMap<KijiColumnName, List<KijiCell<T>>> columns
+  ) {
+    return new MaterializedKijiResult<T>(entityId, dataRequest, columns);
+  }
+
   /** {@inheritDoc} */
   @Override
   public EntityId getEntityId() {
