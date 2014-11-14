@@ -127,7 +127,7 @@ public final class MaterializedKijiResult<T> implements KijiResult<T> {
    * requires a KijiTableLayout parameter. This version is currently only in use by
    * Kiji-Spark.
    */
-  @deprecated
+  @Deprecated
   public static <T> MaterializedKijiResult<T> create(
       final EntityId entityId,
       final KijiDataRequest dataRequest,
