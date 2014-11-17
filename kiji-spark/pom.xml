@@ -1,20 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<!--
+    (c) Copyright 2014 WibiData, Inc.
+
+    See the NOTICE file distributed with this work for additional
+    information regarding copyright ownership.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+  -->
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.kiji.spark</groupId>
-  <artifactId>kiji-spark</artifactId>
+  <artifactId>kiji-spark-root</artifactId>
   <version>0.1.0-SNAPSHOT</version>
-  <packaging>jar</packaging>
-  <inceptionYear>2014</inceptionYear>
-
-  <licenses>
-    <license>
-      <name>The Apache Software License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
+  <packaging>pom</packaging>
 
   <parent>
     <groupId>org.kiji.pom</groupId>
@@ -22,154 +31,12 @@
     <version>1.2.1-SNAPSHOT</version>
   </parent>
 
-  <properties>
-    <spark.version>1.1.0</spark.version>
-    <kiji-schema.version>1.6.0-SNAPSHOT</kiji-schema.version>
-    <kiji-express.version>2.1.0-SNAPSHOT</kiji-express.version>
-    <kiji-cdh5-platform.version>1.4.0-SNAPSHOT</kiji-cdh5-platform.version>
-    <fake-hbase.version>0.3.0-SNAPSHOT</fake-hbase.version>
-    <curator.version>2.4.0</curator.version>
-  </properties>
+  <name>KijiSpark top-level project</name>
+  <description>An interface for running Spark jobs</description>
+  <inceptionYear>2014</inceptionYear>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-test</artifactId>
-      <version>${curator.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.twitter</groupId>
-      <artifactId>chill_${scala.version}</artifactId>
-      <version>0.4.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.schema</groupId>
-      <artifactId>kiji-schema</artifactId>
-      <version>${kiji-schema.version}</version>
-    </dependency>
+  <modules>
+  	<module>kiji-spark</module>
+  </modules>
 
-    <dependency>
-      <groupId>org.kiji.platforms</groupId>
-      <artifactId>kiji-compile-platform</artifactId>
-      <version>${kiji-cdh5-platform.version}</version>
-      <scope>provided</scope>
-      <type>pom</type>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.express</groupId>
-      <artifactId>kiji-express</artifactId>
-      <version>${kiji-express.version}</version>
-    </dependency>
-    <!-- Scala dependencies. -->
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-library</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-core_${scala.version}</artifactId>
-      <version>${spark.version}</version>
-      <scope>compile</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-minicluster</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-client</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-      <!-- This can't be set to Runtime, or else the scala compiler can't find it. -->
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.schema</groupId>
-      <artifactId>kiji-schema</artifactId>
-      <version>${kiji-schema.version}</version>
-      <type>test-jar</type>
-      <classifier>tests</classifier>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.platforms</groupId>
-      <artifactId>kiji-test-platform</artifactId>
-      <version>${kiji-cdh5-platform.version}</version>
-      <type>pom</type>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.testing</groupId>
-      <artifactId>fake-hbase</artifactId>
-      <version>${fake-hbase.version}</version>
-
-    </dependency>
-  </dependencies>
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>net.alchim31.maven</groupId>
-        <artifactId>scala-maven-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </build>
-  <repositories>
-    <!-- Kiji repositories -->
-    <repository>
-      <id>kiji-repos</id>
-      <name>kiji-repos</name>
-      <url>https://repo.wibidata.com/artifactory/kiji</url>
-    </repository>
-    <repository>
-      <id>kiji-snapshots</id>
-      <name>kiji-snapshots</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-    </repository>
-    <repository>
-      <id>kiji-releases</id>
-      <name>Kji artifact releases</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
-      <snapshots>
-        <!-- Kiji-spark is using SNAPSHOTS -->
-        <enabled>true</enabled>
-      </snapshots>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-    </repository>
-    <repository>
-      <id>wibi-releases</id>
-      <name>Wibi artifact releases</name>
-      <url>https://repo.wibidata.com/artifactory/wibi-packages</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-    </repository>
-  </repositories>
-
-  <scm>
-    <connection>scm:git:git@github.com:wibidata/kiji-spark.git</connection>
-    <url>scm:git:git@github.com:wibidata/kiji-spark.git</url>
-    <developerConnection>scm:git:git@github.com:wibidata/kiji-spark.git</developerConnection>
-  </scm>
 </project>
