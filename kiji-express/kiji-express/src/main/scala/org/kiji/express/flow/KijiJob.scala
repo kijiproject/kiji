@@ -373,8 +373,10 @@ class KijiJob(args: Args)
     mainEventBuilder.addAttributes(endAttribute)
 
     if (jobSuccess) {
+      mainEventBuilder.setState("ok")
       mainEventBuilder.addTags("success")
     } else {
+      mainEventBuilder.setState("error")
       mainEventBuilder.addTags("failure")
       mainEventBuilder.setDescription(args.toString())
     }
