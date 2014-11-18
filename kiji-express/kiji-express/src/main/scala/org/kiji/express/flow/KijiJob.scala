@@ -359,7 +359,6 @@ class KijiJob(args: Args)
     if (riemannAddress.isEmpty) { return }
 
     val mainEventBuilder: Event.Builder = Proto.Event.newBuilder()
-    mainEventBuilder.setDescription(args.toString())
     mainEventBuilder.setMetricSint64(endTime - startTime)
 
     val startAttribute: Attribute.Builder =
@@ -377,6 +376,7 @@ class KijiJob(args: Args)
       mainEventBuilder.addTags("success")
     } else {
       mainEventBuilder.addTags("failure")
+      mainEventBuilder.setDescription(args.toString())
     }
 
     // Get the hostname of this machine. Graphite uses '.' as a separator, so all instances in the
