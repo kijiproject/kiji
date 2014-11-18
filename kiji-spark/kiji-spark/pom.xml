@@ -152,12 +152,6 @@
       <name>kiji-repos</name>
       <url>https://repo.wibidata.com/artifactory/kiji</url>
     </repository>
-    <!-- remove reference to kiji-nightly
-    <repository>
-      <id>kiji-snapshots</id>
-      <name>kiji-snapshots</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-    </repository> -->
     <repository>
       <id>kiji-releases</id>
       <name>Kji artifact releases</name>
@@ -175,7 +169,7 @@
       <name>Wibi artifact releases</name>
       <url>https://repo.wibidata.com/artifactory/wibi-packages</url>
       <snapshots>
-        <enabled>true</enabled>
+        <enabled>false</enabled>
       </snapshots>
       <releases>
         <enabled>true</enabled>
