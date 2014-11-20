@@ -39,6 +39,10 @@ import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.security.token.delegation.DelegationTokenIdentifier;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.token.Token;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,6 +85,12 @@ import org.kiji.schema.util.VersionInfo;
 @ApiAudience.Private
 public final class HBaseKijiTable implements KijiTable {
   private static final Logger LOG = LoggerFactory.getLogger(HBaseKijiTable.class);
+
+  /** String identifying the scheme of a URI to an HDFS path. */
+  private static final String HDFS_SCHEME = "hdfs";
+
+  /** String required for requesting an HDFS delegation token. */
+  private static final String RENEWER = "renewer";
 
   /** The kiji instance this table belongs to. */
   private final HBaseKiji mKiji;
@@ -527,6 +537,24 @@ public final class HBaseKijiTable implements KijiTable {
    */
   public void bulkLoad(Path hfilePath) throws IOException {
     final LoadIncrementalHFiles loader = createHFileLoader(mConf);
+
+    final String hFileScheme = hfilePath.toUri().getScheme();
+    Token<DelegationTokenIdentifier> hdfsDelegationToken = null;
+
+    // If we're bulk loading from a secure HDFS, we should request and forward a delegation token.
+    // LoadIncrementalHfiles will actually do this if none is provided, but because we call it
+    // repeatedly in a short amount of time, this seems to trigger a possible race condition
+    // where we ask to load the next HFile while there is a pending token cancellation request.
+    // By requesting the token ourselves, it is re-used for each bulk load call.
+    // Once we're done with the bulk loader we cancel the token.
+    if (UserGroupInformation.isSecurityEnabled() && hFileScheme.equals(HDFS_SCHEME)) {
+      final UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
+      final DistributedFileSystem fileSystem =
+          (DistributedFileSystem) hfilePath.getFileSystem(mConf);
+      hdfsDelegationToken = fileSystem.getDelegationToken(RENEWER);
+      ugi.addToken(hdfsDelegationToken);
+    }
+
     try {
       // LoadIncrementalHFiles.doBulkLoad() requires an HTable instance, not an HTableInterface:
       final HTable htable = (HTable) mHTableFactory.create(mConf, mHBaseTableName);
@@ -555,6 +583,15 @@ public final class HBaseKijiTable implements KijiTable {
       }
     } catch (TableNotFoundException tnfe) {
       throw new InternalKijiError(tnfe);
+    }
+
+    // Cancel the HDFS delegation token if we requested one.
+    if (null != hdfsDelegationToken) {
+      try {
+        hdfsDelegationToken.cancel(mConf);
+      } catch (InterruptedException e) {
+        LOG.warn("Failed to cancel HDFS delegation token.", e);
+      }
     }
   }
 }
