@@ -22,6 +22,9 @@ import java.util.{Map => JMap}
 
 import scala.annotation.implicitNotFound
 import scala.collection.JavaConverters.asScalaIteratorConverter
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
@@ -58,10 +61,16 @@ sealed trait JsonField[T] {
  *   Map[String, T: JsonField]
  *   Option[T: JsonField]
  *   Either[T: JsonField, U: JsonField]
+ *   Try[T: JsonField]
  *
  * Option interprets a non-existent field and a null literal the same.
  * Either favors the Left option if both are valid. e.g. Either[Long, Int] will always be a
  *     Left(Long) or an error.
+ * Try is able to extract any value. If the parameterized type class implementation is also able to
+ *     extract a given value, returns Success containing the extracted value. If the parameterized
+ *     type is not able to extract the given value, returns Failure. When inserting, a Success is
+ *     unwrapped and its contained value inserted, while a Failure becomes a TextNode containing the
+ *     message and stack trace of the exception.
  */
 object JsonField {
   private[this] val Factory: JsonNodeFactory = JsonUtils.Mapper.getNodeFactory
@@ -224,5 +233,19 @@ object JsonField {
     override def canExtract(node: JsonNode): Boolean = {
       tField.canExtract(node) || uField.canExtract(node)
     }
+  }
+
+  implicit def tri[T](
+      implicit tField: JsonField[T]
+  ): JsonField[Try[T]] = new JsonField[Try[T]] {
+    override def insert(t: Try[T]): JsonNode = {
+      throw new UnsupportedOperationException("May not insert a Try.")
+    }
+    override def extract(node: JsonNode): Try[T] = if (tField.canExtract(node)) {
+      Success(tField.extract(node))
+    } else {
+      Failure(new IllegalArgumentException(s"Cannot extract '$node' to expected type."))
+    }
+    override def canExtract(node: JsonNode): Boolean = true
   }
 }

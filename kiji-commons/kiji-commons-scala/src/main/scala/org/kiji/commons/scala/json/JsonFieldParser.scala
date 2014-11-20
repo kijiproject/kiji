@@ -18,10 +18,6 @@
  */
 package org.kiji.commons.scala.json
 
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 

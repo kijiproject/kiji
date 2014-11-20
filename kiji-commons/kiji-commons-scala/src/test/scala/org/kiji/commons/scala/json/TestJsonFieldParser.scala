@@ -156,7 +156,8 @@ class TestJsonFieldParser {
     )
     expectFailure[Float](
       new DecimalNode(BigDecimal.valueOf(Double.MaxValue).bigDecimal),
-      s"Input field: '${Double.MaxValue}' at path: 'field' cannot be parsed to expected type."
+      s"Input field: '${BigDecimal.valueOf(Double.MaxValue).bigDecimal}' at path: 'field' cannot " +
+          s"be parsed to expected type."
     )
   }
 
@@ -276,6 +277,70 @@ class TestJsonFieldParser {
   }
 
   @Test
+  def testTry() {
+    def tryExpectSuccess[T: JsonField](
+      input: JsonNode,
+      output: T
+    ) {
+      val parser: JsonFieldParser[Try[T]] = JsonFieldParser(field)
+      val json: JsonNode = makeJson(input)
+      Assert.assertEquals(output, parser(json).get)
+    }
+
+    def tryExpectFailure[T: JsonField](
+      input: JsonNode,
+      error: String
+    ) {
+      val parser: JsonFieldParser[Try[T]] = JsonFieldParser(field)
+      val json: JsonNode = makeJson(input)
+      parser(json) match {
+        case Failure(exception) => Assert.assertEquals(error, exception.getMessage)
+        case Success(value) => Assert.fail(s"expected failure succeeded with output: $value")
+      }
+    }
+
+    tryExpectSuccess[String](
+      Factory.textNode("string"),
+      "string"
+    )
+    tryExpectSuccess[Seq[Either[String, Int]]](
+      JsonUtils.arrayNode(Seq(Factory.textNode("a"), Factory.textNode("b"), Factory.numberNode(3))),
+      Seq(Left("a"), Left("b"), Right(3))
+    )
+    tryExpectFailure[String](
+      Factory.numberNode(1),
+      "Cannot extract '1' to expected type."
+    )
+    tryExpectFailure[Seq[Int]](
+      JsonUtils.arrayNode(Seq(Factory.textNode("1"), Factory.textNode("2"), Factory.numberNode(3))),
+      "Cannot extract '[\"1\",\"2\",3]' to expected type."
+    )
+
+    {
+      val input: Try[JsonNode] = Failure(new Exception("error message"))
+      val input2: Try[JsonNode] = Success(JsonUtils.textNode("a"))
+      val parser: JsonFieldParser[Try[JsonNode]] = JsonFieldParser("field")
+      val obj: ObjectNode = Factory.objectNode()
+      try {
+        parser.write(obj, input)
+      } catch {
+        case uoe: UnsupportedOperationException => Assert.assertEquals(
+          uoe.getMessage,
+          "May not insert a Try."
+        )
+      }
+      try {
+        parser.write(obj, input2)
+      } catch {
+        case uoe: UnsupportedOperationException => Assert.assertEquals(
+          uoe.getMessage,
+          "May not insert a Try."
+        )
+      }
+    }
+  }
+
+  @Test
   def testComplex() {
     expectSuccess[Seq[Either[String, Int]]](
       Factory.arrayNode().add("one").add(2),
@@ -342,9 +407,8 @@ object TestJsonFieldParser {
       parser(json)
       Assert.fail()
     } catch {
-      case iae: IllegalArgumentException => Assert.assertEquals(
-          error,
-          iae.getMessage)
+      case iae: IllegalArgumentException => Assert.assertTrue(iae.getMessage.contains(error))
+
     }
   }
 }
