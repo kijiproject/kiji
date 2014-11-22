@@ -101,7 +101,7 @@ public class SerializeLoggerAspect {
    */
   private void serializeToFile(TaskInputOutputContext context) throws IOException {
     Path parentPath = new Path(context.getWorkingDirectory(), STATS_DIR);
-    FileSystem fs = FileSystem.get(context.getConfiguration());
+    FileSystem fs = parentPath.getFileSystem(context.getConfiguration());
     fs.mkdirs(parentPath);
     Path path = new Path(parentPath, context.getTaskAttemptID().toString());
     OutputStreamWriter out = new OutputStreamWriter(fs.create(path, true), "UTF-8");

@@ -82,7 +82,7 @@ public final class WholeFileRecordReader extends RecordReader<Text, Text> {
       LOG.debug("Processing path " + pathToProcess + " out of " + fileSplit.getNumPaths());
 
       try {
-        FileSystem fs = FileSystem.get(mConf);
+        final FileSystem fs = mFileToRead.getFileSystem(mConf);
         assert fs.getFileStatus(mFileToRead).getLen() == mFileLength;
       } catch (IOException ioe) {
         // oh well, I was just testing.

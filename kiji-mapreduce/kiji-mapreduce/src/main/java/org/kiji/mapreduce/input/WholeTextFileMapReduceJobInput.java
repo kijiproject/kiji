@@ -39,8 +39,9 @@ import org.kiji.mapreduce.input.impl.WholeFileInputFormat;
  * <pre>
  *   <code>
  *     // Get paths of input files in a directory on HDFS.
- *     final FileSystem fs = FileSystem.get(myConf);
- *     final FileStatus[] statuses = fs.listStatus(fs);
+ *     final Path myDir = // ...
+ *     final FileSystem fs = myDir.getFileSystem(myConf);
+ *     final FileStatus[] statuses = fs.listStatus(myDir);
  *     final List&lt;Path&gt; paths = new ArrayList&lt;Path&gt;();
  *     for (FileStatus status : statuses) {
  *       paths.add(status.getPath());
