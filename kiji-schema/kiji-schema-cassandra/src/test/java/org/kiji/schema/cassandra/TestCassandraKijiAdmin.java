@@ -29,6 +29,7 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTableNotFoundException;
 import org.kiji.schema.avro.TableLayoutDesc;
 import org.kiji.schema.layout.KijiTableLayout;
@@ -59,7 +60,8 @@ public class TestCassandraKijiAdmin extends CassandraKijiClientTest {
   /** Tests that creating a new table works fine. */
   @Test
   public void testCreateTable() throws Exception {
-    getKiji().createTable(mLayoutDesc);
+    final Kiji kiji = getKiji();
+    kiji.createTable(mLayoutDesc);
     assertEquals(mLayoutDesc.getName(), getLayout("table").getName());
     // TODO: Assert that the underlying Cassandra stuff is correct also.
   }

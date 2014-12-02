@@ -19,7 +19,11 @@
 
 package org.kiji.schema.cassandra.util;
 
+import java.io.Closeable;
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
@@ -40,7 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.commons.ReferenceCountedCache;
-import org.kiji.schema.KijiIOException;
 import org.kiji.schema.cassandra.CassandraKijiURI;
 
 /**
@@ -49,14 +52,16 @@ import org.kiji.schema.cassandra.CassandraKijiURI;
 public final class SessionCache {
   private static final Logger LOG = LoggerFactory.getLogger(SessionCache.class);
 
-  /** Global cache of ZooKeeper connections keyed on ensemble addresses. */
-  private static final ReferenceCountedCache<ClusterKey, Cluster> CACHE =
+  /** Global cache of Cassandra connections keyed on ensemble addresses. */
+  private static final ReferenceCountedCache<ClusterKey, Entry> CACHE =
       ReferenceCountedCache.createWithResourceTracking(
-          new Function<ClusterKey, Cluster>() {
+          new Function<ClusterKey, Entry>() {
             /** {@inheritDoc}. */
             @Override
-            public Cluster apply(ClusterKey instanceURI) {
-              return createConnectionToInstance(instanceURI);
+            public Entry apply(ClusterKey instanceURI) {
+              final Cluster cluster = createConnectionToInstance(instanceURI);
+              final Session session = cluster.connect();
+              return new Entry(cluster, session);
             }
           });
 
@@ -70,7 +75,7 @@ public final class SessionCache {
   private static Cluster createConnectionToInstance(
       final ClusterKey clusterKey
   ) {
-    LOG.debug("Creating new cluster connection with key: {}", clusterKey);
+    LOG.info("Creating new cluster connection with key: {}", clusterKey);
     final Set<String> contactPoints = clusterKey.getContactPoints();
     final Builder clusterBuilder = Cluster
         .builder()
@@ -99,13 +104,12 @@ public final class SessionCache {
   public static Session getSession(
       final CassandraKijiURI clusterURI
   ) {
-    final ClusterKey key = new ClusterKey(
-        clusterURI.getContactPoints(),
-        clusterURI.getContactPort(),
-        clusterURI.getUsername(),
-        clusterURI.getPassword());
-
-    return new CachedSession(key, CACHE.get(key).connect());
+    return getSession(
+        new ClusterKey(
+            clusterURI.getContactPoints(),
+            clusterURI.getContactPort(),
+            clusterURI.getUsername(),
+            clusterURI.getPassword()));
   }
 
   /**
@@ -128,17 +132,56 @@ public final class SessionCache {
       final String username,
       final String password
   ) {
-    final ClusterKey key = new ClusterKey(
-        contactPoints,
-        contactPort,
-        username,
-        password);
+    return getSession(new ClusterKey(contactPoints, contactPort, username, password));
+  }
 
-    return new CachedSession(key, CACHE.get(key).connect());
+  /**
+   * Get an open session to the Cassandra cluster with the given cluster key.
+   *
+   * @param key The Cassandra cluster information.
+   * @return An open session.
+   */
+  private static Session getSession(final ClusterKey key) {
+    LOG.debug("Retrieving cached session with key: {}.", key);
+    return new CachedSession(key, CACHE.get(key).getSession());
   }
 
   /** Private utility constructor. */
   private SessionCache() { }
+
+  /**
+   * A cache entry containing a Cassandra cluster and session.
+   */
+  private static final class Entry implements Closeable {
+    private final Cluster mCluster;
+    private final Session mSession;
+
+    /**
+     * Create a new cache entry.
+     *
+     * @param cluster The cached cluster.
+     * @param session The cached session.
+     */
+    public Entry(final Cluster cluster, final Session session) {
+      mCluster = cluster;
+      mSession = session;
+    }
+
+    /**
+     * Get the session.
+     *
+     * @return The session.
+     */
+    public Session getSession() {
+      return mSession;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void close() throws IOException {
+      mCluster.close(); // Closing the cluster will close all attached sessions
+    }
+  }
 
   /**
    * A key which defines the connection parameters for a Cassandra cluster.
@@ -285,10 +328,23 @@ public final class SessionCache {
     public CloseFuture closeAsync() {
       try {
         CACHE.release(mKey);
-      } catch (IOException e) {
-        throw new KijiIOException(e);
+
+        // CloseFuture#immediateFuture is package private, so reflection is used to call it.
+        final Method method = CloseFuture.class.getDeclaredMethod("immediateFuture");
+        AccessController.doPrivileged(
+            new PrivilegedAction<Object>() {
+              @Override
+              public Object run() {
+                method.setAccessible(true);
+                return null;
+              }
+            });
+        return (CloseFuture) method.invoke(null);
+      } catch (RuntimeException e) {
+        throw e;
+      } catch (Exception e) {
+        throw new RuntimeException(e);
       }
-      return mProxy.closeAsync();
     }
 
     /** {@inheritDoc} */

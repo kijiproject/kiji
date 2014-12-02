@@ -138,8 +138,6 @@ public final class CassandraAdmin implements Closeable {
     }
     // Check that the keyspace actually exists!
     assert(keyspaceExists(keyspace));
-
-    getSession().execute(String.format("USE %s", keyspace));
   }
 
   /**

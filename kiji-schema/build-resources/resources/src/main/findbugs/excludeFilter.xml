@@ -129,6 +129,12 @@
   </Match>
 
   <Match>
+    <!-- Anonymous class is more compact. -->
+    <Class name="org.kiji.schema.cassandra.util.SessionCache$CachedSession$1" />
+    <Bug pattern="SIC_INNER_SHOULD_BE_STATIC_ANON" />
+  </Match>
+
+  <Match>
     <!-- FindBugs has a bug: http://sourceforge.net/p/findbugs/bugs/1139/
 
          FindBugs is overly restrictive about nullable/notnull declarations on Guava's Function
