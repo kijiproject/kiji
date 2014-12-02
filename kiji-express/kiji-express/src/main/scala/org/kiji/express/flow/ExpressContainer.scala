@@ -21,6 +21,9 @@ package org.kiji.express.flow
 
 import cascading.flow.FlowDef
 import cascading.pipe.Pipe
+import com.fasterxml.jackson.databind.JsonSerializable
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.twitter.scalding.Args
 import com.twitter.scalding.FieldConversions
 import com.twitter.scalding.GeneratedTupleAdders
@@ -34,25 +37,33 @@ import com.twitter.scalding.TupleSetter
 import com.twitter.scalding.TypedPipe
 import com.twitter.scalding.TypedSource
 import com.twitter.scalding.typed.PipeTExtensions
-import org.codehaus.jackson.map.ObjectMapper
-import org.codehaus.jackson.node.ObjectNode
 
 import org.kiji.express.flow.util.AvroTupleConversions
 import org.kiji.express.flow.util.PipeConversions
 
 /**
- * A container to allow scalding code to be executed outside of a scalding Job object.
+ * A container to allow scalding code to be executed outside of a scalding Job object. The
+ * constructing objects of this class and its subclasses should be treated as nonserializable.
+ * Care should be given to avoid letting members of this class into closures, and nonserializable
+ * members should be flagged as @transient. The config object is not java serializable and should
+ * not be used on the cluster side code. The best practice for parsing the config object is to
+ * parse it in function scope and not in member scope or closures.
  *
  * @param config A Json configuration used by the container.
  * @param mode An implicit Mode object for execution of scalding commands.
  * @param flowDef An implicit FlowDef object for execution of scalding commands.
  */
 abstract class ExpressContainer(
-    config: ObjectNode,
+    @transient // config is not serializable and should never used on the cluster machine.
+    final val config: ObjectNode,
     implicit val mode: Mode,
+    @transient // flowDef is not serializable and is never used on the cluster machine.
     implicit val flowDef: FlowDef
-) extends PipeConversions with AvroTupleConversions with FieldConversions
-    with GeneratedTupleAdders {
+) extends PipeConversions
+    with AvroTupleConversions
+    with FieldConversions
+    with GeneratedTupleAdders
+    with Serializable {
 
   // Implicits taken from com.twitter.scalding.Job so that programming with this object should be
   // the same as programming in a KijiJob.

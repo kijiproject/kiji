@@ -22,13 +22,13 @@ package org.kiji.express.flow
 import scala.collection.mutable
 
 import cascading.flow.FlowDef
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.twitter.scalding.Args
 import com.twitter.scalding.JobTest
 import com.twitter.scalding.Mode
 import com.twitter.scalding.Tsv
 import com.twitter.scalding.TypedPipe
 import com.twitter.scalding.TypedTsv
-import org.codehaus.jackson.node.ObjectNode
 import org.junit.Assert
 import org.junit.Test
 import org.slf4j.Logger
@@ -64,7 +64,7 @@ private[express] class ExpressContainerSuite {
         .arg("output", config)
         .source(Tsv(FILE_NAME), sourceData)
         .sink(TypedTsv[(String, String)](FILE_NAME)) { verifyResult }
-        .run
+        .runHadoop
   }
 
   @Test
@@ -83,7 +83,7 @@ private[express] class ExpressContainerSuite {
           .arg("output", config)
           .source(Tsv(FILE_NAME), sourceData)
           .sink(TypedTsv[(String, String)](FILE_NAME)) { verifyResult }
-          .run
+          .runHadoop
     } catch {
       case e: ClassCastException => {
         LOG.info(e.toString)
@@ -110,7 +110,7 @@ private[express] class ExpressContainerSuite {
           .arg("output", config)
           .source(Tsv(FILE_NAME), sourceData)
           .sink(TypedTsv[(String, String)](FILE_NAME)) { verifyResult }
-          .run
+          .runHadoop
     } catch {
       case e: NoSuchMethodException => {
         LOG.info(e.toString)
@@ -154,14 +154,19 @@ private[express] object TestIO extends ExpressContainerFactory[TestIO]
 /**
  * A valid implementation of the TestIO interface.
  */
-private[express] class TestTsvIO(config: ObjectNode, md: Mode, fd: FlowDef)
-    extends ExpressContainer(config, md, fd) with TestIO {
-  val filename: String = config.findValue("filename").asText()
+private[express] class TestTsvIO(conf: ObjectNode, md: Mode, fd: FlowDef)
+    extends ExpressContainer(conf, md, fd) with TestIO {
 
-  override def readDummyInput: TypedPipe[(String, String)] = Tsv(filename, ('thing1, 'thing2)).read
-      .toTypedPipe[(String, String)]('thing1, 'thing2)
+  override def readDummyInput: TypedPipe[(String, String)] = {
+    val filename: String = conf.findValue("filename").asText()
+
+    Tsv(filename, ('thing1, 'thing2)).read
+        .toTypedPipe[(String, String)]('thing1, 'thing2)
+  }
 
   override def writeDummyOutput: TypedPipe[(String, String)] => TypedPipe[(String, String)] = {
+    val filename: String = conf.findValue("filename").asText()
+
     pipe: TypedPipe[(String, String)] =>
       pipe.write(TypedTsv[(String, String)](filename))
       pipe
@@ -172,16 +177,16 @@ private[express] class TestTsvIO(config: ObjectNode, md: Mode, fd: FlowDef)
  * An ExpressContainer implementation that does not extend the TestIO interface. This means that
  * the TestIO container factory should fail when it attempts to construct it.
  */
-private[express] class TestInvalidInterfaceIO(config: ObjectNode, md: Mode, fd: FlowDef)
-    extends ExpressContainer(config, md, fd) // Does not extend TestIO.
+private[express] class TestInvalidInterfaceIO(conf: ObjectNode, md: Mode, fd: FlowDef)
+    extends ExpressContainer(conf, md, fd) // Does not extend TestIO.
 
 /**
  * An ExpressContainer that does not have a constructor that is usable by the TestIO container
  * factory. This means that the factory should fail if it attempts to construct the object.
  */
 private[express] class TestInvalidConstructorIO(
-    config: ObjectNode,
+    conf: ObjectNode,
     md: Mode,
     fd: FlowDef,
     label: String // Contains an extra parameter in the constructor.
-) extends ExpressContainer(config, md, fd) with TestIO
+) extends ExpressContainer(conf, md, fd) with TestIO
