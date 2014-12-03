@@ -1,6 +1,8 @@
 // (c) Copyright 2014 WibiData, Inc.
 package org.kiji.spark
 
+import org.kiji.spark.connector.rdd.KijiPartition
+
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
 import org.junit.Assert

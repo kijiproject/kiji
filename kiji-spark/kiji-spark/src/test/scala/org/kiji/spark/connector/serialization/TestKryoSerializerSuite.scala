@@ -47,6 +47,7 @@ import org.kiji.schema.impl.hbase.HBaseKijiTable
 import org.kiji.schema.impl.hbase.HBaseKijiTableReader
 import org.kiji.schema.layout.KijiTableLayouts
 import org.kiji.schema.util.InstanceBuilder
+import org.kiji.spark.connector.serialization.KijiSparkRegistrator
 
 object TestKryoSerializerSuite {
   private final val PRIMITIVE_FAMILY: String = "primitive"

@@ -26,4 +26,3 @@ object SparkHelloWorld {
     println(s"There are $linesWithSparkCount lines in the file that contain the word \'Spark\'.")
   }
 }
-

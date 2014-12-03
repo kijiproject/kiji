@@ -44,6 +44,7 @@
     <kiji-cdh5-platform.version>1.4.0-SNAPSHOT</kiji-cdh5-platform.version>
     <fake-hbase.version>0.3.0-SNAPSHOT</fake-hbase.version>
     <curator.version>2.4.0</curator.version>
+    <kiji-commons.version>0.1.0-SNAPSHOT</kiji-commons.version>
   </properties>
 
   <dependencies>
@@ -62,7 +63,11 @@
       <artifactId>kiji-schema</artifactId>
       <version>${kiji-schema.version}</version>
     </dependency>
-
+    <dependency>
+      <groupId>org.kiji.commons</groupId>
+      <artifactId>kiji-commons-scala</artifactId>
+      <version>${kiji-commons.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.kiji.platforms</groupId>
       <artifactId>kiji-compile-platform</artifactId>
@@ -84,7 +89,7 @@
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-core_${scala.version}</artifactId>
       <version>${spark.version}</version>
-      <scope>compile</scope>
+      <scope>provided</scope>
       <exclusions>
         <exclusion>
           <groupId>org.apache.hadoop</groupId>
@@ -95,6 +100,24 @@
           <artifactId>hadoop-client</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-mllib_${scala.version}</artifactId>
+      <version>${spark.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-streaming_${scala.version}</artifactId>
+      <version>${spark.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-sql_${scala.version}</artifactId>
+      <version>${spark.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>log4j</groupId>
@@ -157,7 +180,7 @@
       <name>Kji artifact releases</name>
       <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
       <snapshots>
-        <!-- Kiji-spark is using SNAPSHOTS -->
+        <!-- Kiji-spark is not using SNAPSHOTS -->
         <enabled>false</enabled>
       </snapshots>
       <releases>
