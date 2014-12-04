@@ -63,4 +63,8 @@ object ScalaLogger {
   def apply(clazz: Class[_]): ScalaLogger = {
     new ScalaLogger(LoggerFactory.getLogger(clazz))
   }
+
+  def apply(logger: Logger): ScalaLogger = {
+    new ScalaLogger(logger)
+  }
 }
