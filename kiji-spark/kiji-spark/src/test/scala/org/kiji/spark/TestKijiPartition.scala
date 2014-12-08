@@ -1,8 +1,6 @@
 // (c) Copyright 2014 WibiData, Inc.
 package org.kiji.spark
 
-import org.kiji.spark.connector.rdd.KijiPartition
-
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
 import org.junit.Assert
@@ -15,19 +13,20 @@ import org.kiji.schema.avro.HashSpec
 import org.kiji.schema.avro.RowKeyComponent
 import org.kiji.schema.avro.RowKeyEncoding
 import org.kiji.schema.avro.RowKeyFormat2
+import org.kiji.spark.connector.rdd.hbase.HBaseKijiPartition
 
 class TestKijiPartition {
   import org.kiji.spark.TestKijiPartition._
 
   @Test
   def simpleKijiPartition() {
-    val partition: KijiPartition = new KijiPartition(
+    val partition: HBaseKijiPartition = HBaseKijiPartition(
       INDEX,
       START_ENTITYID.getHBaseRowKey,
       STOP_ENTITYID.getHBaseRowKey
     )
-    Assert.assertEquals(START_ENTITYID.getHBaseRowKey, partition.getStartRow.getHBaseRowKey)
-    Assert.assertEquals(STOP_ENTITYID.getHBaseRowKey, partition.getStopRow.getHBaseRowKey)
+    Assert.assertEquals(START_ENTITYID.getHBaseRowKey, partition.startLocation.getHBaseRowKey)
+    Assert.assertEquals(STOP_ENTITYID.getHBaseRowKey, partition.stopLocation.getHBaseRowKey)
     Assert.assertEquals(INDEX, partition.index)
   }
 }

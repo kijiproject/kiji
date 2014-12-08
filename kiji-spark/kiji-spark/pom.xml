@@ -42,8 +42,8 @@
     <kiji-schema.version>1.6.0-SNAPSHOT</kiji-schema.version>
     <kiji-cdh5-platform.version>1.4.0-SNAPSHOT</kiji-cdh5-platform.version>
     <fake-hbase.version>0.3.0-SNAPSHOT</fake-hbase.version>
-    <curator.version>2.4.0</curator.version>
     <kiji-commons.version>0.1.0-SNAPSHOT</kiji-commons.version>
+    <kiji-schema-cassandra.version>1.6.0-SNAPSHOT</kiji-schema-cassandra.version>
   </properties>
 
   <dependencies>
@@ -51,6 +51,11 @@
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
       <version>${kiji-schema.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.schema</groupId>
+      <artifactId>kiji-schema-cassandra</artifactId>
+      <version>${kiji-schema-cassandra.version}</version>
     </dependency>
     <dependency>
       <groupId>org.kiji.commons</groupId>

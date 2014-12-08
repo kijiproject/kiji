@@ -40,11 +40,10 @@ class SparkContextFunctions(@transient val sc: SparkContext) extends Serializabl
   def kijiRDD[T](uri: KijiURI, dataRequest: KijiDataRequest, vClass: Class[_ <: T]): KijiRDD[T] = {
     val ugi = UserGroupInformation.getCurrentUser
     val credentials = ugi.getCredentials
-    new KijiRDD[T](sc, sc.hadoopConfiguration, credentials, uri, dataRequest)
+    KijiRDD(sc, sc.hadoopConfiguration, credentials, uri, dataRequest).asInstanceOf[KijiRDD[T]]
   }
 }
 
 object SparkContextFunctions {
   val Log = ScalaLogger(classOf[SparkContext])
-  //val Log = LoggerFactory.getLogger("KijiSparkContext")
 }
