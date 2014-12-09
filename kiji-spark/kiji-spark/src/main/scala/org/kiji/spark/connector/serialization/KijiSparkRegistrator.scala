@@ -21,16 +21,12 @@ package org.kiji.spark.connector.serialization
 import com.esotericsoftware.kryo.Kryo
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
-import org.apache.avro.hadoop.io.AvroSerializer
 import org.apache.avro.specific.SpecificRecord
-import org.apache.spark.mllib.recommendation.Rating
 import org.apache.spark.serializer.KryoRegistrator
 
 import org.kiji.schema.KijiCell
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.impl.MaterializedKijiResult
-
-import scala.collection.parallel.mutable
 
 /**
  * Registers serializer classes for a SparkJob
@@ -44,7 +40,5 @@ class KijiSparkRegistrator[T] extends KryoRegistrator {
     kryo.register(classOf[MaterializedKijiResult[T]], new MaterializedKijiResultSerializer[T]())
     kryo.register(classOf[KijiDataRequest], new KijiDataRequestSerializer())
     kryo.register(classOf[KijiCell[T]], new KijiCellSerializer())
-    kryo.register(classOf[Rating])
-    kryo.register(classOf[scala.collection.mutable.BitSet])
   }
 }
