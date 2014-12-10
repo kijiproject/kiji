@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import com.aphyr.riemann.Proto;
 import com.aphyr.riemann.Proto.Event;
@@ -39,6 +40,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.commons.ResourceTracker;
 import org.kiji.commons.SocketAddressUtils;
 
 /**
@@ -84,6 +86,7 @@ public final class RiemannNotifier implements Notifier {
     mRiemann = riemann;
     mHost = host;
 
+    ResourceTracker.get().registerResource(this);
     mExecutor.submit(new NotifierLoop());
   }
 
@@ -164,7 +167,15 @@ public final class RiemannNotifier implements Notifier {
 
   @Override
   public void close() {
-    mExecutor.shutdown();
+    ResourceTracker.get().unregisterResource(this);
+    mExecutor.shutdownNow();
+    try {
+      if (!mExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+        LOG.warn("Unable to shut down RiemannNotifier within timeout.");
+      }
+    } catch (InterruptedException e) {
+      Thread.interrupted();
+    }
   }
 
   /**
