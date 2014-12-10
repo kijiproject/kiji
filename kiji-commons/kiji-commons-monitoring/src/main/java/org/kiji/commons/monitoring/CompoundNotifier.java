@@ -1,0 +1,75 @@
+/**
+ * (c) Copyright 2014 WibiData, Inc.
+ *
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.kiji.commons.monitoring;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.Closer;
+
+/**
+ * A notifier which forwards notifications to multiple notifiers.
+ */
+public final class CompoundNotifier implements Notifier {
+  private final List<Notifier> mNotifiers;
+
+  /**
+   * Constructs a new compound notifier with the provided notifiers.
+   *
+   * @param notifiers The notifiers.
+   */
+  private CompoundNotifier(final List<Notifier> notifiers) {
+    mNotifiers = notifiers;
+  }
+
+  /**
+   * Create a new compound notifier with the provided notifiers.
+   *
+   * @param notifiers The notifiers.
+   * @return A new compound notifier.
+   */
+  public static CompoundNotifier create(final Iterable<Notifier> notifiers) {
+    return new CompoundNotifier(ImmutableList.copyOf(notifiers));
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void error(
+      final String action,
+      final Map<String, String> attributes,
+      final Throwable error
+  ) {
+    for (final Notifier notifier : mNotifiers) {
+      notifier.error(action, attributes, error);
+    }
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void close() throws IOException {
+    final Closer closer = Closer.create();
+    for (final Notifier notifier : mNotifiers) {
+      closer.register(notifier);
+    }
+    closer.close();
+  }
+}

@@ -43,6 +43,7 @@
     <module>build-resources</module>
     <module>kiji-commons-java</module>
     <module>kiji-commons-scala</module>
+    <module>kiji-commons-monitoring</module>
   </modules>
 
   <dependencyManagement>
@@ -95,6 +96,21 @@
       </plugins>
     </pluginManagement>
   </build>
+
+  <repositories>
+    <repository>
+      <id>wibi-releases</id>
+      <url>https://repo.wibidata.com/artifactory/wibi-packages</url>
+      <snapshots> <enabled>false</enabled> </snapshots>
+      <releases> <enabled>true</enabled> </releases>
+    </repository>
+    <repository>
+      <id>clojars.org</id>
+      <url>http://clojars.org/repo</url>
+      <snapshots> <enabled>false</enabled> </snapshots>
+      <releases> <enabled>true</enabled> </releases>
+    </repository>
+  </repositories>
 
   <scm>
     <connection>scm:git:git@github.com:kijiproject/kiji-commons.git</connection>
