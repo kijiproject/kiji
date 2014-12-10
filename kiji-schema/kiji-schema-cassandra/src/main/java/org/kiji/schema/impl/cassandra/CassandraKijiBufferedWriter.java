@@ -27,8 +27,6 @@ import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.concurrent.ThreadSafe;
 
-import com.datastax.driver.core.BatchStatement;
-import com.datastax.driver.core.BatchStatement.Type;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Statement;
 import com.google.common.base.Preconditions;
