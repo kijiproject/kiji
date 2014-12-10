@@ -25,8 +25,8 @@ import org.kiji.spark.connector.KijiSpark
  */
 abstract class KijiRDD[T] private[rdd] (
     @transient sc: SparkContext,
-    @transient conf: Configuration = None,
-    @transient credentials: Credentials = None,
+    //@transient conf: Configuration = None, TODO: add support
+    //@transient credentials: Credentials = None,
     @transient kijiURI: KijiURI,
     kijiDataRequest: KijiDataRequest
 ) extends RDD[KijiResult[T]](sc, Nil) with ScalaLogged {
@@ -48,8 +48,28 @@ object KijiRDD {
    */
   def apply (
       @transient sc: SparkContext,
-      @transient conf: Configuration = None,
-      @transient credentials: Credentials = None,
+      @transient kijiURI: KijiURI,
+      kijiDataRequest: KijiDataRequest
+  ): KijiRDD[_] = {
+    kijiURI match {
+      case cassandraKijiURI: CassandraKijiURI => CassandraKijiRDD(sc, kijiURI, kijiDataRequest)
+      case _ => throw new UnsupportedOperationException(KijiSpark.UnsupportedKiji)
+    }
+  }
+
+  /**
+   *
+   * @param sc
+   * @param conf
+   * @param credentials
+   * @param kijiURI
+   * @param kijiDataRequest
+   * @return
+   */
+  def apply (
+      @transient sc: SparkContext,
+      @transient conf: Configuration,
+      @transient credentials: Credentials,
       @transient kijiURI: KijiURI,
       kijiDataRequest: KijiDataRequest
   ): KijiRDD[_] = {
