@@ -11,3 +11,5 @@
 .idea/
 atlassian-ide-plugin.xml
 
+# Vagrant stuff
+.vagrant
