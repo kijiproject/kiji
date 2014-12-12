@@ -425,6 +425,13 @@
             <headerLocation>src/main/checkstyle/header-file.txt</headerLocation>
             <includeTestSourceDirectory>true</includeTestSourceDirectory>
             <excludes>**/*.scala</excludes>
+            <!-- Fix so that M2E doesn't bomb when importing this project. Since we
+            upgraded to Checkstyle 2.13, M2E won't import the project. See
+            https://github.com/m2e-code-quality/m2e-code-quality/issues/53 and
+            https://groups.google.com/forum/#!topic/m2e-code-quality/_QGGBPIzpxg.
+            -->
+            <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
+            <testSourceDirectory>${project.build.testSourceDirectory}</testSourceDirectory>
           </configuration>
           <executions>
             <execution>
