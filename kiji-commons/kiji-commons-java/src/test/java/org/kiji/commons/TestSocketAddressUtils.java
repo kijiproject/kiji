@@ -26,7 +26,7 @@ import java.net.UnknownHostException;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class SocketAddressUtilsTest {
+public class TestSocketAddressUtils {
 
   @Test
   public void testLocalToPublicAnyAddress() throws UnknownHostException {
@@ -34,7 +34,6 @@ public class SocketAddressUtilsTest {
     final InetSocketAddress address = new InetSocketAddress(anyAddress, 80);
     final InetSocketAddress publicAddress = SocketAddressUtils.localToPublic(address);
 
-    Assert.assertTrue(publicAddress.getAddress().isLoopbackAddress());
     Assert.assertFalse("0.0.0.0".equals(publicAddress.getHostName()));
     Assert.assertFalse("localhost".equals(publicAddress.getHostName()));
     Assert.assertSame(80, publicAddress.getPort());
@@ -46,7 +45,6 @@ public class SocketAddressUtilsTest {
     final InetSocketAddress address = new InetSocketAddress(loopbackAddress, 80);
     final InetSocketAddress publicAddress = SocketAddressUtils.localToPublic(address);
 
-    Assert.assertTrue(publicAddress.getAddress().isLoopbackAddress());
     Assert.assertFalse("0.0.0.0".equals(publicAddress.getHostName()));
     Assert.assertFalse("localhost".equals(publicAddress.getHostName()));
     Assert.assertSame(80, publicAddress.getPort());
