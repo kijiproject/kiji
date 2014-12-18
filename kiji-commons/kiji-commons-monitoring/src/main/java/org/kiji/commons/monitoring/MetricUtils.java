@@ -72,6 +72,28 @@ public final class MetricUtils {
   }
 
   /**
+   * Create a new {@link Histogram} backed by the HDR histogram package. The histogram supports
+   * recording values in the given range with the given amount of precision.  The precision is
+   * expressed in the number of significant decimal digits preserved.
+   *
+   * @param lowestDiscernableValue Smallest recorded value discernible from 0.
+   * @param highestTrackableValue Highest trackable value.
+   * @param numberOfSignificantValueDigits Number of significant decimal digits.
+   * @return A Histogram backed by the HDR histogram package.
+   */
+  public static Histogram createHdrHistogram(
+    final long lowestDiscernableValue,
+    final long highestTrackableValue,
+    final int numberOfSignificantValueDigits
+  ) {
+    return new Histogram(
+        HdrHistogramReservoir.create(
+            lowestDiscernableValue,
+            highestTrackableValue,
+            numberOfSignificantValueDigits));
+  }
+
+  /**
    * Register a Riemann reporter with the provided metrics registry.
    *
    * @param riemannAddress The address of the Riemann service.

@@ -96,8 +96,10 @@ public final class LatencyUtilsReservoir implements Reservoir {
 
   /**
    * An implementation of {@link Snapshot} for {@link LatencyStats}.
+   *
+   * Package private for use by the HDR histogram reservoir.
    */
-  private static final class HistogramSnapshot extends Snapshot {
+  static final class HistogramSnapshot extends Snapshot {
     private final Histogram mHistogram;
 
     /**
