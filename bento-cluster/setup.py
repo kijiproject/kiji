@@ -1,6 +1,6 @@
-# !/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# -*- mode: python -*-
+#!/usr/bin/env python3
+#-*- coding: utf-8 -*-
+#-*- mode: python -*-
 import sys
 
 from setuptools import setup
@@ -9,7 +9,7 @@ from setuptools import setup
 def main(args):
     setup(
         name="kiji-bento-cluster",
-        version="2.0.9",
+        version="2.0.10",
 
         # Lists the Python modules provided by this package:
         packages=[
@@ -45,7 +45,7 @@ def main(args):
 
         # Dependencies on other Python packages:
         install_requires=[
-            "docker-py",
+            "docker-py==0.6.0",
         ],
 
         # Metadata for upload to PyPI
