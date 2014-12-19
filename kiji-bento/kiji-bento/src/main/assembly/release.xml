@@ -314,18 +314,6 @@
       <filtered>false</filtered>
       <fileMode>0755</fileMode>
     </fileSet>
-    <fileSet>
-      <!-- kiji-scoring -->
-      <useDefaultExcludes>false</useDefaultExcludes>
-      <outputDirectory>.</outputDirectory>
-      <directory>target/prereqs-dir/kiji-scoring-${kiji-scoring.version}</directory>
-      <filtered>false</filtered>
-      <excludes>
-        <exclude>RELEASE_NOTES.txt</exclude>
-        <exclude>docs/**</exclude>
-      </excludes>
-      <fileMode>0644</fileMode>
-    </fileSet>
   </fileSets>
   <files>
     <!-- Mostly to move and rename release notes. -->

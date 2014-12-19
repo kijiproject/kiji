@@ -48,7 +48,6 @@
     <kiji-express.version>2.1.0-SNAPSHOT</kiji-express.version>
     <kiji-express-music.version>2.1.0-SNAPSHOT</kiji-express-music.version>
     <kiji-rest.version>1.5.0-SNAPSHOT</kiji-rest.version>
-    <kiji-scoring.version>0.18.0-SNAPSHOT</kiji-scoring.version>
   </properties>
 
   <modules>
