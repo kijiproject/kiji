@@ -25,6 +25,8 @@ import java.io.Closeable;
  * values. It is expected that cached values are thread-safe, otherwise
  * any modifications made to the cached object during the refresh cycle
  * could introduce concurrency issues.
+ *
+ * @param <T> The type of the value that will be cached.
  */
 public interface RefreshingLoader<T> extends Closeable {
 

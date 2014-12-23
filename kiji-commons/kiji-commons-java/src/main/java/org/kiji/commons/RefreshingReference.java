@@ -20,7 +20,6 @@ package org.kiji.commons;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;

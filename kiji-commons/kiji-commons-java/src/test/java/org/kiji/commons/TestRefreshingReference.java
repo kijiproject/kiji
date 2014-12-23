@@ -20,7 +20,6 @@ package org.kiji.commons;
 
 import java.io.IOException;
 import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -40,7 +39,7 @@ public class TestRefreshingReference {
     private final CyclicBarrier mFirstBarrier = new CyclicBarrier(2);
     private final CyclicBarrier mSecondBarrier = new CyclicBarrier(2);
     private final AtomicBoolean mFailureIndicator = new AtomicBoolean(false);
-    final AtomicInteger mValue = new AtomicInteger(0);
+    private final AtomicInteger mValue = new AtomicInteger(0);
 
     public CyclicBarrier getFirstBarrier() {
       return mFirstBarrier;
@@ -98,6 +97,10 @@ public class TestRefreshingReference {
       mValue.incrementAndGet();
     }
 
+    public Integer getValue() {
+      return mValue.get();
+    }
+
   }
 
   @Test
@@ -150,7 +153,7 @@ public class TestRefreshingReference {
         } catch (Exception e) {
           setFailureIndicator(true);
         }
-        Integer currentValue = mValue.get();
+        Integer currentValue = getValue();
         if (currentValue % 2 == 0) {
           return currentValue;
         } else {
