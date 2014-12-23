@@ -56,7 +56,30 @@ public final class RefreshingReference<T> implements Closeable {
   private final RefreshingLoader<T> mRefreshingLoader;
 
   /**
-   * Static factory constructor.
+   * Static factory constructor. Allows the user to pass in a name for the thread
+   * the scheduler will run on.
+   *
+   * @param refreshPeriod Configures the refresh rate for the scheduler.
+   * @param timeUnit Specifies the unit of time for the refreshPeriod.
+   * @param refreshingLoader Used to initialize and refresh the cached value.
+   * @param name The name of the thread the scheduler will run on.
+   * @param <U> The type that will be cached.
+   * @return A new RefreshingReference.
+   */
+  public static <U> RefreshingReference<U> create(
+      final Long refreshPeriod,
+      final TimeUnit timeUnit,
+      final RefreshingLoader<U> refreshingLoader,
+      final String name
+  ) {
+    ThreadFactoryBuilder builder = new ThreadFactoryBuilder()
+        .setNameFormat(name + "-%d");
+    return new RefreshingReference<>(refreshPeriod, timeUnit, refreshingLoader, builder);
+  }
+
+  /**
+   * Static factory constructor. Provides a default name for the thread the scheduler will
+   * run on.
    *
    * @param refreshPeriod Configures the refresh rate for the scheduler.
    * @param timeUnit Specifies the unit of time for the refreshPeriod.
@@ -69,7 +92,9 @@ public final class RefreshingReference<T> implements Closeable {
       final TimeUnit timeUnit,
       final RefreshingLoader<U> refreshingLoader
   ) {
-    return new RefreshingReference<>(refreshPeriod, timeUnit, refreshingLoader);
+    ThreadFactoryBuilder builder = new ThreadFactoryBuilder()
+        .setNameFormat("refreshing-reference-%d");
+    return new RefreshingReference<>(refreshPeriod, timeUnit, refreshingLoader, builder);
   }
 
   /**
@@ -78,16 +103,17 @@ public final class RefreshingReference<T> implements Closeable {
    * @param refreshPeriod Configures the refresh rate for the scheduler.
    * @param timeUnit Specifies the unit of time for the refreshPeriod.
    * @param refreshingLoader Used to initialize and refresh the cached value.
+   * @param builder Thread factory builder. Expects that the name format is already set.
    */
   private RefreshingReference(
       final Long refreshPeriod,
       final TimeUnit timeUnit,
-      final RefreshingLoader<T> refreshingLoader
+      final RefreshingLoader<T> refreshingLoader,
+      final ThreadFactoryBuilder builder
   ) {
     mRef = new AtomicReference<>(WithTimestamp.create(refreshingLoader.initial()));
     mScheduler = Executors.newSingleThreadScheduledExecutor(
-        new ThreadFactoryBuilder()
-            .setNameFormat("refreshing-reference-%d")
+        builder
             .setDaemon(true)
             .build()
     );

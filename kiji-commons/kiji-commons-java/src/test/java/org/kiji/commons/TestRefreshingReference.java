@@ -27,12 +27,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import junit.framework.Assert;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TestRefreshingReference {
-
-  private static final Logger LOG = LoggerFactory.getLogger(TestRefreshingReference.class);
 
   private class BarrierLoader implements RefreshingLoader<Integer> {
 
@@ -172,13 +168,13 @@ public class TestRefreshingReference {
 
     // Refresh will fail, so the cached value will not be updated.
     Assert.assertEquals(0, cache.get().intValue());
-
     loader.incrementValue(); // Sets the value to 2
     loader.advance(); // Attempt to refresh the cache
     Assert.assertEquals(2, cache.get().intValue()); // The refresh will succeed
 
     // Make sure the barrier didn't throw an exception while refreshing
     Assert.assertFalse(loader.getFailureIndicator());
+
   }
 
   @Test
@@ -259,6 +255,68 @@ public class TestRefreshingReference {
     // Finally, we verify that the cache has not actually been refreshing and that the value was
     // frozen after calling close.
     Assert.assertEquals(finalValue, cache.get());
+  }
+
+  /**
+   * This test is to verify that the scheduling threads are being named properly.
+   *
+   * @throws InterruptedException If the countDown latch encounters an error.
+   */
+  @Test
+  public void testThreadNaming() throws InterruptedException {
+
+    final AtomicBoolean failureIndicator = new AtomicBoolean(false);
+    final CyclicBarrier barrier1 = new CyclicBarrier(3);
+    final CyclicBarrier barrier2 = new CyclicBarrier(3);
+
+    RefreshingLoader<String> refresh = new RefreshingLoader<String>() {
+      @Override
+      public String initial() {
+        return null;
+      }
+
+      @Override
+      public String refresh(String previous) {
+        try {
+          barrier1.await();
+          barrier2.await();
+        } catch (Exception e) {
+          failureIndicator.set(true);
+        }
+
+        return Thread.currentThread().getName();
+      }
+
+      @Override
+      public void close() throws IOException {}
+    };
+
+    final String testString1 = "testRefreshingReference"; //custom string
+    final String testString2 = "refreshing-reference"; //default string name
+
+    RefreshingReference<String> cache1 =
+        RefreshingReference.create(1L, TimeUnit.MILLISECONDS, refresh, testString1);
+
+    RefreshingReference<String> cache2 =
+        RefreshingReference.create(1L, TimeUnit.MILLISECONDS, refresh);
+
+    // We have to run refresh once to ensure the scheduler thread is running
+    try {
+      barrier1.await();
+      barrier2.await();
+      barrier1.await();
+    } catch (Exception e) {
+      failureIndicator.set(true);
+    }
+
+    // The thread factory will normally add a '-0' to the end of the thread name, but since this
+    // number could conceivably vary we just check to make sure the test string is contained in
+    // the name of the scheduling thread
+    Assert.assertTrue(cache1.get().contains(testString1));
+    Assert.assertTrue(cache2.get().contains(testString2));
+
+    Assert.assertFalse(failureIndicator.get());
+
   }
 
 }
