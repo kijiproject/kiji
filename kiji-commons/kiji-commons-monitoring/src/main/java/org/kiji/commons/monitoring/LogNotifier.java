@@ -67,6 +67,20 @@ public final class LogNotifier implements Notifier {
 
   /** {@inheritDoc} */
   @Override
+  public void error(
+      final String action,
+      final Map<String, String> attributes
+  ) {
+    final StringBuilder sb = new StringBuilder();
+    sb.append("Error in ");
+    sb.append(action);
+    sb.append(":\n");
+    Joiner.on('\n').withKeyValueSeparator(": ").appendTo(sb, attributes);
+    mLog.error(sb.toString());
+  }
+
+  /** {@inheritDoc} */
+  @Override
   public void close() {
     // do nothing
   }

@@ -60,6 +60,7 @@ public final class PrefixNotifier implements Notifier {
     return new PrefixNotifier(prefix + ".", notifier);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void error(
       final String action,
@@ -69,6 +70,16 @@ public final class PrefixNotifier implements Notifier {
     mNotifier.error(mPrefix + action, attributes, error);
   }
 
+  /** {@inheritDoc} */
+  @Override
+  public void error(
+      final String action,
+      final Map<String, String> attributes
+  ) {
+    mNotifier.error(mPrefix + action, attributes);
+  }
+
+  /** {@inheritDoc} */
   @Override
   public void close() throws IOException {
     mNotifier.close();

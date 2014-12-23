@@ -121,27 +121,16 @@ public final class RiemannNotifier implements Notifier {
     return new RiemannNotifier(queue, executor, riemann, host);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void error(
       final String action,
       final Map<String, String> attributes,
       final Throwable error
   ) {
-    final List<StackTraceElement> frames = Arrays.asList(error.getStackTrace());
-
-    final StringBuilder description = new StringBuilder();
-
-    description.append(error.getMessage());
-    description.append('\n');
-    Joiner.on('\n').appendTo(description, Iterables.limit(frames, 20));
-    if (frames.size() > 20) {
-      description.append("\n...");
-    }
-
-    final Event.Builder builder = Proto.Event.newBuilder();
-
+    final Event.Builder event = Proto.Event.newBuilder();
     for (Map.Entry<String, String> entry : attributes.entrySet()) {
-      builder.addAttributes(
+      event.addAttributes(
           Proto
               .Attribute
               .newBuilder()
@@ -150,21 +139,44 @@ public final class RiemannNotifier implements Notifier {
               .build());
     }
 
-    final Event event = builder
+    event
         .setHost(mHost)
         .setService("wibi.bblocks." + action)
         .setTime(System.currentTimeMillis() / 1000L)
         .setState("error")
         .addTags("error")
         .addTags("notification")
-        .setDescription(description.toString())
         .build();
 
-    if (!mQueue.offer(event) && mQueueFullLimiter.tryAcquire()) {
+    if (error != null) {
+      final List<StackTraceElement> frames = Arrays.asList(error.getStackTrace());
+
+      final StringBuilder description = new StringBuilder();
+
+      description.append(error.getMessage());
+      description.append('\n');
+      Joiner.on('\n').appendTo(description, Iterables.limit(frames, 20));
+      if (frames.size() > 20) {
+        description.append("\n...");
+      }
+      event.setDescription(description.toString());
+    }
+
+    if (!mQueue.offer(event.build()) && mQueueFullLimiter.tryAcquire()) {
       LOG.error("Riemann queue full. Dropping notifications.");
     }
   }
 
+  /** {@inheritDoc} */
+  @Override
+  public void error(
+      final String action,
+      final Map<String, String> attributes
+  ) {
+    error(action, attributes, null);
+  }
+
+  /** {@inheritDoc} */
   @Override
   public void close() {
     ResourceTracker.get().unregisterResource(this);

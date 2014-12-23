@@ -65,6 +65,17 @@ public final class CompoundNotifier implements Notifier {
 
   /** {@inheritDoc} */
   @Override
+  public void error(
+      final String action,
+      final Map<String, String> attributes
+  ) {
+    for (final Notifier notifier : mNotifiers) {
+      notifier.error(action, attributes);
+    }
+  }
+
+  /** {@inheritDoc} */
+  @Override
   public void close() throws IOException {
     final Closer closer = Closer.create();
     for (final Notifier notifier : mNotifiers) {

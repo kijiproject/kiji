@@ -59,4 +59,23 @@ public interface Notifier extends Closeable {
    * @param error The error.
    */
   void error(String action, Map<String, String> attributes, Throwable error);
+
+  /**
+   * Notify of an error event while attempting an action.
+   *
+   * The event consists of an action and an attributes map of context-specific properties.
+   *
+   * Typically, the action should be statically known in the context of the notification location.
+   * In particular, some notifier implementations may have trouble handling an unbounded number of
+   * actions. By convention, actions should be period-separated paths, for instance:
+   * "org.kiji.rest.put".
+   *
+   * Service authors may use this method to notify of an error occurrence.
+   *
+   * This method must be non-blocking.
+   *
+   * @param action The action which experienced an error.
+   * @param attributes Important properties in the context of the error.
+   */
+  void error(String action, Map<String, String> attributes);
 }
