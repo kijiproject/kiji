@@ -25,6 +25,8 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.apache.commons.io.IOUtils;
@@ -35,11 +37,37 @@ import org.kiji.schema.avro.TableLayoutDesc;
 import org.kiji.schema.layout.InvalidLayoutException;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
+import org.kiji.schema.util.ResourceUtils;
 import org.kiji.schema.util.ToJson;
 
 public class TestCreateTableTool extends KijiToolTest {
   /** Path to a region splits files. */
   public static final String REGION_SPLIT_KEY_FILE = "org/kiji/schema/tools/split-keys.txt";
+
+  public static String readResource(String resourcePath) throws IOException {
+    final InputStream istream =
+        TestCreateTableTool.class.getClassLoader().getResourceAsStream(resourcePath);
+    try {
+      return IOUtils.toString(istream);
+    } finally {
+      ResourceUtils.closeOrLog(istream);
+    }
+  }
+
+  private File createTempTextFile(final String content) throws IOException {
+    final File file = File.createTempFile("temp-", ".txt", getLocalTempDir());
+    final OutputStream fos = new FileOutputStream(file);
+    try {
+      IOUtils.write(content, fos);
+    } finally {
+      fos.close();
+    }
+    return file;
+  }
+
+  private File getRegionSplitKeyFile() throws IOException {
+    return createTempTextFile(readResource(REGION_SPLIT_KEY_FILE));
+  }
 
   /**
    * Writes a table layout as a JSON descriptor in a temporary file.
@@ -89,13 +117,10 @@ public class TestCreateTableTool extends KijiToolTest {
     final KijiURI tableURI =
         KijiURI.newBuilder(getKiji().getURI()).withTableName(layout.getName()).build();
 
-    final String splitKeyFile =
-        getClass().getClassLoader().getResource(REGION_SPLIT_KEY_FILE).getPath();
-
     assertEquals(BaseTool.SUCCESS, runTool(new CreateTableTool(),
       "--table=" + tableURI,
       "--layout=" + layoutFile,
-      "--split-key-file=file://" + splitKeyFile,
+      "--split-key-file=file://" + getRegionSplitKeyFile(),
       "--debug"
     ));
     assertEquals(2, mToolOutputLines.length);
@@ -112,14 +137,11 @@ public class TestCreateTableTool extends KijiToolTest {
     final KijiURI tableURI =
         KijiURI.newBuilder(getKiji().getURI()).withTableName(layout.getName()).build();
 
-    final String splitKeyFile =
-        getClass().getClassLoader().getResource(REGION_SPLIT_KEY_FILE).getPath();
-
     try {
       runTool(new CreateTableTool(),
         "--table=" + tableURI,
         "--layout=" + layoutFile,
-        "--split-key-file=file://" + splitKeyFile
+        "--split-key-file=file://" + getRegionSplitKeyFile()
       );
       fail("Should throw IllegalArgumentException");
     } catch (IllegalArgumentException iae) {
