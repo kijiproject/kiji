@@ -173,23 +173,41 @@ public final class RefreshingReference<T> implements Closeable {
   }
 
   /**
+   * Shuts down the scheduler and calls the close method in the RefreshingLoader.
+   * Allows the user to demand immediate shutdown; this should only be used for testing.
+   *
+   * @param closeNow Will shut down immediately if this is true, otherwise will attempt to wait
+   *     for concurrent execution.
+   * @throws IOException If the RefreshingLoader encounters an error on closing.
+   */
+  public void close(
+      Boolean closeNow
+  ) throws IOException {
+    if (closeNow) {
+      mScheduler.shutdownNow();
+      mRefreshingLoader.close();
+    } else {
+      try {
+        mScheduler.shutdown();
+        // Await termination so that we don't close the state out from under the function
+        mScheduler.awaitTermination(10, TimeUnit.SECONDS);
+        mRefreshingLoader.close();
+      } catch (InterruptedException e) {
+        Thread.interrupted();
+        mRefreshingLoader.close();
+      } finally {
+        ResourceTracker.get().unregisterResource(this);
+      }
+    }
+  }
+
+  /**
    * Shuts down the scheduler and calls the close method in the RefreshingLoader. Attempts
    * to wait for concurrent execution, but does not wait indefinitely.
    *
    * @throws IOException If the RefreshingLoader encounters an error on closing.
    */
   public void close() throws IOException {
-    try {
-      mScheduler.shutdown();
-      // Await termination so that we don't close the state out from under the function
-      mScheduler.awaitTermination(10, TimeUnit.SECONDS);
-      mRefreshingLoader.close();
-    } catch (InterruptedException e) {
-      Thread.interrupted();
-      mRefreshingLoader.close();
-    } finally {
-      ResourceTracker.get().unregisterResource(this);
-    }
-
+    close(false);
   }
 }

@@ -1,4 +1,5 @@
 /output/
+/__pycache__/
 
 # Temporary files used by editors.
 *~
