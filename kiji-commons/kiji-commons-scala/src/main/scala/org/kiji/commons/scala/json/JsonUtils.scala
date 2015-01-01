@@ -36,6 +36,11 @@ import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
 import com.google.common.base.Preconditions
+import org.apache.avro.Schema
+import org.apache.avro.generic.GenericContainer
+
+import org.kiji.commons.FromJson
+import org.kiji.commons.ToJson
 
 object JsonUtils {
   /** ObjectMapper with which to read and write Json. */
@@ -483,5 +488,63 @@ object JsonUtils {
       case JsonNodeType.STRING => Seq(jsonNode.asText())
       case _ => sys.error("Neither array nor text node passed to getStringOrArrayOfString().")
     }
+  }
+
+  /**
+   * Parses a json node into an avro object given an avro schema. Call this method with the
+   * following syntax:
+   *
+   * val avro: GeneratedType = JsonUtils.fromJson(node, GeneratedType.getClassSchema)
+   *
+   * @param jsonNode The json node to be parsed.
+   * @param schema The avro schema to be used to parse the json node.
+   * @tparam T The type that is expected to be returned.
+   * @return The extracted avro object cast to type T.
+   */
+  def fromJson[T](jsonNode: JsonNode, schema: Schema): T = {
+    FromJson.fromJsonNode(jsonNode, schema).asInstanceOf[T]
+  }
+
+  /**
+   * Converts an avro specific record to a json node.
+   *
+   * @param avro The avro record to be converted.
+   * @tparam T The type of the avro record.
+   * @return A constructed json node.
+   */
+  def toJson[T <: GenericContainer](avro: T): JsonNode = {
+    ToJson.toJsonNode(avro, avro.getSchema)
+  }
+
+  // Pimp my class pattern to give avro records a .toJson method and json nodes a .toAvro method.
+  /**
+   * Implicitly grants avro records a .toJson method.
+   *
+   * @param avro The avro record.
+   * @tparam T The type of the avro record.
+   */
+  implicit class AvroToJson[T <: GenericContainer](avro: T) {
+    /**
+     * Creates a json node from the avro record.
+     *
+     * @return A json node.
+     */
+    def toJson: JsonNode = JsonUtils.toJson[T](avro)
+  }
+
+  /**
+   * Implicitly grants json nodes a toAvro method.
+   *
+   * @param node The json node to be converted.
+   */
+  implicit class JsonToAvro(node: JsonNode) {
+    /**
+     * Converts a json node into an avro object with the given type and schema.
+     *
+     * @param schema The schema of the avro record.
+     * @tparam T The type of the resulting avro object.
+     * @return The avro record resulting from the conversion.
+     */
+    def toAvro[T](schema: Schema): T = fromJson(node, schema)
   }
 }

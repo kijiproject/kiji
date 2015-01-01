@@ -44,6 +44,13 @@
       <artifactId>kiji-commons-java</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.kiji.commons</groupId>
+      <artifactId>kiji-commons-java</artifactId>
+      <type>test-jar</type>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -92,7 +99,7 @@
             <org.kiji.commons.ResourceTracker.tracking_level>REFERENCES</org.kiji.commons.ResourceTracker.tracking_level>
           </systemPropertyVariables>
           <includes>
-            <include>**/Test*.scala</include>
+            <include>%regex[.*/Test.*.class]</include>
           </includes>
           <redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
           <skipExec>${skipUnitTests}</skipExec>

@@ -33,4 +33,7 @@
 
   <!-- Do not check generated code. -->
   <suppress checks=".*" files="/target/"/>
+
+  <!-- Do not check fake generated avro class. -->
+  <suppress checks=".*" files="src/test/java/org/kiji/commons/FakeRecord.java"/>
 </suppressions>
