@@ -24,7 +24,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import com.google.common.collect.Lists;
 import org.apache.avro.Schema;
@@ -32,6 +35,7 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -40,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.avro.Node;
+import org.kiji.schema.util.ResourceUtils;
 
 public class TestAvroRecordKeyValueStore extends KijiClientTest {
   private static final Logger LOG = LoggerFactory.getLogger(TestAvroRecordKeyValueStore.class);
@@ -47,10 +52,31 @@ public class TestAvroRecordKeyValueStore extends KijiClientTest {
   /** The path to an existing test avro file of specific records (Nodes). */
   public static final String NODE_AVRO_FILE = "org/kiji/mapreduce/kvstore/simple.avro";
 
+  public static byte[] readResourceBytes(String resourcePath) throws IOException {
+    final InputStream istream =
+        TestAvroRecordKeyValueStore.class.getClassLoader().getResourceAsStream(resourcePath);
+    try {
+      return IOUtils.toByteArray(istream);
+    } finally {
+      ResourceUtils.closeOrLog(istream);
+    }
+  }
+
+  private File createTempBinaryFile(final byte[] bytes) throws IOException {
+    final File file = File.createTempFile("temp-", ".txt", getLocalTempDir());
+    final OutputStream fos = new FileOutputStream(file);
+    try {
+      IOUtils.write(bytes, fos);
+    } finally {
+      fos.close();
+    }
+    return file;
+  }
+
   @Test
   public void testSpecificAvroRecordKeyValueStore() throws IOException, InterruptedException {
     final Path avroFilePath =
-        new Path(getClass().getClassLoader().getResource(NODE_AVRO_FILE).toString());
+        new Path(createTempBinaryFile(readResourceBytes(NODE_AVRO_FILE)).toString());
 
     final AvroRecordKeyValueStore<CharSequence, Node> store = AvroRecordKeyValueStore
         .builder()
