@@ -56,8 +56,8 @@ import org.kiji.modeling.examples.ItemItemCF.avro._
 /**
  * Make sure that the scorer runs.
  */
-class ItemScorerSuite extends ItemItemSuite {
-  val logger: Logger = LoggerFactory.getLogger(classOf[ItemSimilarityCalculatorSuite])
+class TestItemScorer extends ItemItemSuite {
+  val logger: Logger = LoggerFactory.getLogger(classOf[TestItemScorer])
 
   val myUser: Long = 100L
   val myItem: Long = 10L

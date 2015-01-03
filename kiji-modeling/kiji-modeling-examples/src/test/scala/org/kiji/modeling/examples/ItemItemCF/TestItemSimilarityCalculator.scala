@@ -56,9 +56,9 @@ import org.kiji.modeling.examples.ItemItemCF.avro._
  * example.
  */
 @RunWith(classOf[JUnitRunner])
-class ItemSimilarityCalculatorSuite extends ItemItemSuite {
+class TestItemSimilarityCalculator extends ItemItemSuite {
 
-  val logger: Logger = LoggerFactory.getLogger(classOf[ItemSimilarityCalculatorSuite])
+  val logger: Logger = LoggerFactory.getLogger(classOf[TestItemSimilarityCalculator])
 
 
   /* Description of the test case:
