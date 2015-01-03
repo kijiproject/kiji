@@ -24,6 +24,8 @@ import scala.collection.mutable.Buffer
 import cascading.tuple.Fields
 import com.twitter.scalding.JobTest
 import com.twitter.scalding.Tsv
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.EntityId
@@ -35,6 +37,7 @@ import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 import java.io.File
 
+@RunWith(classOf[JUnitRunner])
 class NewsgroupNaiveBayesClassifierSuite extends KijiSuite {
   val layout: KijiTableLayout = {
     KijiTableLayouts.getTableLayout("org/kiji/express/examples/layout/postings.json")

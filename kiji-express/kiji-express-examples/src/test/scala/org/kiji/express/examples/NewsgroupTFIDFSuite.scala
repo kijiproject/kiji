@@ -23,6 +23,8 @@ import scala.collection.mutable.Buffer
 
 import com.twitter.scalding.JobTest
 import com.twitter.scalding.Tsv
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.EntityId
@@ -33,6 +35,7 @@ import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 
+@RunWith(classOf[JUnitRunner])
 class NewsgroupTFIDFSuite extends KijiSuite {
   val layout: KijiTableLayout = {
     KijiTableLayouts.getTableLayout("org/kiji/express/examples/layout/postings.json")
