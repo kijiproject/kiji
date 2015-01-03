@@ -23,6 +23,8 @@ import scala.collection.mutable.Buffer
 
 import com.twitter.scalding._
 import org.apache.avro.generic.GenericRecord
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express._
 import org.kiji.express.flow._
@@ -32,6 +34,7 @@ import org.kiji.schema.EntityId
 /**
  * A test that ensures the Song Metadata importer can import song data into a Kiji table.
  */
+@RunWith(classOf[JUnitRunner])
 class SongMetadataImporterSuite extends KijiSuite {
   // Get a Kiji to use for the test and record the Kiji URI of the songs table we'll test against.
   val kiji = makeTestKiji("SongMetadataImporterSuite")

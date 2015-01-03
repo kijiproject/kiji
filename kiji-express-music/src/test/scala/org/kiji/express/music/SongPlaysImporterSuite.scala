@@ -22,6 +22,8 @@ package org.kiji.express.music
 import scala.collection.mutable.Buffer
 
 import com.twitter.scalding._
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express._
 import org.kiji.express.flow._
@@ -32,6 +34,7 @@ import org.kiji.schema.EntityId
  * A test that ensures the song plays importer can import records of tracks being played into a
  * users table.
  */
+@RunWith(classOf[JUnitRunner])
 class SongPlaysImporterSuite extends KijiSuite {
 
   // Get a Kiji to use for the test and record the Kiji URI of the users table we'll test against.

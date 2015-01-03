@@ -20,9 +20,11 @@
 package org.kiji.express.music
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
+import scala.collection.mutable.Buffer
 
 import com.twitter.scalding.JobTest
-import scala.collection.mutable.Buffer
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.EntityId
@@ -36,6 +38,7 @@ import org.kiji.express.flow.util.ResourceUtil
 import org.kiji.express.music.avro.SongCount
 import org.kiji.express.music.avro.TopSongs
 
+@RunWith(classOf[JUnitRunner])
 class SongRecommenderSuite extends KijiSuite {
 
   // Get a Kiji to use for the test and record the Kiji URI of the users and songs tables we'll

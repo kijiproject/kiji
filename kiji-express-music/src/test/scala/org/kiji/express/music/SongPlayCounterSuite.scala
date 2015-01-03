@@ -22,6 +22,8 @@ package org.kiji.express.music
 import scala.collection.mutable.Buffer
 
 import com.twitter.scalding._
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express._
 import org.kiji.express.flow._
@@ -30,6 +32,7 @@ import org.kiji.express.flow.util.ResourceUtil
 /**
  * A test for counting the number of times songs have been played by users.
  */
+@RunWith(classOf[JUnitRunner])
 class SongPlayCounterSuite extends KijiSuite {
 
   // Get a Kiji to use for the test and record the Kiji URI of the users table we'll test against.
