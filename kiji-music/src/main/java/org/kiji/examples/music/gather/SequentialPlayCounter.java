@@ -79,8 +79,8 @@ public class SequentialPlayCounter extends KijiGatherer<AvroKey<SongBiGram>, Lon
       // only contains one song, so don't output it.  Otherwise...
       if (null != firstSong) {
         // Create the bigram of these two songs.
-        mBiGram.setFirstSongPlayed(firstSong);
-        mBiGram.setSecondSongPlayed(nextSong);
+        mBiGram.setFirstSongPlayed(firstSong.toString());
+        mBiGram.setSecondSongPlayed(nextSong.toString());
         // Emit the bigram of these two songs.
         context.write(new AvroKey<SongBiGram>(mBiGram), ONE);
       }
