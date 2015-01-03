@@ -30,7 +30,9 @@ import org.apache.avro.generic.GenericContainer
 import org.apache.avro.generic.GenericRecordBuilder
 import org.apache.avro.specific.SpecificRecord
 import org.apache.hadoop.hbase.HBaseConfiguration
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.SerDeSuite
 import org.kiji.express.avro.SimpleRecord
@@ -38,6 +40,7 @@ import cascading.tuple.collect.SpillableProps
 import cascading.pipe.assembly.AggregateBy
 import com.twitter.chill.config.{ConfiguredInstantiator, ScalaMapConfig}
 
+@RunWith(classOf[JUnitRunner])
 class KryoKijiSuite
     extends FunSuite
     with SerDeSuite {
@@ -130,10 +133,21 @@ class KryoKijiSuite
       )
       val chillConf = ScalaMapConfig(lowPriorityDefaults)
 
-      assert(!chillConf.contains(ConfiguredInstantiator.KEY))
+      assert(
+          // Contains is implemented backwards in chill 0.3.6.
+          chillConf.contains(ConfiguredInstantiator.KEY),
+          s"Found ${ConfiguredInstantiator.KEY} in ${chillConf.toMap}"
+      )
       ConfiguredInstantiator.setReflect(chillConf, classOf[KijiKryoInstantiator])
-      assert(chillConf.contains(ConfiguredInstantiator.KEY))
-      assert(chillConf.get(ConfiguredInstantiator.KEY) == classOf[KijiKryoInstantiator].getName)
+      assert(
+          // Contains is implemented backwards in chill 0.3.6.
+          !chillConf.contains(ConfiguredInstantiator.KEY),
+          s"Could not find ${ConfiguredInstantiator.KEY} in ${chillConf.toMap}"
+      )
+      assert(
+          chillConf.get(ConfiguredInstantiator.KEY) == classOf[KijiKryoInstantiator].getName,
+          s"Configured kryo instantiator is ${chillConf.get(ConfiguredInstantiator.KEY)}"
+      )
 
       val kryo = new ConfiguredInstantiator(chillConf).newKryo()
 
