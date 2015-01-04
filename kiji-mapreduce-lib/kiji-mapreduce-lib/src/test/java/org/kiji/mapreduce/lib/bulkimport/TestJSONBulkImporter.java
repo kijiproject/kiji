@@ -76,13 +76,19 @@ public class TestJSONBulkImporter extends KijiClientTest {
   @Test
   public void testJSONBulkImporter() throws Exception {
     // Prepare input file:
-    File inputFile = File.createTempFile("TestJSONImportInput", ".txt", getLocalTempDir());
-    TestingResources.writeTextFile(inputFile,
-        TestingResources.get(BulkImporterTestUtils.JSON_IMPORT_DATA));
+    final File inputFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.JSON_IMPORT_DATA,
+        getLocalTempDir()
+    );
 
-    Configuration conf = getConf();
-    conf.set(DescribedInputTextBulkImporter.CONF_FILE,
-        BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_IMPORT_DESCRIPTOR));
+    // Prepare descriptor file:
+    final File descriptorFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.FOO_IMPORT_DESCRIPTOR,
+        getLocalTempDir()
+    );
+
+    final Configuration conf = getConf();
+    conf.set(DescribedInputTextBulkImporter.CONF_FILE, descriptorFile.getCanonicalPath());
 
     // Run the bulk-import:
     final KijiMapReduceJob job = KijiBulkImportJobBuilder.create()
@@ -110,13 +116,19 @@ public class TestJSONBulkImporter extends KijiClientTest {
   @Test
   public void testTimestampJSONBulkImporter() throws Exception {
     // Prepare input file:
-    File inputFile = File.createTempFile("TestJSONImportInput", ".txt", getLocalTempDir());
-    TestingResources.writeTextFile(inputFile,
-        TestingResources.get(BulkImporterTestUtils.JSON_IMPORT_DATA));
+    final File inputFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.JSON_IMPORT_DATA,
+        getLocalTempDir()
+    );
 
-    Configuration conf = getConf();
-    conf.set(DescribedInputTextBulkImporter.CONF_FILE,
-        BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_TIMESTAMP_IMPORT_DESCRIPTOR));
+    // Prepare descriptor file:
+    final File descriptorFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.FOO_TIMESTAMP_IMPORT_DESCRIPTOR,
+        getLocalTempDir()
+    );
+
+    final Configuration conf = getConf();
+    conf.set(DescribedInputTextBulkImporter.CONF_FILE, descriptorFile.getCanonicalPath());
 
     // Run the bulk-import:
     final KijiMapReduceJob job = KijiBulkImportJobBuilder.create()
@@ -144,13 +156,19 @@ public class TestJSONBulkImporter extends KijiClientTest {
   @Test
   public void testJSONPathBulkImporter() throws Exception {
     // Prepare input file:
-    File inputFile = File.createTempFile("TestComplexJSONImportInput", ".txt", getLocalTempDir());
-    TestingResources.writeTextFile(inputFile,
-        TestingResources.get(BulkImporterTestUtils.COMPLEX_JSON_IMPORT_DATA));
+    final File inputFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.COMPLEX_JSON_IMPORT_DATA,
+        getLocalTempDir()
+    );
 
-    Configuration conf = getConf();
-    conf.set(DescribedInputTextBulkImporter.CONF_FILE,
-        BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_JSONPATH_IMPORT_DESCRIPTOR));
+    // Prepare descriptor file:
+    final File descriptorFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.FOO_JSONPATH_IMPORT_DESCRIPTOR,
+        getLocalTempDir()
+    );
+
+    final Configuration conf = getConf();
+    conf.set(DescribedInputTextBulkImporter.CONF_FILE, descriptorFile.getCanonicalPath());
 
     // Run the bulk-import:
     final KijiMapReduceJob job = KijiBulkImportJobBuilder.create()

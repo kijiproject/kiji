@@ -77,13 +77,19 @@ public class TestXMLBulkImporter extends KijiClientTest {
   @Test
   public void testXMLBulkImporter() throws Exception {
     // Prepare input file:
-    File inputFile = File.createTempFile("TestXMLImportInput", ".txt", getLocalTempDir());
-    TestingResources.writeTextFile(inputFile,
-        TestingResources.get(BulkImporterTestUtils.XML_IMPORT_DATA));
+    final File inputFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.XML_IMPORT_DATA,
+        getLocalTempDir()
+    );
 
-    Configuration conf = getConf();
-    conf.set(DescribedInputTextBulkImporter.CONF_FILE,
-        BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_XML_IMPORT_DESCRIPTOR));
+    // Prepare descriptor file:
+    final File descriptorFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.FOO_XML_IMPORT_DESCRIPTOR,
+        getLocalTempDir()
+    );
+
+    final Configuration conf = getConf();
+    conf.set(DescribedInputTextBulkImporter.CONF_FILE, descriptorFile.getCanonicalPath());
     conf.set(XMLInputFormat.RECORD_TAG_CONF_KEY, "user");
 
     // Run the bulk-import:
@@ -116,14 +122,19 @@ public class TestXMLBulkImporter extends KijiClientTest {
   @Test
   public void testTimestampXMLBulkImporter() throws Exception {
     // Prepare input file:
-    File inputFile = File.createTempFile("TestXMLImportInput", ".txt", getLocalTempDir());
-    TestingResources.writeTextFile(inputFile,
-        TestingResources.get(BulkImporterTestUtils.XML_IMPORT_DATA));
+    final File inputFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.XML_IMPORT_DATA,
+        getLocalTempDir()
+    );
 
-    Configuration conf = getConf();
-    conf.set(DescribedInputTextBulkImporter.CONF_FILE,
-        BulkImporterTestUtils.localResource(
-            BulkImporterTestUtils.FOO_TIMESTAMP_XML_IMPORT_DESCRIPTOR));
+    // Prepare descriptor file:
+    final File descriptorFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.FOO_TIMESTAMP_XML_IMPORT_DESCRIPTOR,
+        getLocalTempDir()
+    );
+
+    final Configuration conf = getConf();
+    conf.set(DescribedInputTextBulkImporter.CONF_FILE, descriptorFile.getCanonicalPath());
     conf.set(XMLInputFormat.RECORD_TAG_CONF_KEY, "user");
 
     // Run the bulk-import:
@@ -159,16 +170,20 @@ public class TestXMLBulkImporter extends KijiClientTest {
     getKiji().createTable(KijiTableLayouts.getLayout(KijiMRTestLayouts.LG_TEST_LAYOUT));
     final KijiTable table = getKiji().openTable("testlg");
     try {
-      //Prepare input file:
-      File inputFile = File.createTempFile("TestXMLImportInput", ".txt", getLocalTempDir());
-      TestingResources.writeTextFile(
-          inputFile,
-          TestingResources.get(BulkImporterTestUtils.XML_IMPORT_DATA));
+      // Prepare input file:
+      final File inputFile = TestingResources.getResourceAsTempFile(
+          BulkImporterTestUtils.XML_IMPORT_DATA,
+          getLocalTempDir()
+      );
 
-      Configuration conf = new Configuration(getConf());
-      conf.set(
-          DescribedInputTextBulkImporter.CONF_FILE,
-          BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_LG_XML_IMPORT_DESCRIPTOR));
+      // Prepare descriptor file:
+      final File descriptorFile = TestingResources.getResourceAsTempFile(
+          BulkImporterTestUtils.FOO_LG_XML_IMPORT_DESCRIPTOR,
+          getLocalTempDir()
+      );
+
+      final Configuration conf = new Configuration(getConf());
+      conf.set(DescribedInputTextBulkImporter.CONF_FILE, descriptorFile.getCanonicalPath());
       conf.set(XMLInputFormat.RECORD_TAG_CONF_KEY, "user");
 
       // Run the bulk-import:

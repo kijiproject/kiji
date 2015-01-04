@@ -37,7 +37,7 @@ public final class TestingResources {
    * @return the resource content, as a string.
    * @throws IOException on I/O error.
    */
-  public static String get(String resourcePath) throws IOException {
+  public static String get(final String resourcePath) throws IOException {
     final InputStream istream =
         KijiTableLayouts.class.getClassLoader().getResourceAsStream(resourcePath);
     try {
@@ -54,13 +54,30 @@ public final class TestingResources {
    * @param content Text content of the file to create.
    * @throws IOException on I/O error.
    */
-  public static void writeTextFile(File path, String content) throws IOException {
+  public static void writeTextFile(final File path, final String content) throws IOException {
     final FileOutputStream ostream = new FileOutputStream(path);
     try {
       IOUtils.write(content, ostream);
     } finally {
       ostream.close();
     }
+  }
+
+  /**
+   * Reads a resource and writes it to a local temporary file.
+   *
+   * @param resourcePath Path of the resource to load.
+   * @param directory Path to the directory to write the temporary file to.
+   * @return A handle to the written temporary file.
+   * @throws IOException on I/O error.
+   */
+  public static File getResourceAsTempFile(
+      final String resourcePath,
+      final File directory
+  ) throws IOException {
+    final File tempFile = File.createTempFile("TempResourceFile", "", directory);
+    TestingResources.writeTextFile(tempFile, TestingResources.get(resourcePath));
+    return tempFile;
   }
 
   /** Utility class may not be instantiated. */

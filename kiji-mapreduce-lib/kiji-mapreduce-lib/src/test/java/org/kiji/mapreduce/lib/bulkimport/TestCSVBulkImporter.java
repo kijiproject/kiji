@@ -80,13 +80,19 @@ public class TestCSVBulkImporter extends KijiClientTest {
   @Test
   public void testCSVBulkImporter() throws Exception {
     // Prepare input file:
-    File inputFile = File.createTempFile("TestCSVImportInput", ".txt", getLocalTempDir());
-    TestingResources.writeTextFile(inputFile,
-        TestingResources.get(BulkImporterTestUtils.CSV_IMPORT_DATA));
+    final File inputFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.CSV_IMPORT_DATA,
+        getLocalTempDir()
+    );
 
-    Configuration conf = getConf();
-    conf.set(DescribedInputTextBulkImporter.CONF_FILE,
-        BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_IMPORT_DESCRIPTOR));
+    // Prepare descriptor file:
+    final File descriptorFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.FOO_IMPORT_DESCRIPTOR,
+        getLocalTempDir()
+    );
+
+    final Configuration conf = getConf();
+    conf.set(DescribedInputTextBulkImporter.CONF_FILE, descriptorFile.getCanonicalPath());
 
     // Run the bulk-import:
     final KijiMapReduceJob job = KijiBulkImportJobBuilder.create()
@@ -109,16 +115,22 @@ public class TestCSVBulkImporter extends KijiClientTest {
 
   @Test
   public void testInjectedHeaderRow() throws Exception {
-    String headerRow = "first,last,email,phone";
+    final String headerRow = "first,last,email,phone";
 
     // Prepare input file:
-    File inputFile = File.createTempFile("HeaderlessCSVImportInput", ".txt", getLocalTempDir());
-    TestingResources.writeTextFile(inputFile,
-        TestingResources.get(BulkImporterTestUtils.HEADERLESS_CSV_IMPORT_DATA));
+    final File inputFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.HEADERLESS_CSV_IMPORT_DATA,
+        getLocalTempDir()
+    );
 
-    Configuration conf = getConf();
-    conf.set(DescribedInputTextBulkImporter.CONF_FILE,
-        BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_IMPORT_DESCRIPTOR));
+    // Prepare descriptor file:
+    final File descriptorFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.FOO_IMPORT_DESCRIPTOR,
+        getLocalTempDir()
+    );
+
+    final Configuration conf = getConf();
+    conf.set(DescribedInputTextBulkImporter.CONF_FILE, descriptorFile.getCanonicalPath());
 
     // Set the header row
     conf.set(CSVBulkImporter.CONF_INPUT_HEADER_ROW, headerRow);
@@ -149,13 +161,19 @@ public class TestCSVBulkImporter extends KijiClientTest {
   @Test
   public void testTimestampedCSVBulkImporter() throws Exception {
     // Prepare input file:
-    File inputFile = File.createTempFile("TimestampCSVImportInput", ".txt", getLocalTempDir());
-    TestingResources.writeTextFile(inputFile,
-        TestingResources.get(BulkImporterTestUtils.TIMESTAMP_CSV_IMPORT_DATA));
+    final File inputFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.TIMESTAMP_CSV_IMPORT_DATA,
+        getLocalTempDir()
+    );
 
-    Configuration conf = getConf();
-    conf.set(DescribedInputTextBulkImporter.CONF_FILE,
-        BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_TIMESTAMP_IMPORT_DESCRIPTOR));
+    // Prepare descriptor file:
+    final File descriptorFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.FOO_TIMESTAMP_IMPORT_DESCRIPTOR,
+        getLocalTempDir()
+    );
+
+    final Configuration conf = getConf();
+    conf.set(DescribedInputTextBulkImporter.CONF_FILE, descriptorFile.getCanonicalPath());
 
     // Run the bulk-import:
     final KijiMapReduceJob job = KijiBulkImportJobBuilder.create()
@@ -179,13 +197,19 @@ public class TestCSVBulkImporter extends KijiClientTest {
   @Test
   public void testTSVBulkImporter() throws Exception {
     // Prepare input file:
-    File inputFile = File.createTempFile("TestTSVImportInput", ".txt", getLocalTempDir());
-    TestingResources.writeTextFile(inputFile,
-        TestingResources.get(BulkImporterTestUtils.TSV_IMPORT_DATA));
+    final File inputFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.TSV_IMPORT_DATA,
+        getLocalTempDir()
+    );
 
-    Configuration conf = getConf();
-    conf.set(DescribedInputTextBulkImporter.CONF_FILE,
-        BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_IMPORT_DESCRIPTOR));
+    // Prepare descriptor file:
+    final File descriptorFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.FOO_IMPORT_DESCRIPTOR,
+        getLocalTempDir()
+    );
+
+    final Configuration conf = getConf();
+    conf.set(DescribedInputTextBulkImporter.CONF_FILE, descriptorFile.getCanonicalPath());
     conf.set(CSVBulkImporter.CONF_FIELD_DELIMITER, "\t");
 
     // Run the bulk-import:
@@ -214,13 +238,19 @@ public class TestCSVBulkImporter extends KijiClientTest {
   @Test
   public void testFailOnInvalidDelimiter() throws Exception {
     // Prepare input file:
-    File inputFile = File.createTempFile("TestCSVImportInput", ".txt", getLocalTempDir());
-    TestingResources.writeTextFile(inputFile,
-        TestingResources.get(BulkImporterTestUtils.CSV_IMPORT_DATA));
+    final File inputFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.CSV_IMPORT_DATA,
+        getLocalTempDir()
+    );
 
-    Configuration conf = getConf();
-    conf.set(DescribedInputTextBulkImporter.CONF_FILE,
-        BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_IMPORT_DESCRIPTOR));
+    // Prepare descriptor file:
+    final File descriptorFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.FOO_IMPORT_DESCRIPTOR,
+        getLocalTempDir()
+    );
+
+    final Configuration conf = getConf();
+    conf.set(DescribedInputTextBulkImporter.CONF_FILE, descriptorFile.getCanonicalPath());
     conf.set(CSVBulkImporter.CONF_FIELD_DELIMITER, "!");
     conf.set(KijiConfKeys.KIJI_OUTPUT_TABLE_URI, mTable.getURI().toString());
     CSVBulkImporter csvbi = new CSVBulkImporter();
@@ -237,13 +267,19 @@ public class TestCSVBulkImporter extends KijiClientTest {
   @Test
   public void testPrimitives() throws Exception {
     // Prepare input file:
-    File inputFile = File.createTempFile("TestCSVImportInput", ".txt", getLocalTempDir());
-    TestingResources.writeTextFile(inputFile,
-        TestingResources.get(BulkImporterTestUtils.PRIMITIVE_IMPORT_DATA));
+    final File inputFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.PRIMITIVE_IMPORT_DATA,
+        getLocalTempDir()
+    );
 
-    Configuration conf = getConf();
-    conf.set(DescribedInputTextBulkImporter.CONF_FILE,
-        BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_PRIMITIVE_IMPORT_DESCRIPTOR));
+    // Prepare descriptor file:
+    final File descriptorFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.FOO_PRIMITIVE_IMPORT_DESCRIPTOR,
+        getLocalTempDir()
+    );
+
+    final Configuration conf = getConf();
+    conf.set(DescribedInputTextBulkImporter.CONF_FILE, descriptorFile.getCanonicalPath());
 
     // Run the bulk-import:
     final KijiMapReduceJob job = KijiBulkImportJobBuilder.create()

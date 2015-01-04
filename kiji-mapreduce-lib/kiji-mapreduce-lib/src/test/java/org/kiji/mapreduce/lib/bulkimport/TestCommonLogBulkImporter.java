@@ -76,13 +76,19 @@ public class TestCommonLogBulkImporter extends KijiClientTest {
   @Test
   public void testCommonLogBulkImporter() throws Exception {
     // Prepare input file:
-    File inputFile = File.createTempFile("TestCommonLog", ".log", getLocalTempDir());
-    TestingResources.writeTextFile(inputFile,
-        TestingResources.get(BulkImporterTestUtils.COMMON_LOG_IMPORT_DATA));
+    final File inputFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.COMMON_LOG_IMPORT_DATA,
+        getLocalTempDir()
+    );
 
-    Configuration conf = getConf();
-    conf.set(DescribedInputTextBulkImporter.CONF_FILE,
-        BulkImporterTestUtils.COMMON_LOG_IMPORT_DESCRIPTOR);
+    // Prepare descriptor file:
+    final File descriptorFile = TestingResources.getResourceAsTempFile(
+        BulkImporterTestUtils.COMMON_LOG_IMPORT_DESCRIPTOR,
+        getLocalTempDir()
+    );
+
+    final Configuration conf = getConf();
+    conf.set(DescribedInputTextBulkImporter.CONF_FILE, descriptorFile.getCanonicalPath());
 
     // Run the bulk-import:
     final KijiMapReduceJob job = KijiBulkImportJobBuilder.create()

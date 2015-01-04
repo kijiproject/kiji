@@ -98,7 +98,7 @@ public final class BulkImporterTestUtils {
       "org/kiji/mapreduce/lib/mapping/TestCommonLog.log";
 
   public static final String COMMON_LOG_IMPORT_DESCRIPTOR =
-      "src/main/resources/org/kiji/mapreduce/lib/mapping/commonlog-import-descriptor.json";
+      "org/kiji/mapreduce/lib/mapping/commonlog-import-descriptor.json";
 
   public static String localResource(String resource) {
     return LOCAL_RESOURCE_PREFIX + resource;
