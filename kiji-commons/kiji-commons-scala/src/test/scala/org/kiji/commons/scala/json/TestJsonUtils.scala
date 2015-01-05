@@ -27,7 +27,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import org.junit.Assert
 import org.junit.Test
 
-import org.kiji.commons.FakeRecord
+import org.kiji.commons.avro.FakeRecord
 import org.kiji.commons.scala.json.JsonUtils.AvroToJson
 import org.kiji.commons.scala.json.JsonUtils.JsonToAvro
 

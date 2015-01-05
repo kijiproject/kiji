@@ -23,6 +23,8 @@ import org.apache.avro.Schema;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.kiji.commons.avro.FakeRecord;
+
 public class TestJsonAvroConversions {
 
   @Test
