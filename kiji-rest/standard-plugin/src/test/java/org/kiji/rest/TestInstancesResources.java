@@ -30,6 +30,7 @@ import java.util.Set;
 
 import javax.ws.rs.core.UriBuilder;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Sets;
 import com.yammer.dropwizard.testing.ResourceTest;
 import org.junit.After;
@@ -40,7 +41,6 @@ import org.kiji.rest.resources.InstancesResource;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.avro.MetadataBackup;
 
 /**
  * Test class for the Row resource.
@@ -130,7 +130,8 @@ public class TestInstancesResources extends ResourceTest {
     // Ensure that we can fetch something from the instance resource for each instance.
     for (String instance : instanceNames) {
       URI instanceURI = UriBuilder.fromResource(InstanceResource.class).build(instance);
-      MetadataBackup backup = client().resource(instanceURI).get(MetadataBackup.class);
+      JsonNode backup = client().resource(instanceURI).get(JsonNode.class);
+      assertEquals(backup.get("layout_version").asText(), "system-2.0");
       assertNotNull(backup);
     }
   }
