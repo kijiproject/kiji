@@ -63,7 +63,6 @@ import org.kiji.mapreduce.kvstore.impl.KeyValueStoreConfigValidator;
 import org.kiji.mapreduce.kvstore.impl.XmlKeyValueStoreParser;
 import org.kiji.mapreduce.platform.KijiMRPlatformBridge;
 import org.kiji.mapreduce.util.AvroMapReduce;
-import org.kiji.mapreduce.util.Jars;
 import org.kiji.schema.Kiji;
 
 /**
@@ -83,6 +82,12 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
    * with MapReduce jobs.
    */
   public static final String JOB_LIB_PROPERTY = "org.kiji.mapreduce.job.lib";
+
+  /**
+   * Name of the property to control whether the JVM classpath should be automatically added
+   * to the DistributedCache.
+   * This behavior is enabled by default.
+   */
   public static final String ADD_CLASSPATH_TO_JOB_DCACHE_PROPERTY =
       "org.kiji.mapreduce.add.classpath.to.job.dcache";
 
@@ -614,7 +619,7 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
     }
 
     final boolean addClasspathToDCache =
-        Boolean.parseBoolean(System.getProperty(ADD_CLASSPATH_TO_JOB_DCACHE_PROPERTY, "false"));
+        Boolean.parseBoolean(System.getProperty(ADD_CLASSPATH_TO_JOB_DCACHE_PROPERTY, "true"));
     if (addClasspathToDCache) {
       final List<Path> jarFiles = Lists.newArrayList();
       for (String cpEntry : System.getProperty("java.class.path").split(":")) {
@@ -624,43 +629,6 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
       }
       DistributedCacheJars.addJarsToDistributedCache(job, jarFiles);
     }
-
-    // We release kiji-schema to a directory called KIJI_HOME, and the jars for kiji and all its
-    // dependencies live in KIJI_HOME/lib.  Add everything in this lib directory to the
-    // distributed cache.
-    // And the same for kiji-mapreduce.
-    try {
-      final File kijiSchemaJarPath = new File(Jars.getJarPathForClass(Kiji.class));
-      final File kijiSchemaDependencyLibDir = kijiSchemaJarPath.getParentFile();
-
-      LOG.debug("Adding kiji-schema dependency jars to the distributed cache of the job: "
-          + kijiSchemaDependencyLibDir);
-      DistributedCacheJars.addJarsToDistributedCache(
-          job, new Path("file:" + kijiSchemaDependencyLibDir));
-
-    } catch (ClassNotFoundException e) {
-      LOG.warn("The kiji-schema jar could not be found, so no kiji dependency jars will be "
-          + "loaded onto the distributed cache.");
-    }
-
-    try {
-      final File kijiMRJarPath = new File(Jars.getJarPathForClass(MapReduceJobBuilder.class));
-      final File kijiMRDependencyLibDir = kijiMRJarPath.getParentFile();
-      LOG.debug("Adding kiji-mapreduce dependency jars to the distributed cache of the job: "
-          + kijiMRDependencyLibDir);
-      DistributedCacheJars.addJarsToDistributedCache(
-          job, new Path("file:" + kijiMRDependencyLibDir));
-
-    } catch (ClassNotFoundException e) {
-      LOG.warn("The kiji-mapreduce jar could not be found, so no kiji dependency jars will be "
-          + "loaded onto the distributed cache.");
-    }
-
-    // Finally, make sure HBase's own dependencies are bundled too.
-    // This uses the "Generic" TableMapReduceUtil that is packaged in KijiSchema,
-    // and extends HBase's own TableMapReduceUtil (in the same package) to work
-    // around a few bugs therein.
-    GenericTableMapReduceUtil.addAllDependencyJars(job);
 
     // Ensure jars we place on the dcache take precedence over Hadoop + HBase lib jars.
     KijiMRPlatformBridge.get().setUserClassesTakesPrecedence(job, true);
