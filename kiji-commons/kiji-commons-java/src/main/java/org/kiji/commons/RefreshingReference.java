@@ -183,21 +183,21 @@ public final class RefreshingReference<T> implements Closeable {
   public void close(
       Boolean closeNow
   ) throws IOException {
-    if (closeNow) {
-      mScheduler.shutdownNow();
-      mRefreshingLoader.close();
-    } else {
-      try {
+    try {
+      if (closeNow) {
+        mScheduler.shutdownNow();
+        mRefreshingLoader.close();
+      } else {
         mScheduler.shutdown();
         // Await termination so that we don't close the state out from under the function
         mScheduler.awaitTermination(10, TimeUnit.SECONDS);
         mRefreshingLoader.close();
-      } catch (InterruptedException e) {
-        Thread.interrupted();
-        mRefreshingLoader.close();
-      } finally {
-        ResourceTracker.get().unregisterResource(this);
       }
+    } catch (InterruptedException e) {
+      Thread.interrupted();
+      mRefreshingLoader.close();
+    } finally {
+      ResourceTracker.get().unregisterResource(this);
     }
   }
 
