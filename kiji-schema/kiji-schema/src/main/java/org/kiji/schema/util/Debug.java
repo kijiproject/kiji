@@ -68,7 +68,9 @@ public final class Debug {
    * @return a debugging representation of the HBase filter.
    */
   public static String toDebugString(Filter filter) {
-    if (filter == null) { return "<no filter>"; }
+    if (filter == null) {
+      return "<no filter>";
+    }
     if (filter instanceof FilterList) {
       final FilterList flist = (FilterList) filter;
       String operator = null;

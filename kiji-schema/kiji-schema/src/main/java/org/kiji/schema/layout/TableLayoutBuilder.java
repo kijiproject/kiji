@@ -551,7 +551,9 @@ public final class TableLayoutBuilder {
      * Returns the format to use to encode Avro schema.
      * @return the format to use to encode Avro schema.
      */
-    public SchemaFormat getSchemaFormat() { return mSchemaFormat; }
+    public SchemaFormat getSchemaFormat() {
+      return mSchemaFormat;
+    }
   };
 
   /**

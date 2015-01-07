@@ -63,7 +63,6 @@ import org.kiji.mapreduce.kvstore.impl.KeyValueStoreConfigValidator;
 import org.kiji.mapreduce.kvstore.impl.XmlKeyValueStoreParser;
 import org.kiji.mapreduce.platform.KijiMRPlatformBridge;
 import org.kiji.mapreduce.util.AvroMapReduce;
-import org.kiji.schema.Kiji;
 
 /**
  * Base class for builders that configure <code>MapReduceJob</code>s.

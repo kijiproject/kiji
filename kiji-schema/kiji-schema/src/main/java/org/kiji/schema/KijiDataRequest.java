@@ -157,7 +157,9 @@ public final class KijiDataRequest implements Serializable {
      *
      * @return A column family name.
      */
-    public String getFamily() { return mFamily; }
+    public String getFamily() {
+      return mFamily;
+    }
 
     /**
      * Gets the name of the requested column qualifier, which may be null if any qualifier
@@ -165,7 +167,9 @@ public final class KijiDataRequest implements Serializable {
      *
      * @return A column qualifier name (may be null or empty).
      */
-    public String getQualifier() { return mQualifier; }
+    public String getQualifier() {
+      return mQualifier;
+    }
 
     /**
      * <p>Gets the full name of the requested column.</p>
@@ -197,7 +201,9 @@ public final class KijiDataRequest implements Serializable {
      *
      * @return The maximum number of most recent versions in this column.
      */
-    public int getMaxVersions() { return mMaxVersions; }
+    public int getMaxVersions() {
+      return mMaxVersions;
+    }
 
     /**
      * Gets the column filter, or null if no filter was specified.
@@ -605,14 +611,18 @@ public final class KijiDataRequest implements Serializable {
    *
    * @return A minimum timestamp (milliseconds since the epoch).
    */
-  public long getMinTimestamp() { return mMinTimestamp; }
+  public long getMinTimestamp() {
+    return mMinTimestamp;
+  }
 
   /**
    * Gets the maximum timestamp for versions in this request (exclusive).
    *
    * @return A maximum timestamp (milliseconds since the epoch).
    */
-  public long getMaxTimestamp() { return mMaxTimestamp; }
+  public long getMaxTimestamp() {
+    return mMaxTimestamp;
+  }
 
   /**
    * Determines whether a timestamp <code>ts</code> is within the time range for this

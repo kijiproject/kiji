@@ -313,19 +313,19 @@ public class TestKijiCellWritable {
   }
 
   // Enum necessary for the testEnumCell test.
-  static enum SAMPLE_ENUM { VAL1, VAL2, VAL3 }
+  static enum SampleEnum { VAL1, VAL2, VAL3 }
 
   @Test
   public void testEnumCell() throws IOException {
     List<String> enumValues = Lists.newArrayList();
-    for (SAMPLE_ENUM e : SAMPLE_ENUM.values()) {
+    for (SampleEnum e : SampleEnum.values()) {
       enumValues.add(e.toString());
     }
     final Schema enumSchema = Schema.createEnum("name", "doc", "namespace", enumValues);
 
-    final KijiCell<SAMPLE_ENUM> cell1 =
-        new KijiCell<SAMPLE_ENUM>("family", "qualifier", TIMESTAMP_VALUE,
-            new DecodedCell<SAMPLE_ENUM>(enumSchema, SAMPLE_ENUM.VAL2));
+    final KijiCell<SampleEnum> cell1 =
+        new KijiCell<SampleEnum>("family", "qualifier", TIMESTAMP_VALUE,
+            new DecodedCell<SampleEnum>(enumSchema, SampleEnum.VAL2));
 
     KijiCellWritable cell1Writable = new KijiCellWritable(cell1);
     byte[] cell1Bytes = ByteWritable.serialize(cell1Writable);
