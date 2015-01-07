@@ -18,10 +18,10 @@
  */
 package org.kiji.commons;
 
-import com.google.common.base.Preconditions;
-
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Test utility class for deterministically controlling the execution of cache refresh cycles. This
@@ -48,7 +48,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * lp.advance(); //completes a cycle of the runnable and freezes at the second barrier again
  * Assert.assertEquals(1, thisVal);
  */
-public class LoopController {
+public final class LoopController {
 
   private final CyclicBarrier mBarrierOne;
   private final CyclicBarrier mBarrierTwo;
@@ -142,7 +142,7 @@ public class LoopController {
   public void advance(
       final int numLoops
   ) {
-    for (int i=0; i<numLoops; i++) {
+    for (int i=0; i < numLoops; i++) {
       advance();
     }
   }

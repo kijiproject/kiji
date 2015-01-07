@@ -25,6 +25,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +57,11 @@ public final class RefreshingReference<T> implements Closeable {
   private final RefreshingLoader<T> mRefreshingLoader;
 
   /**
+   * Used to deterministically control refresh cycles during testing.
+   */
+  private final Optional<LoopController> mLoopController;
+
+  /**
    * Static factory constructor. Allows the user to pass in a name for the thread
    * the scheduler will run on.
    *
@@ -63,6 +69,7 @@ public final class RefreshingReference<T> implements Closeable {
    * @param timeUnit Specifies the unit of time for the refreshPeriod.
    * @param refreshingLoader Used to initialize and refresh the cached value.
    * @param name The name of the thread the scheduler will run on.
+   * @param loopController Used to deterministically control refresh cycles during testing.
    * @param <U> The type that will be cached.
    * @return A new RefreshingReference.
    */
@@ -70,11 +77,17 @@ public final class RefreshingReference<T> implements Closeable {
       final Long refreshPeriod,
       final TimeUnit timeUnit,
       final RefreshingLoader<U> refreshingLoader,
-      final String name
+      final String name,
+      final Optional<LoopController> loopController
   ) {
     ThreadFactoryBuilder builder = new ThreadFactoryBuilder()
         .setNameFormat(name + "-%d");
-    return new RefreshingReference<>(refreshPeriod, timeUnit, refreshingLoader, builder);
+    return new RefreshingReference<>(
+        refreshPeriod,
+        timeUnit,
+        refreshingLoader,
+        builder,
+        loopController);
   }
 
   /**
@@ -84,17 +97,24 @@ public final class RefreshingReference<T> implements Closeable {
    * @param refreshPeriod Configures the refresh rate for the scheduler.
    * @param timeUnit Specifies the unit of time for the refreshPeriod.
    * @param refreshingLoader Used to initialize and refresh the cached value.
+   * @param loopController Used to deterministically control refresh cycles during testing.
    * @param <U> The type that will be cached.
    * @return A new RefreshingReference.
    */
   public static <U> RefreshingReference<U> create(
       final Long refreshPeriod,
       final TimeUnit timeUnit,
-      final RefreshingLoader<U> refreshingLoader
+      final RefreshingLoader<U> refreshingLoader,
+      final Optional<LoopController> loopController
   ) {
     ThreadFactoryBuilder builder = new ThreadFactoryBuilder()
         .setNameFormat("refreshing-reference-%d");
-    return new RefreshingReference<>(refreshPeriod, timeUnit, refreshingLoader, builder);
+    return new RefreshingReference<>(
+        refreshPeriod,
+        timeUnit,
+        refreshingLoader,
+        builder,
+        loopController);
   }
 
   /**
@@ -104,12 +124,14 @@ public final class RefreshingReference<T> implements Closeable {
    * @param timeUnit Specifies the unit of time for the refreshPeriod.
    * @param refreshingLoader Used to initialize and refresh the cached value.
    * @param builder Thread factory builder. Expects that the name format is already set.
+   * @param loopController Used to deterministically control refresh cycles during testing.
    */
   private RefreshingReference(
       final Long refreshPeriod,
       final TimeUnit timeUnit,
       final RefreshingLoader<T> refreshingLoader,
-      final ThreadFactoryBuilder builder
+      final ThreadFactoryBuilder builder,
+      final Optional<LoopController> loopController
   ) {
     mRef = new AtomicReference<>(WithTimestamp.create(refreshingLoader.initial()));
     mScheduler = Executors.newSingleThreadScheduledExecutor(
@@ -120,6 +142,7 @@ public final class RefreshingReference<T> implements Closeable {
     mRefreshingLoader = refreshingLoader;
     final RefreshingRunnable runnable = new RefreshingRunnable();
     mScheduler.scheduleAtFixedRate(runnable, refreshPeriod, refreshPeriod, timeUnit);
+    mLoopController = loopController;
     ResourceTracker.get().registerResource(this);
   }
 
@@ -138,6 +161,9 @@ public final class RefreshingReference<T> implements Closeable {
     @Override
     public void run() {
       try {
+        if (mLoopController.isPresent()) {
+          mLoopController.get().await();
+        }
         final T value = mRef.get().getValue();
         final T newValue = mRefreshingLoader.refresh(value);
         mRef.set(WithTimestamp.create(newValue));

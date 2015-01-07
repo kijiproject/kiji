@@ -20,74 +20,18 @@ package org.kiji.commons;
 
 import java.io.IOException;
 import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.base.Optional;
 import junit.framework.Assert;
 import org.junit.Test;
 
 public class TestRefreshingReference {
 
-  private class BarrierLoader implements RefreshingLoader<Integer> {
+  private class TestLoader implements RefreshingLoader<Integer> {
 
-    private final CyclicBarrier mFirstBarrier = new CyclicBarrier(2);
-    private final CyclicBarrier mSecondBarrier = new CyclicBarrier(2);
-    private final AtomicBoolean mFailureIndicator = new AtomicBoolean(false);
     private final AtomicInteger mValue = new AtomicInteger(0);
-
-    public CyclicBarrier getFirstBarrier() {
-      return mFirstBarrier;
-    }
-
-    public CyclicBarrier getSecondBarrier() {
-      return mSecondBarrier;
-    }
-
-    public void setFailureIndicator(boolean b) {
-      mFailureIndicator.set(b);
-    }
-
-    public boolean getFailureIndicator() {
-      return mFailureIndicator.get();
-    }
-
-    public void start() {
-      try {
-        mFirstBarrier.await();
-      } catch (Exception e) {
-        mFailureIndicator.set(true);
-      }
-    }
-
-    public void advance() {
-      try {
-        mSecondBarrier.await();
-        mFirstBarrier.await();
-      } catch (Exception e) {
-        mFailureIndicator.set(true);
-      }
-    }
-
-    @Override
-    public Integer initial() {
-      return mValue.get();
-    }
-
-    @Override
-    public Integer refresh(final Integer previous) {
-      try {
-        mFirstBarrier.await();
-        mSecondBarrier.await();
-      } catch (Exception e) {
-        mFailureIndicator.set(true);
-      }
-      return mValue.get();
-    }
-
-    @Override
-    public void close() { }
 
     public void incrementValue() {
       mValue.incrementAndGet();
@@ -97,36 +41,52 @@ public class TestRefreshingReference {
       return mValue.get();
     }
 
+    @Override
+    public Integer initial() {
+      return mValue.get();
+    }
+
+    @Override
+    public Integer refresh(final Integer previous) {
+      return mValue.get();
+    }
+
+    @Override
+    public void close() { }
+
   }
 
   @Test
   public void testRefresh() throws Exception {
 
-    final BarrierLoader loader = new BarrierLoader();
+    final TestLoader loader = new TestLoader();
+    final LoopController lp = LoopController.create();
 
     final RefreshingReference<Integer> reference =
-        RefreshingReference.create(1L, TimeUnit.MILLISECONDS, loader);
+        RefreshingReference.create(1L, TimeUnit.MILLISECONDS, loader, Optional.of(lp));
 
     // Freezes the refresh cycle, so the cache should still contain the initial value.
-    loader.start();
+    lp.start();
     Assert.assertEquals(0, reference.get().intValue());
     // Increment the value to be cached to 1
     loader.incrementValue();
     // Since the refresh is frozen by the barrier, assert that the cached value hasn't refreshed.
     Assert.assertEquals(0, reference.get().intValue());
     // Release the barrier and force a full refresh cycle.
-    loader.advance();
+    lp.advance();
     // After one full refresh cycle, the cached value should be 1.
     Assert.assertEquals(1, reference.get().intValue());
     // Increment the value to be cached to 2
     loader.incrementValue();
     // Force one more refresh cycle
-    loader.advance();
+    lp.advance();
     // After the second full refresh cycle, the cached value should be 2.
     Assert.assertEquals(2, reference.get().intValue());
 
     // Make sure the barrier didn't throw any exceptions during the refresh cycle
-    Assert.assertFalse(loader.getFailureIndicator());
+    Assert.assertFalse(lp.hasFailed());
+
+    reference.close(true);
 
   }
 
@@ -138,17 +98,12 @@ public class TestRefreshingReference {
   @Test
   public void testRunException() throws Exception {
 
-    final BarrierLoader loader = new BarrierLoader() {
+    final LoopController lp = LoopController.create();
+
+    final TestLoader loader = new TestLoader() {
 
       @Override
       public Integer refresh(Integer previous) {
-
-        try {
-          getFirstBarrier().await();
-          getSecondBarrier().await();
-        } catch (Exception e) {
-          setFailureIndicator(true);
-        }
         Integer currentValue = getValue();
         if (currentValue % 2 == 0) {
           return currentValue;
@@ -159,21 +114,23 @@ public class TestRefreshingReference {
     };
 
     RefreshingReference<Integer> cache =
-        RefreshingReference.create(1L, TimeUnit.MILLISECONDS, loader);
+        RefreshingReference.create(1L, TimeUnit.MILLISECONDS, loader, Optional.of(lp));
 
     Assert.assertEquals(0, cache.get().intValue());
-    loader.start();
+    lp.start();
     loader.incrementValue(); // Sets the value to 1
-    loader.advance(); // Attempt to refresh the cache
+    lp.advance(); // Attempt to refresh the cache
 
     // Refresh will fail, so the cached value will not be updated.
     Assert.assertEquals(0, cache.get().intValue());
     loader.incrementValue(); // Sets the value to 2
-    loader.advance(); // Attempt to refresh the cache
+    lp.advance(); // Attempt to refresh the cache
     Assert.assertEquals(2, cache.get().intValue()); // The refresh will succeed
 
     // Make sure the barrier didn't throw an exception while refreshing
-    Assert.assertFalse(loader.getFailureIndicator());
+    Assert.assertFalse(lp.hasFailed());
+
+    cache.close(true);
 
   }
 
@@ -200,7 +157,11 @@ public class TestRefreshingReference {
     };
 
     RefreshingReference<Integer> cache =
-        RefreshingReference.create(1000L, TimeUnit.MILLISECONDS, refresh);
+        RefreshingReference.create(
+            1000L,
+            TimeUnit.MILLISECONDS,
+            refresh,
+            Optional.<LoopController>absent());
 
     Assert.assertEquals(0, value.get()); // Value should remain 0 until close call
 
@@ -242,7 +203,11 @@ public class TestRefreshingReference {
     };
 
     RefreshingReference<Integer> cache =
-        RefreshingReference.create(1L, TimeUnit.MILLISECONDS, refresh);
+        RefreshingReference.create(
+            1L,
+            TimeUnit.MILLISECONDS,
+            refresh,
+            Optional.<LoopController>absent());
 
     // Now we close the cache and take the final value.
     cache.close();
@@ -263,11 +228,9 @@ public class TestRefreshingReference {
    * @throws InterruptedException If the countDown latch encounters an error.
    */
   @Test
-  public void testThreadNaming() throws InterruptedException {
+  public void testThreadNaming() throws InterruptedException, IOException {
 
-    final AtomicBoolean failureIndicator = new AtomicBoolean(false);
-    final CyclicBarrier barrier1 = new CyclicBarrier(3);
-    final CyclicBarrier barrier2 = new CyclicBarrier(3);
+    final LoopController lp = LoopController.create(3);
 
     RefreshingLoader<String> refresh = new RefreshingLoader<String>() {
       @Override
@@ -277,13 +240,6 @@ public class TestRefreshingReference {
 
       @Override
       public String refresh(String previous) {
-        try {
-          barrier1.await();
-          barrier2.await();
-        } catch (Exception e) {
-          failureIndicator.set(true);
-        }
-
         return Thread.currentThread().getName();
       }
 
@@ -295,19 +251,23 @@ public class TestRefreshingReference {
     final String testString2 = "refreshing-reference"; //default string name
 
     RefreshingReference<String> cache1 =
-        RefreshingReference.create(1L, TimeUnit.MILLISECONDS, refresh, testString1);
+        RefreshingReference.create(
+            1L,
+            TimeUnit.MILLISECONDS,
+            refresh,
+            testString1,
+            Optional.of(lp));
 
     RefreshingReference<String> cache2 =
-        RefreshingReference.create(1L, TimeUnit.MILLISECONDS, refresh);
+        RefreshingReference.create(
+            1L,
+            TimeUnit.MILLISECONDS,
+            refresh,
+            Optional.of(lp));
 
     // We have to run refresh once to ensure the scheduler thread is running
-    try {
-      barrier1.await();
-      barrier2.await();
-      barrier1.await();
-    } catch (Exception e) {
-      failureIndicator.set(true);
-    }
+    lp.start();
+    lp.advance();
 
     // The thread factory will normally add a '-0' to the end of the thread name, but since this
     // number could conceivably vary we just check to make sure the test string is contained in
@@ -315,7 +275,10 @@ public class TestRefreshingReference {
     Assert.assertTrue(cache1.get().contains(testString1));
     Assert.assertTrue(cache2.get().contains(testString2));
 
-    Assert.assertFalse(failureIndicator.get());
+    Assert.assertFalse(lp.hasFailed());
+
+    cache1.close(true);
+    cache2.close(true);
 
   }
 
