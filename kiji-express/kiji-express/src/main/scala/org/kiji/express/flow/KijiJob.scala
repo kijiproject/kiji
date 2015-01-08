@@ -443,6 +443,7 @@ class KijiJob(args: Args)
   ) {
     val expressJobHistoryTable: ExpressJobHistoryKijiTable = ExpressJobHistoryKijiTable(kiji)
     try {
+      logger.info("ExpressJobHistory.jobId = {}", uniqueId.get)
       expressJobHistoryTable.recordJob(
           uniqueId.get,
           name,
