@@ -20,53 +20,30 @@
   limitations under the License.
   -->
   <modelVersion>4.0.0</modelVersion>
+
   <groupId>org.kiji.rest</groupId>
   <artifactId>kiji-rest-root</artifactId>
-  <version>1.5.0-SNAPSHOT</version>
+  <version>dev</version>
   <packaging>pom</packaging>
+
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
     <version>1.2.1-SNAPSHOT</version>
   </parent>
+
   <name>The Kiji REST Servlet top-level project</name>
   <description>The Kiji REST Servlet</description>
   <inceptionYear>2013</inceptionYear>
 
-  <properties>
-    <kiji-schema.version>1.6.0-SNAPSHOT</kiji-schema.version>
-    <kiji-platforms.version>1.4.0-SNAPSHOT</kiji-platforms.version>
-    <fake-hbase.version>0.3.0-SNAPSHOT</fake-hbase.version>
-    <dropwizard.version>0.6.2</dropwizard.version>
-  </properties>
-
   <modules>
     <module>build-resources</module>
     <module>kiji-rest</module>
-    <module>standard-plugin</module>
-    <module>load-testing</module>
-    <module>plugin-archetype</module>
-    <module>cdh5</module>
+    <!-- <module>standard-plugin</module> -->
+    <!-- <module>load-testing</module> -->
+    <!-- <module>plugin-archetype</module> -->
+    <!-- <module>cdh5</module> -->
   </modules>
-
-  <dependencies>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <scope>compile</scope>
-    </dependency>
-  </dependencies>
-
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-api</artifactId>
-        <version>${slf4j-api.version}</version>
-        <scope>compile</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
 
   <build>
     <plugins>

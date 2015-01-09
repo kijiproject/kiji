@@ -22,7 +22,7 @@
 
   <groupId>org.kiji.schema</groupId>
   <artifactId>kiji-schema-root</artifactId>
-  <version>1.6.0-SNAPSHOT</version>
+  <version>dev</version>
   <packaging>pom</packaging>
 
   <parent>
@@ -35,28 +35,18 @@
   <description>A schema management layer for Apache HBase</description>
   <inceptionYear>2012</inceptionYear>
 
-  <properties>
-    <kiji-checkin.version>1.1.0-SNAPSHOT</kiji-checkin.version>
-    <kiji-platforms.version>1.4.0-SNAPSHOT</kiji-platforms.version>
-    <fake-hbase.version>0.3.0-SNAPSHOT</fake-hbase.version>
-    <kiji-annotations.version>1.1.2-SNAPSHOT</kiji-annotations.version>
-    <kiji-delegation.version>1.1.2-SNAPSHOT</kiji-delegation.version>
-    <kiji-common-flags.version>1.1.1-SNAPSHOT</kiji-common-flags.version>
-    <kiji-commons.version>0.1.0-SNAPSHOT</kiji-commons.version>
-  </properties>
-
   <modules>
     <module>build-resources</module>
     <module>platform-api</module>
-    <module>cdh41mr1-bridge</module>
-    <module>cdh42mr1-bridge</module>
+    <!-- <module>cdh41mr1-bridge</module> -->
+    <!-- <module>cdh42mr1-bridge</module> -->
     <module>cdh5-bridge</module>
 
     <module>kiji-schema</module>
     <module>kiji-schema-cassandra</module>
-    <module>profiling</module>
+    <!-- <module>profiling</module> -->
     <module>kiji-schema-extras</module>
-    <module>kiji-schema-archetype</module>
+    <!-- <module>kiji-schema-archetype</module> -->
   </modules>
 
   <build>
@@ -92,41 +82,6 @@
       </plugins>
     </pluginManagement>
   </build>
-
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.kiji.annotations</groupId>
-        <artifactId>annotations</artifactId>
-        <version>${kiji-annotations.version}</version>
-        <scope>compile</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.kiji.checkin</groupId>
-        <artifactId>kiji-checkin</artifactId>
-        <version>${kiji-checkin.version}</version>
-        <scope>compile</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.kiji.common</groupId>
-        <artifactId>kiji-common-flags</artifactId>
-        <version>${kiji-common-flags.version}</version>
-        <scope>compile</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.kiji.commons</groupId>
-        <artifactId>kiji-commons-java</artifactId>
-        <version>${kiji-commons.version}</version>
-        <scope>compile</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.kiji.delegation</groupId>
-        <artifactId>kiji-delegation</artifactId>
-        <version>${kiji-delegation.version}</version>
-        <scope>compile</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
 
   <scm>
     <connection>scm:git:git@github.com:kijiproject/kiji-schema.git</connection>

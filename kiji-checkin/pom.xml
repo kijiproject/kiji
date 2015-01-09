@@ -13,7 +13,7 @@
 
   <groupId>org.kiji.checkin</groupId>
   <artifactId>kiji-checkin</artifactId>
-  <version>1.1.0-SNAPSHOT</version>
+  <version>dev</version>
   <packaging>jar</packaging>
 
   <parent>
@@ -69,49 +69,24 @@
   </build>
 
   <dependencies>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>4.2.3</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.common</groupId>
-      <artifactId>kiji-common-flags</artifactId>
-      <version>1.1.1-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-    </dependency>
-    <!-- Testing Dependencies -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.easymock</groupId>
-      <artifactId>easymock</artifactId>
-    </dependency>
+    <dependency> <groupId>com.google.code.gson</groupId>                      <artifactId>gson</artifactId>                                <type>jar</type>               <version>2.2.2</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>com.google.guava</groupId>                          <artifactId>guava</artifactId>                               <type>jar</type>               <version>15.0</version>                  <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>commons-codec</groupId>                             <artifactId>commons-codec</artifactId>                       <type>jar</type>               <version>1.6</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>commons-io</groupId>                                <artifactId>commons-io</artifactId>                          <type>jar</type>               <version>2.1</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>commons-lang</groupId>                              <artifactId>commons-lang</artifactId>                        <type>jar</type>               <version>2.6</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>commons-logging</groupId>                           <artifactId>commons-logging</artifactId>                     <type>jar</type>               <version>1.1.1</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.apache.httpcomponents</groupId>                 <artifactId>httpclient</artifactId>                          <type>jar</type>               <version>4.2.3</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.apache.httpcomponents</groupId>                 <artifactId>httpcore</artifactId>                            <type>jar</type>               <version>4.2.2</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.kiji.annotations</groupId>                      <artifactId>annotations</artifactId>                         <type>jar</type>               <version>dev</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.kiji.common</groupId>                           <artifactId>kiji-common-flags</artifactId>                   <type>jar</type>               <version>dev</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.kiji.delegation</groupId>                       <artifactId>kiji-delegation</artifactId>                     <type>jar</type>               <version>dev</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.slf4j</groupId>                                 <artifactId>slf4j-api</artifactId>                           <type>jar</type>               <version>1.7.5</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>cglib</groupId>                                     <artifactId>cglib-nodep</artifactId>                         <type>jar</type>               <version>2.2</version>                   <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>junit</groupId>                                     <artifactId>junit</artifactId>                               <type>jar</type>               <version>4.10</version>                  <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.easymock</groupId>                              <artifactId>easymock</artifactId>                            <type>jar</type>               <version>3.0</version>                   <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.hamcrest</groupId>                              <artifactId>hamcrest-core</artifactId>                       <type>jar</type>               <version>1.1</version>                   <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.objenesis</groupId>                             <artifactId>objenesis</artifactId>                           <type>jar</type>               <version>1.2</version>                   <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>testing</groupId>                                   <artifactId>test-annotation-collector</artifactId>           <type>jar</type>               <version>dev</version>                   <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
   </dependencies>
 
   <scm>

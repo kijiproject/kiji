@@ -22,7 +22,7 @@
 
   <groupId>org.kiji.commons</groupId>
   <artifactId>kiji-commons-root</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>dev</version>
   <packaging>pom</packaging>
 
   <parent>
@@ -44,6 +44,7 @@
     <module>kiji-commons-java</module>
     <module>kiji-commons-scala</module>
     <module>kiji-commons-monitoring</module>
+    <module>kiji-commons-java-testing</module>
   </modules>
 
   <dependencyManagement>
