@@ -19,7 +19,7 @@
 
 package org.kiji.rest.health;
 
-import com.yammer.metrics.core.HealthCheck;
+import com.codahale.metrics.health.HealthCheck;
 
 import org.kiji.rest.ManagedKijiClient;
 
@@ -36,7 +36,6 @@ public class KijiClientHealthCheck extends HealthCheck {
    * @param kijiClient to check health of.
    */
   public KijiClientHealthCheck(ManagedKijiClient kijiClient) {
-    super("KijiClientHealthCheck");
     this.mKijiClient = kijiClient;
   }
 

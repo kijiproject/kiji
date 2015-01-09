@@ -19,8 +19,8 @@
 
 package org.kiji.rest.plugins;
 
-import com.yammer.dropwizard.config.Bootstrap;
-import com.yammer.dropwizard.config.Environment;
+import io.dropwizard.setup.Bootstrap;
+import io.dropwizard.setup.Environment;
 
 import org.kiji.rest.KijiClient;
 import org.kiji.rest.KijiRESTConfiguration;

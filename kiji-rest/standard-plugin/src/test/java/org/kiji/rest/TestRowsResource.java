@@ -47,7 +47,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.sun.jersey.api.client.UniformInterfaceException;
-import com.yammer.dropwizard.testing.ResourceTest;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
@@ -135,7 +134,7 @@ public class TestRowsResource extends ResourceTest {
     writer.put(eid, "group_family", "team_qualifier", t);
 
     CellSpec spec = fakeTable.getLayout().getCellSpec(
-        new KijiColumnName("group_family:inline_record"));
+        KijiColumnName.create("group_family", "inline_record"));
     Schema schema = spec.getAvroSchema();
     GenericData.Record genericRecord = new GenericData.Record(schema);
     genericRecord.put("username", "some_user");
@@ -212,12 +211,12 @@ public class TestRowsResource extends ResourceTest {
     playersTableWriter.close();
     playersTable.release();
 
-    KijiRESTService.registerSerializers(this.getObjectMapperFactory());
+    KijiRESTService.registerSerializers(getObjectMapper());
     mKijiClient = new ManagedKijiClient(mFakeKiji.getURI());
     mKijiClient.start();
 
-    RowsResource resource = new RowsResource(mKijiClient, this.getObjectMapperFactory().build(),
-        new FresheningConfiguration(false, 0));
+    RowsResource resource =
+        new RowsResource(mKijiClient, getObjectMapper(), new FresheningConfiguration(false, 0));
     addResource(resource);
   }
 

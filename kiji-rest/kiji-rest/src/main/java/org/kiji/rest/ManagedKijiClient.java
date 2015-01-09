@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
+import com.codahale.metrics.health.HealthCheck;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -42,8 +43,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.yammer.dropwizard.lifecycle.Managed;
-import com.yammer.metrics.core.HealthCheck;
+import io.dropwizard.lifecycle.Managed;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.imps.CuratorFrameworkState;
 import org.apache.curator.framework.recipes.cache.ChildData;

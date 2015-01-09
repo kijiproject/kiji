@@ -24,7 +24,7 @@ import java.util.Collection;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMultimap;
-import com.yammer.dropwizard.tasks.Task;
+import io.dropwizard.servlets.tasks.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

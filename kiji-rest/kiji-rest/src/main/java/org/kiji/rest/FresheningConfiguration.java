@@ -20,7 +20,7 @@
 package org.kiji.rest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.yammer.dropwizard.config.Configuration;
+import io.dropwizard.Configuration;
 
 /**
  * The Java object which is deserialized from the YAML configuration file under 'freshening'.

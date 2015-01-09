@@ -26,11 +26,11 @@ import java.util.Set;
 import javax.ws.rs.ext.ExceptionMapper;
 
 import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.yammer.dropwizard.Service;
-import com.yammer.dropwizard.config.Bootstrap;
-import com.yammer.dropwizard.config.Environment;
-import com.yammer.dropwizard.json.ObjectMapperFactory;
+import io.dropwizard.Application;
+import io.dropwizard.setup.Bootstrap;
+import io.dropwizard.setup.Environment;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +57,7 @@ import org.kiji.schema.KijiURI;
  * The configuration is parametrized by a file that contains the cluster
  * address and the list of instances.
  */
-public class KijiRESTService extends Service<KijiRESTConfiguration> {
+public class KijiRESTService extends Application<KijiRESTConfiguration> {
 
   private static final Logger LOG = LoggerFactory.getLogger(KijiRESTService.class);
 
@@ -74,8 +74,6 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
   /** {@inheritDoc} */
   @Override
   public final void initialize(final Bootstrap<KijiRESTConfiguration> bootstrap) {
-    bootstrap.setName("kiji-rest");
-
     // Initialize plugins.
     for (KijiRestPlugin plugin : Lookups.get(KijiRestPlugin.class)) {
       LOG.info("Initializing plugin {}", plugin.getClass());
@@ -89,41 +87,45 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
    * @throws IOException when instance in configuration can not be opened and closed.
    */
   @Override
-  public final void run(final KijiRESTConfiguration configuration, final Environment environment)
-      throws IOException {
+  public final void run(
+      final KijiRESTConfiguration configuration,
+      final Environment environment
+  ) throws IOException {
     final KijiURI clusterURI = KijiURI.newBuilder(configuration.getClusterURI()).build();
     final ManagedKijiClient managedKijiClient = new ManagedKijiClient(configuration);
-    environment.manage(managedKijiClient);
+    environment.lifecycle().manage(managedKijiClient);
 
     // Setup the health checker for the KijiClient
-    environment.addHealthCheck(new KijiClientHealthCheck(managedKijiClient));
+    environment
+        .healthChecks()
+        .register("KijiClientHealthCheck", new KijiClientHealthCheck(managedKijiClient));
 
     // Remove all built-in Dropwizard ExceptionHandler.
     // Always depend on custom ones.
     // Inspired by Jeremy Whitlock's suggestion on thoughtspark.org.
-    Set<Object> jerseyResources = environment.getJerseyResourceConfig().getSingletons();
+    Set<Object> jerseyResources = environment.jersey().getResourceConfig().getSingletons();
     Iterator<Object> jerseyResourcesIterator = jerseyResources.iterator();
     while (jerseyResourcesIterator.hasNext()) {
       Object jerseyResource = jerseyResourcesIterator.next();
       if (jerseyResource instanceof ExceptionMapper
-          && jerseyResource.getClass().getName().startsWith("com.yammer.dropwizard.jersey")) {
+          && jerseyResource.getClass().getName().startsWith("io.dropwizard.jersey")) {
         jerseyResourcesIterator.remove();
       }
     }
 
     // Load admin task to manually refresh instances.
-    environment.addTask(new RefreshInstancesTask(managedKijiClient));
+    environment.admin().addTask(new RefreshInstancesTask(managedKijiClient));
     // Load admin task to manually close instances and tables.
-    environment.addTask(new CloseTask(managedKijiClient));
+    environment.admin().addTask(new CloseTask(managedKijiClient));
     // Load admin task to manually shutdown the system.
-    environment.addTask(new ShutdownTask(managedKijiClient, configuration));
+    environment.admin().addTask(new ShutdownTask(managedKijiClient, configuration));
 
     // Adds custom serializers.
-    registerSerializers(environment.getObjectMapperFactory());
+    registerSerializers(environment.getObjectMapper());
 
     // Adds exception mappers to print better exception messages to the client than what
     // Dropwizard does by default.
-    environment.addProvider(new GeneralExceptionMapper());
+    environment.jersey().register(new GeneralExceptionMapper());
 
     // Load resources.
     for (KijiRestPlugin plugin : Lookups.get(KijiRestPlugin.class)) {
@@ -133,25 +135,24 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
 
     // Allow global CORS filter. CORS off by default.
     if (configuration.getCORS()) {
-      environment.addFilter(
-          CrossOriginFilter.class,
-          configuration.getHttpConfiguration().getRootPath());
+      environment.servlets().addFilter("CrossOriginFilter", CrossOriginFilter.class);
       LOG.info("Global cross-origin resource sharing is allowed.");
     }
   }
 
   /**
-   * Registers custom serializers with the Jackson ObjectMapper via DropWizard's
-   * ObjectMapperFactory. This is used by both the service initialization and the test
-   * setup method to ensure consistency between test and production.
+   * Registers custom serializers with the Jackson ObjectMapper. This is used by both the service
+   * initialization and the test setup method to ensure consistency between test and production.
    *
-   * @param mapperFactory is the ObjectMapperFactory.
+   * @param objectMapper is the ObjectMapper.
    */
-  public static void registerSerializers(ObjectMapperFactory mapperFactory) {
+  public static void registerSerializers(ObjectMapper objectMapper) {
     // TODO: Add a module to convert btw Avro's specific types and JSON. The default
     // mapping seems to throw an exception.
-    SimpleModule module = new SimpleModule("KijiRestModule", new Version(1, 0, 0, null,
-        "org.kiji.rest", "serializers"));
+    SimpleModule module =
+        new SimpleModule(
+            "KijiRestModule",
+            new Version(1, 0, 0, null, "org.kiji.rest", "serializers"));
     module.addSerializer(new AvroToJsonStringSerializer());
     module.addSerializer(new Utf8ToJsonSerializer());
     module.addSerializer(new TableLayoutToJsonSerializer());
@@ -159,6 +160,6 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
     module.addDeserializer(SchemaOption.class, new JsonToSchemaOption());
     module.addSerializer(new KijiRestEntityIdToJson());
     module.addDeserializer(KijiRestEntityId.class, new JsonToKijiRestEntityId());
-    mapperFactory.registerModule(module);
+    objectMapper.registerModule(module);
   }
 }

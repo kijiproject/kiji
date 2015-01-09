@@ -32,7 +32,6 @@ import javax.ws.rs.core.UriBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Sets;
-import com.yammer.dropwizard.testing.ResourceTest;
 import org.junit.After;
 import org.junit.Test;
 
@@ -67,7 +66,7 @@ public class TestInstancesResources extends ResourceTest {
 
     mInstances = Sets.newHashSet(kiji1.getURI().getInstance(), kiji2.getURI().getInstance());
 
-    KijiRESTService.registerSerializers(this.getObjectMapperFactory());
+    KijiRESTService.registerSerializers(getObjectMapper());
     mClient = new ManagedKijiClient(clusterURI, ManagedKijiClient.DEFAULT_TIMEOUT, mInstances);
     mClient.start();
 

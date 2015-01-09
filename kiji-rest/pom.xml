@@ -37,7 +37,7 @@
     <kiji-schema.version>1.6.0-SNAPSHOT</kiji-schema.version>
     <kiji-platforms.version>1.4.0-SNAPSHOT</kiji-platforms.version>
     <fake-hbase.version>0.3.0-SNAPSHOT</fake-hbase.version>
-    <dropwizard.version>0.6.2</dropwizard.version>
+    <dropwizard.version>0.7.1</dropwizard.version>
   </properties>
 
   <modules>

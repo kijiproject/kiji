@@ -22,9 +22,9 @@
 
 package ${package};
 
-import com.yammer.dropwizard.assets.AssetsBundle;
-import com.yammer.dropwizard.config.Bootstrap;
-import com.yammer.dropwizard.config.Environment;
+import io.dropwizard.assets.AssetsBundle;
+import io.dropwizard.setup.Bootstrap;
+import io.dropwizard.setup.Environment;
 
 import org.kiji.rest.GeneralExceptionMapper;
 import org.kiji.rest.KijiClient;

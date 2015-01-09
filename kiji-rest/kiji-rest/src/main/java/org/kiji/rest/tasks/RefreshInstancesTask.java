@@ -22,7 +22,7 @@ package org.kiji.rest.tasks;
 import java.io.PrintWriter;
 
 import com.google.common.collect.ImmutableMultimap;
-import com.yammer.dropwizard.tasks.Task;
+import io.dropwizard.servlets.tasks.Task;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.rest.ManagedKijiClient;

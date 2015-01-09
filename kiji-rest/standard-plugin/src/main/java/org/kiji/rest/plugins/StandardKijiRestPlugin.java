@@ -19,8 +19,9 @@
 
 package org.kiji.rest.plugins;
 
-import com.yammer.dropwizard.config.Bootstrap;
-import com.yammer.dropwizard.config.Environment;
+import io.dropwizard.jersey.setup.JerseyEnvironment;
+import io.dropwizard.setup.Bootstrap;
+import io.dropwizard.setup.Environment;
 
 import org.kiji.rest.KijiClient;
 import org.kiji.rest.KijiRESTConfiguration;
@@ -44,16 +45,20 @@ public class StandardKijiRestPlugin implements KijiRestPlugin {
   public void install(
       final KijiClient kijiClient,
       final KijiRESTConfiguration configuration,
-      final Environment environment) {
+      final Environment environment
+  ) {
 
+    final JerseyEnvironment jersey = environment.jersey();
     // Adds resources.
-    environment.addResource(new KijiRESTResource());
-    environment.addResource(new InstancesResource(kijiClient));
-    environment.addResource(new InstanceResource(kijiClient));
-    environment.addResource(new TableResource(kijiClient));
-    environment.addResource(new TablesResource(kijiClient));
-    environment.addResource(new RowsResource(kijiClient,
-        environment.getObjectMapperFactory().build(),
-        configuration.getFresheningConfiguration()));
+    jersey.register(new KijiRESTResource());
+    jersey.register(new InstancesResource(kijiClient));
+    jersey.register(new InstanceResource(kijiClient));
+    jersey.register(new TableResource(kijiClient));
+    jersey.register(new TablesResource(kijiClient));
+    jersey.register(
+        new RowsResource(
+            kijiClient,
+            environment.getObjectMapper(),
+            configuration.getFresheningConfiguration()));
   }
 }
