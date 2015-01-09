@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.kiji.schema</groupId>
     <artifactId>kiji-schema-root</artifactId>
-    <version>dev</version>
+    <version>1.6.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 
@@ -174,146 +174,139 @@
   </build>
 
   <dependencies>
-    <dependency> <groupId>ant</groupId>                                       <artifactId>ant</artifactId>                                 <type>jar</type>               <version>1.6.5</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>aopalliance</groupId>                               <artifactId>aopalliance</artifactId>                         <type>jar</type>               <version>1.0</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>asm</groupId>                                       <artifactId>asm</artifactId>                                 <type>jar</type>               <version>3.1</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.fasterxml.jackson.core</groupId>                <artifactId>jackson-annotations</artifactId>                 <type>jar</type>               <version>2.1.4</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.fasterxml.jackson.core</groupId>                <artifactId>jackson-core</artifactId>                        <type>jar</type>               <version>2.1.4</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.fasterxml.jackson.core</groupId>                <artifactId>jackson-databind</artifactId>                    <type>jar</type>               <version>2.1.4</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.fasterxml.jackson.module</groupId>              <artifactId>jackson-module-jaxb-annotations</artifactId>     <type>jar</type>               <version>2.1.4</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.github.stephenc.findbugs</groupId>              <artifactId>findbugs-annotations</artifactId>                <type>jar</type>               <version>1.3.9-1</version>               <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.github.stephenc.high-scale-lib</groupId>        <artifactId>high-scale-lib</artifactId>                      <type>jar</type>               <version>1.1.1</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.google.code.findbugs</groupId>                  <artifactId>jsr305</artifactId>                              <type>jar</type>               <version>1.3.9</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.google.code.gson</groupId>                      <artifactId>gson</artifactId>                                <type>jar</type>               <version>2.2.2</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.google.guava</groupId>                          <artifactId>guava</artifactId>                               <type>jar</type>               <version>15.0</version>                  <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.google.inject.extensions</groupId>              <artifactId>guice-servlet</artifactId>                       <type>jar</type>               <version>3.0</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.google.inject</groupId>                         <artifactId>guice</artifactId>                               <type>jar</type>               <version>3.0</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.google.protobuf</groupId>                       <artifactId>protobuf-java</artifactId>                       <type>jar</type>               <version>2.5.0</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.jamesmurty.utils</groupId>                      <artifactId>java-xmlbuilder</artifactId>                     <type>jar</type>               <version>0.4</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.jcraft</groupId>                                <artifactId>jsch</artifactId>                                <type>jar</type>               <version>0.1.42</version>                <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.sun.jersey.contribs</groupId>                   <artifactId>jersey-guice</artifactId>                        <type>jar</type>               <version>1.9</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.sun.jersey</groupId>                            <artifactId>jersey-client</artifactId>                       <type>jar</type>               <version>1.9</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.sun.jersey</groupId>                            <artifactId>jersey-core</artifactId>                         <type>jar</type>               <version>1.9</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.sun.jersey</groupId>                            <artifactId>jersey-json</artifactId>                         <type>jar</type>               <version>1.9</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.sun.jersey</groupId>                            <artifactId>jersey-server</artifactId>                       <type>jar</type>               <version>1.9</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.sun.xml.bind</groupId>                          <artifactId>jaxb-impl</artifactId>                           <type>jar</type>               <version>2.2.3-1</version>               <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.thoughtworks.paranamer</groupId>                <artifactId>paranamer</artifactId>                           <type>jar</type>               <version>2.3</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>com.yammer.metrics</groupId>                        <artifactId>metrics-core</artifactId>                        <type>jar</type>               <version>2.1.2</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>commons-beanutils</groupId>                         <artifactId>commons-beanutils-core</artifactId>              <type>jar</type>               <version>1.8.0</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>commons-beanutils</groupId>                         <artifactId>commons-beanutils</artifactId>                   <type>jar</type>               <version>1.7.0</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>commons-cli</groupId>                               <artifactId>commons-cli</artifactId>                         <type>jar</type>               <version>1.2</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>commons-codec</groupId>                             <artifactId>commons-codec</artifactId>                       <type>jar</type>               <version>1.6</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>commons-collections</groupId>                       <artifactId>commons-collections</artifactId>                 <type>jar</type>               <version>3.2.1</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>commons-configuration</groupId>                     <artifactId>commons-configuration</artifactId>               <type>jar</type>               <version>1.6</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>commons-daemon</groupId>                            <artifactId>commons-daemon</artifactId>                      <type>jar</type>               <version>1.0.13</version>                <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>commons-digester</groupId>                          <artifactId>commons-digester</artifactId>                    <type>jar</type>               <version>1.8</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>commons-el</groupId>                                <artifactId>commons-el</artifactId>                          <type>jar</type>               <version>1.0</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>commons-httpclient</groupId>                        <artifactId>commons-httpclient</artifactId>                  <type>jar</type>               <version>3.1</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>commons-io</groupId>                                <artifactId>commons-io</artifactId>                          <type>jar</type>               <version>2.1</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>commons-lang</groupId>                              <artifactId>commons-lang</artifactId>                        <type>jar</type>               <version>2.6</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>commons-logging</groupId>                           <artifactId>commons-logging</artifactId>                     <type>jar</type>               <version>1.1.1</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>commons-net</groupId>                               <artifactId>commons-net</artifactId>                         <type>jar</type>               <version>3.1</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>commons-pool</groupId>                              <artifactId>commons-pool</artifactId>                        <type>jar</type>               <version>1.6</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>io.netty</groupId>                                  <artifactId>netty</artifactId>                               <type>jar</type>               <version>3.6.2.Final</version>           <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>javax.activation</groupId>                          <artifactId>activation</artifactId>                          <type>jar</type>               <version>1.1</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>javax.inject</groupId>                              <artifactId>javax.inject</artifactId>                        <type>jar</type>               <version>1</version>                     <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>javax.servlet.jsp</groupId>                         <artifactId>jsp-api</artifactId>                             <type>jar</type>               <version>2.1</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>javax.servlet</groupId>                             <artifactId>jsp-api</artifactId>                             <type>jar</type>               <version>2.0</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>javax.servlet</groupId>                             <artifactId>servlet-api</artifactId>                         <type>jar</type>               <version>2.5</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>javax.xml.bind</groupId>                            <artifactId>jaxb-api</artifactId>                            <type>jar</type>               <version>2.1</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>javax.xml.stream</groupId>                          <artifactId>stax-api</artifactId>                            <type>jar</type>               <version>1.0-2</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>jline</groupId>                                     <artifactId>jline</artifactId>                               <type>jar</type>               <version>0.9.94</version>                <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>junit</groupId>                                     <artifactId>junit</artifactId>                               <type>jar</type>               <version>4.11</version>                  <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>log4j</groupId>                                     <artifactId>log4j</artifactId>                               <type>jar</type>               <version>1.2.17</version>                <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>net.java.dev.jets3t</groupId>                       <artifactId>jets3t</artifactId>                              <type>jar</type>               <version>0.9.0</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.avro</groupId>                           <artifactId>avro</artifactId>                                <type>jar</type>               <version>1.7.5</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.commons</groupId>                        <artifactId>commons-compress</artifactId>                    <type>jar</type>               <version>1.4.1</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.commons</groupId>                        <artifactId>commons-math3</artifactId>                       <type>jar</type>               <version>3.1.1</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.commons</groupId>                        <artifactId>commons-math</artifactId>                        <type>jar</type>               <version>2.1</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.curator</groupId>                        <artifactId>curator-client</artifactId>                      <type>jar</type>               <version>2.4.1</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.curator</groupId>                        <artifactId>curator-framework</artifactId>                   <type>jar</type>               <version>2.4.1</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.curator</groupId>                        <artifactId>curator-recipes</artifactId>                     <type>jar</type>               <version>2.4.1</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.directory.api</groupId>                  <artifactId>api-asn1-api</artifactId>                        <type>jar</type>               <version>1.0.0-M20</version>             <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.directory.api</groupId>                  <artifactId>api-util</artifactId>                            <type>jar</type>               <version>1.0.0-M20</version>             <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.directory.server</groupId>               <artifactId>apacheds-i18n</artifactId>                       <type>jar</type>               <version>2.0.0-M15</version>             <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.directory.server</groupId>               <artifactId>apacheds-kerberos-codec</artifactId>             <type>jar</type>               <version>2.0.0-M15</version>             <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hadoop</groupId>                         <artifactId>hadoop-annotations</artifactId>                  <type>jar</type>               <version>2.3.0-cdh5.1.3</version>        <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hadoop</groupId>                         <artifactId>hadoop-auth</artifactId>                         <type>jar</type>               <version>2.3.0-cdh5.1.3</version>        <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hadoop</groupId>                         <artifactId>hadoop-common</artifactId>                       <type>jar</type>               <version>2.3.0-cdh5.1.3</version>        <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hadoop</groupId>                         <artifactId>hadoop-hdfs</artifactId>                         <type>jar</type>               <version>2.3.0-cdh5.1.3</version>        <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hadoop</groupId>                         <artifactId>hadoop-mapreduce-client-app</artifactId>         <type>jar</type>               <version>2.3.0-cdh5.1.3</version>        <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hadoop</groupId>                         <artifactId>hadoop-mapreduce-client-common</artifactId>      <type>jar</type>               <version>2.3.0-cdh5.1.3</version>        <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hadoop</groupId>                         <artifactId>hadoop-mapreduce-client-core</artifactId>        <type>jar</type>               <version>2.3.0-cdh5.1.3</version>        <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hadoop</groupId>                         <artifactId>hadoop-mapreduce-client-jobclient</artifactId>   <type>jar</type>               <version>2.3.0-cdh5.1.3</version>        <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hadoop</groupId>                         <artifactId>hadoop-mapreduce-client-shuffle</artifactId>     <type>jar</type>               <version>2.3.0-cdh5.1.3</version>        <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hadoop</groupId>                         <artifactId>hadoop-yarn-api</artifactId>                     <type>jar</type>               <version>2.3.0-cdh5.1.3</version>        <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hadoop</groupId>                         <artifactId>hadoop-yarn-client</artifactId>                  <type>jar</type>               <version>2.3.0-cdh5.1.3</version>        <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hadoop</groupId>                         <artifactId>hadoop-yarn-common</artifactId>                  <type>jar</type>               <version>2.3.0-cdh5.1.3</version>        <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hadoop</groupId>                         <artifactId>hadoop-yarn-server-common</artifactId>           <type>jar</type>               <version>2.3.0-cdh5.1.3</version>        <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hadoop</groupId>                         <artifactId>hadoop-yarn-server-nodemanager</artifactId>      <type>jar</type>               <version>2.3.0-cdh5.1.3</version>        <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hadoop</groupId>                         <artifactId>hadoop-yarn-server-web-proxy</artifactId>        <type>jar</type>               <version>2.3.0-cdh5.1.3</version>        <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hbase</groupId>                          <artifactId>hbase-client</artifactId>                        <type>jar</type>               <version>0.98.1-cdh5.1.3</version>       <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hbase</groupId>                          <artifactId>hbase-common</artifactId>                        <type>jar</type>               <version>0.98.1-cdh5.1.3</version>       <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hbase</groupId>                          <artifactId>hbase-hadoop-compat</artifactId>                 <type>jar</type>               <version>0.98.1-cdh5.1.3</version>       <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hbase</groupId>                          <artifactId>hbase-hadoop2-compat</artifactId>                <type>jar</type>               <version>0.98.1-cdh5.1.3</version>       <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hbase</groupId>                          <artifactId>hbase-prefix-tree</artifactId>                   <type>jar</type>               <version>0.98.1-cdh5.1.3</version>       <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hbase</groupId>                          <artifactId>hbase-protocol</artifactId>                      <type>jar</type>               <version>0.98.1-cdh5.1.3</version>       <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hbase</groupId>                          <artifactId>hbase-server</artifactId>                        <type>jar</type>               <version>0.98.1-cdh5.1.3</version>       <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.httpcomponents</groupId>                 <artifactId>httpclient</artifactId>                          <type>jar</type>               <version>4.2.3</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.httpcomponents</groupId>                 <artifactId>httpcore</artifactId>                            <type>jar</type>               <version>4.2.2</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.zookeeper</groupId>                      <artifactId>zookeeper</artifactId>                           <type>jar</type>               <version>3.4.5-cdh5.1.3</version>        <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.cloudera.htrace</groupId>                       <artifactId>htrace-core</artifactId>                         <type>jar</type>               <version>2.04</version>                  <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.codehaus.jackson</groupId>                      <artifactId>jackson-core-asl</artifactId>                    <type>jar</type>               <version>1.9.13</version>                <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.codehaus.jackson</groupId>                      <artifactId>jackson-jaxrs</artifactId>                       <type>jar</type>               <version>1.9.13</version>                <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.codehaus.jackson</groupId>                      <artifactId>jackson-mapper-asl</artifactId>                  <type>jar</type>               <version>1.9.13</version>                <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.codehaus.jackson</groupId>                      <artifactId>jackson-xc</artifactId>                          <type>jar</type>               <version>1.9.13</version>                <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.codehaus.jettison</groupId>                     <artifactId>jettison</artifactId>                            <type>jar</type>               <version>1.1</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.eclipse.jdt</groupId>                           <artifactId>core</artifactId>                                <type>jar</type>               <version>3.1.1</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.hamcrest</groupId>                              <artifactId>hamcrest-core</artifactId>                       <type>jar</type>               <version>1.3</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.jamon</groupId>                                 <artifactId>jamon-runtime</artifactId>                       <type>jar</type>               <version>2.3.1</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.kiji.annotations</groupId>                      <artifactId>annotations</artifactId>                         <type>jar</type>               <version>dev</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.kiji.checkin</groupId>                          <artifactId>kiji-checkin</artifactId>                        <type>jar</type>               <version>dev</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.kiji.common</groupId>                           <artifactId>kiji-common-flags</artifactId>                   <type>jar</type>               <version>dev</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.kiji.commons</groupId>                          <artifactId>kiji-commons-java</artifactId>                   <type>jar</type>               <version>dev</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.kiji.delegation</groupId>                       <artifactId>kiji-delegation</artifactId>                     <type>jar</type>               <version>dev</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.kiji.deps</groupId>                             <artifactId>jackson</artifactId>                             <type>jar</type>               <version>dev</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.kiji.platforms</groupId>                        <artifactId>cdh5.1-platform</artifactId>                     <type>jar</type>               <version>dev</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.kiji.platforms</groupId>                        <artifactId>compile-platform</artifactId>                    <type>jar</type>               <version>dev</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.kiji.schema</groupId>                           <artifactId>cdh5-bridge</artifactId>                         <type>jar</type>               <version>dev</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.kiji.schema</groupId>                           <artifactId>kiji-schema-avro</artifactId>                    <type>jar</type>               <version>dev</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.kiji.schema</groupId>                           <artifactId>schema-platform-api</artifactId>                 <type>jar</type>               <version>dev</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.mortbay.jetty</groupId>                         <artifactId>jetty-sslengine</artifactId>                     <type>jar</type>               <version>6.1.26.cloudera.2</version>     <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.mortbay.jetty</groupId>                         <artifactId>jetty-util</artifactId>                          <type>jar</type>               <version>6.1.26</version>                <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.mortbay.jetty</groupId>                         <artifactId>jetty</artifactId>                               <type>jar</type>               <version>6.1.26</version>                <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.mortbay.jetty</groupId>                         <artifactId>jsp-2.1</artifactId>                             <type>jar</type>               <version>6.1.14</version>                <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.mortbay.jetty</groupId>                         <artifactId>jsp-api-2.1</artifactId>                         <type>jar</type>               <version>6.1.14</version>                <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.mortbay.jetty</groupId>                         <artifactId>servlet-api-2.5</artifactId>                     <type>jar</type>               <version>6.1.14</version>                <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.mortbay.jetty</groupId>                         <artifactId>servlet-api</artifactId>                         <type>jar</type>               <version>2.5-20081211</version>          <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.slf4j</groupId>                                 <artifactId>slf4j-api</artifactId>                           <type>jar</type>               <version>1.7.5</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.slf4j</groupId>                                 <artifactId>slf4j-log4j12</artifactId>                       <type>jar</type>               <version>1.7.5</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.sonatype.sisu.inject</groupId>                  <artifactId>cglib</artifactId>                               <type>jar</type>               <version>2.2.1-v20090111</version>       <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.tukaani</groupId>                               <artifactId>xz</artifactId>                                  <type>jar</type>               <version>1.0</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.xerial.snappy</groupId>                         <artifactId>snappy-java</artifactId>                         <type>jar</type>               <version>1.0.5</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>stax</groupId>                                      <artifactId>stax-api</artifactId>                            <type>jar</type>               <version>1.0.1</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>tomcat</groupId>                                    <artifactId>jasper-compiler</artifactId>                     <type>jar</type>               <version>5.5.23</version>                <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>tomcat</groupId>                                    <artifactId>jasper-runtime</artifactId>                      <type>jar</type>               <version>5.5.23</version>                <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>xmlenc</groupId>                                    <artifactId>xmlenc</artifactId>                              <type>jar</type>               <version>0.52</version>                  <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>cglib</groupId>                                     <artifactId>cglib-nodep</artifactId>                         <type>jar</type>               <version>2.2</version>                   <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.curator</groupId>                        <artifactId>curator-test</artifactId>                        <type>jar</type>               <version>2.4.1</version>                 <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hadoop</groupId>                         <artifactId>hadoop-hdfs</artifactId>                         <type>test-jar</type>          <version>2.3.0-cdh5.1.3</version>        <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hadoop</groupId>                         <artifactId>hadoop-yarn-server-resourcemanager</artifactId>  <type>jar</type>               <version>2.3.0-cdh5.1.3</version>        <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hadoop</groupId>                         <artifactId>hadoop-yarn-server-tests</artifactId>            <type>test-jar</type>          <classifier>tests</classifier><version>2.3.0-cdh5.1.3</version>        <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hbase</groupId>                          <artifactId>hbase-common</artifactId>                        <type>test-jar</type>          <classifier>tests</classifier><version>0.98.1-cdh5.1.3</version>       <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.apache.hbase</groupId>                          <artifactId>hbase-server</artifactId>                        <type>test-jar</type>          <classifier>tests</classifier><version>0.98.1-cdh5.1.3</version>       <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.easymock</groupId>                              <artifactId>easymock</artifactId>                            <type>jar</type>               <version>3.0</version>                   <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.hamcrest</groupId>                              <artifactId>hamcrest-all</artifactId>                        <type>jar</type>               <version>1.1</version>                   <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.javassist</groupId>                             <artifactId>javassist</artifactId>                           <type>jar</type>               <version>3.15.0-GA</version>             <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.kiji.platforms</groupId>                        <artifactId>cdh5.1-test-platform</artifactId>                <type>jar</type>               <version>dev</version>                   <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.kiji.platforms</groupId>                        <artifactId>test-platform</artifactId>                       <type>jar</type>               <version>dev</version>                   <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.kiji.schema</groupId>                           <artifactId>kiji-schema-test-avro</artifactId>               <type>jar</type>               <version>dev</version>                   <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.kiji.testing</groupId>                          <artifactId>fake-hbase</artifactId>                          <type>jar</type>               <version>dev</version>                   <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.objenesis</groupId>                             <artifactId>objenesis</artifactId>                           <type>jar</type>               <version>1.2</version>                   <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>org.scala-lang</groupId>                            <artifactId>scala-library</artifactId>                       <type>jar</type>               <version>2.10.4</version>                <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
-    <dependency> <groupId>testing</groupId>                                   <artifactId>test-annotation-collector</artifactId>           <type>jar</type>               <version>dev</version>                   <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>kiji-schema-platform-api</artifactId>
+      <version>${project.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.checkin</groupId>
+      <artifactId>kiji-checkin</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-compile-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-test-platform</artifactId>
+      <type>pom</type>
+      <version>${kiji-platforms.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
+    <!-- Guava has a "provided" dependency on JSR-305, so we must provide it. -->
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>jsr305</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.common</groupId>
+      <artifactId>kiji-common-flags</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.commons</groupId>
+      <artifactId>kiji-commons-java</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro-ipc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro-mapred</artifactId>
+      <classifier>hadoop2</classifier>
+    </dependency>
+    <dependency>
+      <groupId>commons-pool</groupId>
+      <artifactId>commons-pool</artifactId>
+      <version>${commons-pool.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.easymock</groupId>
+      <artifactId>easymock</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-all</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.annotations</groupId>
+      <artifactId>annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.delegation</groupId>
+      <artifactId>kiji-delegation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+      <version>${protobuf.version}</version>
+      <!-- Make sure Kiji doesn't override the protobuf library that comes with Hadoop/HBase. -->
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.kiji.testing</groupId>
+      <artifactId>fake-hbase</artifactId>
+      <version>${fake-hbase.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- All platform bridge implementations that should be bundled with the redistributable. -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>kiji-schema-cdh41mr1-bridge</artifactId>
+      <version>${project.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>kiji-schema-cdh42mr1-bridge</artifactId>
+      <version>${project.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>kiji-schema-cdh5-bridge</artifactId>
+      <version>${project.version}</version>
+      <scope>runtime</scope>
+    </dependency>
   </dependencies>
 </project>
