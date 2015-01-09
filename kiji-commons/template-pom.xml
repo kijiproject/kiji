@@ -44,7 +44,6 @@
     <module>kiji-commons-java</module>
     <module>kiji-commons-scala</module>
     <module>kiji-commons-monitoring</module>
-    <module>kiji-commons-java-testing</module>
   </modules>
 
   <dependencyManagement>
