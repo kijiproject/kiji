@@ -744,11 +744,29 @@ public final class KijiTableReaderPool
 
     /** {@inheritDoc} */
     @Override
+    public <T> KijiResult<T> getResult(
+        final EntityId entityId,
+        final KijiDataRequest dataRequest
+    ) throws IOException {
+      return mInnerReader.getResult(entityId, dataRequest);
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public List<KijiRowData> bulkGet(
         final List<EntityId> entityIds,
         final KijiDataRequest dataRequest
     ) throws IOException {
       return mInnerReader.bulkGet(entityIds, dataRequest);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public <T> List<KijiResult<T>> bulkGetResults(
+        final List<EntityId> entityIds,
+        final KijiDataRequest dataRequest
+    ) throws IOException {
+      return mInnerReader.bulkGetResults(entityIds, dataRequest);
     }
 
     /** {@inheritDoc} */
@@ -766,6 +784,14 @@ public final class KijiTableReaderPool
         final KijiScannerOptions scannerOptions
     ) throws IOException {
       return mInnerReader.getScanner(dataRequest, scannerOptions);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public <T> KijiResultScanner<T> getKijiResultScanner(
+        final KijiDataRequest dataRequest
+    ) throws IOException {
+      return mInnerReader.getKijiResultScanner(dataRequest);
     }
 
     /** {@inheritDoc} */

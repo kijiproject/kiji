@@ -100,6 +100,19 @@ public interface KijiTableReader extends Closeable {
       throws IOException;
 
   /**
+   * Retrieves data from a sigle row in the kiji table.
+   *
+   * @param entityId The entity id for the row from which to get data.
+   * @param dataRequest Specifies the columns of data to retrieve.
+   * @param <T> Type of the data in the requested cells.
+   * @return The requested data. Never null; if the requested row does not exist, returns an empty
+   *     KijiResult.
+   * @throws IOException If there is an error reading from the table.
+   */
+  <T> KijiResult<T> getResult(EntityId entityId, KijiDataRequest dataRequest)
+      throws IOException;
+
+  /**
    * Retrieves data from a list of rows in the kiji table.
    *
    * @param entityIds The list of entity ids to collect data for.
@@ -110,6 +123,19 @@ public interface KijiTableReader extends Closeable {
    * @throws IOException If there is an IO error.
    */
   List<KijiRowData> bulkGet(List<EntityId> entityIds, KijiDataRequest dataRequest)
+      throws IOException;
+
+  /**
+   * Retrieves data from a list of rows in a kiji table.
+   *
+   * @param entityIds List of entity ids from which to read data.
+   * @param dataRequest Specifies the data to retrieve from each row.
+   * @param <T> Type of the data to read.
+   * @return The requested data. Elements are never null; if a requested row does not exist, the
+   *     corresponding KijiResult will be empty.
+   * @throws IOException In case of an error reading from the table.
+   */
+  <T> List<KijiResult<T>> bulkGetResults(List<EntityId> entityIds, KijiDataRequest dataRequest)
       throws IOException;
 
   /**
@@ -133,6 +159,18 @@ public interface KijiTableReader extends Closeable {
    * @throws KijiDataRequestException If the data request is invalid.
    */
   KijiRowScanner getScanner(KijiDataRequest dataRequest, KijiScannerOptions scannerOptions)
+      throws IOException;
+
+  /**
+   * Get a KijiResultScanner using the specified data request. KijiScannerOptions are currently not
+   * supported by KijiResultScanner.
+   *
+   * @param dataRequest Specifies the data to request from each row.
+   * @param <T> Type of the data in the requested cells.
+   * @return A KijiResultScanner for the requested data.
+   * @throws IOException In case of an error reading from the table.
+   */
+  <T> KijiResultScanner<T> getKijiResultScanner(KijiDataRequest dataRequest)
       throws IOException;
 
   /**

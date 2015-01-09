@@ -369,6 +369,7 @@ public final class CassandraKijiTableReader implements KijiTableReader {
    * @return a new KijiResult for the given EntityId and data request.
    * @throws IOException in case of an error getting the data.
    */
+  @Override
   public <T> KijiResult<T> getResult(
       final EntityId entityId,
       final KijiDataRequest dataRequest
@@ -411,6 +412,23 @@ public final class CassandraKijiTableReader implements KijiTableReader {
 
   /** {@inheritDoc} */
   @Override
+  public <T> List<KijiResult<T>> bulkGetResults(
+      final List<EntityId> entityIds,
+      final KijiDataRequest dataRequest
+  ) throws IOException {
+    // TODO(SCHEMA-981): make this use async requests
+    final State state = mState.get();
+    Preconditions.checkState(state == State.OPEN,
+        "Cannot get rows from KijiTableReader instance %s in state %s.", this, state);
+    List<KijiResult<T>> data = Lists.newArrayList();
+    for (EntityId eid : entityIds) {
+      data.add(this.<T>getResult(eid, dataRequest));
+    }
+    return data;
+  }
+
+  /** {@inheritDoc} */
+  @Override
   public KijiRowScanner getScanner(final KijiDataRequest dataRequest) throws IOException {
     return getScannerWithOptions(dataRequest, CassandraKijiScannerOptions.withoutBounds());
   }
@@ -441,6 +459,14 @@ public final class CassandraKijiTableReader implements KijiTableReader {
     return new KijiResultRowScanner(
         mReaderLayoutCapsule.getLayout(),
         getKijiResultScanner(request, kijiScannerOptions));
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public <T> CassandraKijiResultScanner<T> getKijiResultScanner(
+      final KijiDataRequest request
+  ) throws IOException {
+    return getKijiResultScanner(request, CassandraKijiScannerOptions.withoutBounds());
   }
 
   /**

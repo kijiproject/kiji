@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -403,6 +404,7 @@ public final class HBaseKijiTableReader implements KijiTableReader {
    * @return a new KijiResult for the given EntityId and data request.
    * @throws IOException in case of an error getting the data.
    */
+  @Override
   public <T> KijiResult<T> getResult(
       final EntityId entityId,
       final KijiDataRequest dataRequest
@@ -460,6 +462,51 @@ public final class HBaseKijiTableReader implements KijiTableReader {
 
   /** {@inheritDoc} */
   @Override
+  public <T> List<KijiResult<T>> bulkGetResults(
+      final List<EntityId> entityIds,
+      final KijiDataRequest dataRequest
+  ) throws IOException {
+    final State state = mState.get();
+    Preconditions.checkState(state == State.OPEN,
+        "Cannot get rows from KijiTableReader instance %s in state %s.", this, state);
+
+    // Bulk gets have some overhead associated with them,
+    // so delegate work to getResult(EntityId, KijiDataRequest) if possible.
+    if (entityIds.size() == 1) {
+      return Collections.singletonList(this.<T>getResult(entityIds.get(0), dataRequest));
+    }
+    final ReaderLayoutCapsule capsule = mReaderLayoutCapsule;
+    final KijiTableLayout tableLayout = capsule.getLayout();
+    validateRequestAgainstLayout(dataRequest, tableLayout);
+    final HBaseDataRequestAdapter hbaseRequestAdapter =
+        new HBaseDataRequestAdapter(dataRequest, capsule.getColumnNameTranslator());
+
+    // Construct a list of hbase Gets to send to the HTable.
+    final List<Get> hbaseGetList = makeGetList(entityIds, tableLayout, hbaseRequestAdapter);
+
+    // Send the HTable Gets.
+    final Result[] results = doHBaseGet(hbaseGetList);
+    Preconditions.checkState(entityIds.size() == results.length);
+
+    final List<KijiResult<T>> kijiResults = Lists.newArrayList();
+    for (int i = 0; i < entityIds.size(); i++) {
+      kijiResults.add(
+          HBaseKijiResult.<T>create(
+              entityIds.get(i),
+              dataRequest,
+              results[i],
+              mTable,
+              capsule.getLayout(),
+              capsule.getColumnNameTranslator(),
+              capsule.getCellDecoderProvider()
+          )
+      );
+    }
+    return kijiResults;
+  }
+
+  /** {@inheritDoc} */
+  @Override
   public KijiRowScanner getScanner(KijiDataRequest dataRequest) throws IOException {
     return getScanner(dataRequest, new KijiScannerOptions());
   }
@@ -512,6 +559,14 @@ public final class HBaseKijiTableReader implements KijiTableReader {
       // opened table.  If it is, there's something seriously wrong.
       throw new InternalKijiError(e);
     }
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public <T> HBaseKijiResultScanner<T> getKijiResultScanner(
+      final KijiDataRequest request
+  ) throws IOException {
+    return getKijiResultScanner(request, new KijiScannerOptions());
   }
 
   /**
