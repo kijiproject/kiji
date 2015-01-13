@@ -2,8 +2,6 @@ package org.kiji.spark.connector.rdd.cassandra
 
 import org.apache.spark.Partition
 
-import org.kiji.commons.scala.ScalaLogged
-
 /**
  *
  * @param mIndex the index of this partition.
@@ -25,7 +23,7 @@ class CassandraKijiPartition private (
   override def index: Int = mIndex
 }
 
-object CassandraKijiPartition extends ScalaLogged {
+object CassandraKijiPartition {
 
   /**
    *

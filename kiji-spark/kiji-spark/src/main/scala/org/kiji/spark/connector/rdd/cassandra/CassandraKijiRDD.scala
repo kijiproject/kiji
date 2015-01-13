@@ -1,35 +1,35 @@
 package org.kiji.spark.connector.rdd.cassandra
 
-import scala.collection.Iterator
-import scala.collection.JavaConverters.asScalaIteratorConverter
-import scala.collection.JavaConverters.collectionAsScalaIterableConverter
-
-import java.util.{SortedMap => JSortedMap}
-import java.util.{List => JList}
-import java.util.{TreeMap => JTreeMap}
 import java.util.{ArrayList => JArrayList}
+import java.util.{List => JList}
+import java.util.{SortedMap => JSortedMap}
+import java.util.{TreeMap => JTreeMap}
+import org.slf4j.LoggerFactory
 
 import org.apache.spark.Partition
 import org.apache.spark.SparkContext
 import org.apache.spark.TaskContext
+import scala.collection.Iterator
+import scala.collection.JavaConverters.asScalaIteratorConverter
+import scala.collection.JavaConverters.collectionAsScalaIterableConverter
 
-import org.kiji.schema.KijiResult
 import org.kiji.schema.Kiji
-import org.kiji.schema.KijiURI
-import org.kiji.schema.KijiDataRequest
-import org.kiji.schema.KijiTable
-import org.kiji.schema.KijiDataRequest.Column
-import org.kiji.schema.KijiRowData
-import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiCell
+import org.kiji.schema.KijiColumnName
+import org.kiji.schema.KijiDataRequest
+import org.kiji.schema.KijiDataRequest.Column
+import org.kiji.schema.KijiResult
+import org.kiji.schema.KijiRowData
+import org.kiji.schema.KijiTable
+import org.kiji.schema.KijiURI
 import org.kiji.schema.impl.MaterializedKijiResult
-import org.kiji.schema.impl.cassandra.CassandraKijiScannerOptions
-import org.kiji.schema.impl.cassandra.CassandraKijiTableReader
-import org.kiji.schema.impl.cassandra.CassandraKijiResultScanner
 import org.kiji.schema.impl.cassandra.CassandraKiji
+import org.kiji.schema.impl.cassandra.CassandraKijiResultScanner
+import org.kiji.schema.impl.cassandra.CassandraKijiScannerOptions
 import org.kiji.schema.impl.cassandra.CassandraKijiTable
-import org.kiji.spark.connector.rdd.KijiRDD
+import org.kiji.schema.impl.cassandra.CassandraKijiTableReader
 import org.kiji.spark.connector.KijiSpark
+import org.kiji.spark.connector.rdd.KijiRDD
 
 /**
  * An RDD that provides the core functionality for reading Kiji data.
@@ -51,6 +51,7 @@ class CassandraKijiRDD[T] private (
   // This would probably consist of adding a method in KijiRDD, e.g. KijiRDD#writeToKijiTable
   // following the style of spark's RDD#write
 
+  import CassandraKijiRDD._
   /**
    * KijiURIs are not serializable; this string representation allows
    * the provided kijiURI to be reconstructed upon deserialization of the RDD.
@@ -159,8 +160,8 @@ class CassandraKijiRDD[T] private (
       throw new IllegalArgumentException("KijiURI must specify a table.")
     }
     val kiji: Kiji = downcastAndOpenKiji(kijiURI)
-    LOG.debug("openedKiji")
-    LOG.debug("openedKiji")
+    Log.debug("openedKiji")
+    Log.debug("openedKiji")
     try {
       val table: KijiTable = downcastAndOpenKijiTable(kiji, kijiURI.getTable)
       table match {
@@ -203,7 +204,7 @@ class CassandraKijiRDD[T] private (
    * @throws UnsupportedOperationException if the Kiji is not C* or HBase.
    */
   private def downcastAndOpenKiji(kijiURI: KijiURI): Kiji = {
-    LOG.debug("opening kiji")
+    Log.debug("opening kiji")
     Kiji.Factory.open(kijiURI) match {
       //case hbaseKiji: HBaseKiji => hbaseKiji
       case cassandraKiji: CassandraKiji => cassandraKiji
@@ -282,6 +283,7 @@ class CassandraKijiRDD[T] private (
 
 /** Companion object containing static members used by the KijiRDD class. */
 object CassandraKijiRDD {
+  private final val Log = LoggerFactory.getLogger(classOf[CassandraKijiRDD])
 
   /**
    *

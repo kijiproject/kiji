@@ -20,11 +20,10 @@ package org.kiji.spark.connector
 
 import org.apache.hadoop.security.UserGroupInformation
 import org.apache.spark.SparkContext
-
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiURI
 import org.kiji.spark.connector.rdd.KijiRDD
-import org.kiji.commons.scala.ScalaLogger
+import org.slf4j.LoggerFactory
 
 /** Provides Kiji-specific methods on `SparkContext` */
 class SparkContextFunctions(@transient val sc: SparkContext) extends Serializable {
@@ -45,5 +44,5 @@ class SparkContextFunctions(@transient val sc: SparkContext) extends Serializabl
 }
 
 object SparkContextFunctions {
-  val Log = ScalaLogger(classOf[SparkContext])
+  private final val Log = LoggerFactory.getLogger("SparkContextFunctions")
 }

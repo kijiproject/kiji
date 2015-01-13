@@ -2,7 +2,6 @@ package org.kiji.spark.connector.rdd.hbase
 
 import org.apache.spark.Partition
 
-import org.kiji.commons.scala.ScalaLogged
 import org.kiji.schema.EntityId
 import org.kiji.schema.HBaseEntityId
 
@@ -33,7 +32,7 @@ class HBaseKijiPartition private (
   override def index: Int = mIndex
 }
 
-object HBaseKijiPartition extends ScalaLogged {
+object HBaseKijiPartition {
 
   /**
    *

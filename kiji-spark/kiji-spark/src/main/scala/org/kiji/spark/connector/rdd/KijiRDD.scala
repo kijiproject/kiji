@@ -1,7 +1,5 @@
 package org.kiji.spark.connector.rdd
 
-import org.kiji.commons.scala.ScalaLogged
-
 import scala.collection.Iterator
 
 import org.apache.hadoop.conf.Configuration
@@ -29,7 +27,7 @@ abstract class KijiRDD[T] private[rdd] (
     //@transient credentials: Credentials = None,
     @transient kijiURI: KijiURI,
     kijiDataRequest: KijiDataRequest
-) extends RDD[KijiResult[T]](sc, Nil) with ScalaLogged {
+) extends RDD[KijiResult[T]](sc, Nil) {
 
   override def compute(split: Partition, context: TaskContext): Iterator[KijiResult[T]]
   override protected def getPartitions: Array[Partition]
