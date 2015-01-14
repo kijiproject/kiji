@@ -20,6 +20,7 @@
 package org.kiji.express.flow
 
 import java.io.InputStream
+
 import scala.collection.JavaConverters.mapAsScalaMapConverter
 
 import com.twitter.scalding.Args
@@ -41,8 +42,8 @@ import org.kiji.schema.util.InstanceBuilder
 import org.kiji.express.flow.framework.ExpressJobHistoryKijiTable
 import org.kiji.express.avro.generated.ExpressJobHistoryEntry
 
-class JobHistorySuite extends KijiClientTest {
-  import JobHistorySuite._
+class ExpressJobHistorySuite extends KijiClientTest {
+  import ExpressJobHistorySuite._
 
   @Test
   def testSimpleFlow(): Unit = {
@@ -109,7 +110,7 @@ class JobHistorySuite extends KijiClientTest {
   }
 }
 
-object JobHistorySuite {
+object ExpressJobHistorySuite {
   private final val DdlPath: String = "layout/org.kiji.express.flow.ITSimpleFlow.ddl"
   private final val TableName: String = "table"
 

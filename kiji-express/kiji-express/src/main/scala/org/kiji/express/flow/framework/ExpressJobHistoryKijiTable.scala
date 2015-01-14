@@ -115,7 +115,7 @@ final class ExpressJobHistoryKijiTable private[express]
       endTime: Long,
       jobSuccess: Boolean,
       conf: Option[Configuration],
-       counters: Map[String, Long],
+      counters: Map[String, Long],
       extendedInfo: Map[String, String],
       bufferedPutter: KijiPutter
 
@@ -129,7 +129,7 @@ final class ExpressJobHistoryKijiTable private[express]
         startTime)
     bufferedPutter.put(entityId, JobHistoryFamily, JobHistoryEndTimeQualifier, startTime, endTime)
     bufferedPutter.put(entityId, JobHistoryFamily, JobHistoryCountersQualifier, startTime,
-        counters)
+        counters.toString())
     bufferedPutter.put(entityId, JobHistoryFamily, JobHistoryEndStatusQualifier, startTime,
         if (jobSuccess) JobHistorySuccessValue else JobHistoryFailureValue)
 
