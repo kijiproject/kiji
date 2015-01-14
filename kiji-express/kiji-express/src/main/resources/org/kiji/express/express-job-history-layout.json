@@ -25,7 +25,7 @@
         "salt" : {
           "hash_size" : 2
         },
-        "range_scan_start_index" : 2,
+        "range_scan_start_index" : 1,
         "components" : [ {
           "name" : "jobId",
           "type" : "STRING"
