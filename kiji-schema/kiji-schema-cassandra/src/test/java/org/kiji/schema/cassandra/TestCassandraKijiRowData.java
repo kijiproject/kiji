@@ -123,7 +123,7 @@ public class TestCassandraKijiRowData {
         .build();
 
     // Put some data into the table.
-    mWriter.put(mEntityId, FAMILY, QUAL0, Bytes.toBytes("bot"));
+    mWriter.put(mEntityId, FAMILY, QUAL0, "bot");
 
     // Read out the results to get a KijiRowData
     final KijiRowData input = mReader.get(mEntityId, dataRequest);
