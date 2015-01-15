@@ -1,7 +1,7 @@
 KijiREST ${project.version}
 ===========================
 
-KijiREST is a RESTful interface for interacting with KijiSchema.
+KijiREST is a RESTfulll interface for interacting with KijiSchema.
 
 For more information about KijiREST, see
 [the KijiREST user guide](http://docs.kiji.org/userguides.html).
