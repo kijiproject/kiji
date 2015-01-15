@@ -120,7 +120,7 @@ object ResourceUtils {
    * @return the result of the operation.
    */
   def doAndRelease[T, R <: { def release(): Any }](resource: => R)(fn: R => T): T = {
-    def after(r: R) { r.release() }
+    def after(r: R): Unit = { r.release() }
     doAnd(resource, after)(fn)
   }
 
@@ -134,7 +134,7 @@ object ResourceUtils {
    * @return the result of the operation.
    */
   def doAndClose[T, C <: { def close(): Any }](resource: => C)(fn: C => T): T = {
-    def after(c: C) { c.close() }
+    def after(c: C): Unit = { c.close() }
     doAnd(resource, after)(fn)
   }
 }
