@@ -49,40 +49,6 @@ import org.kiji.schema.layout.KijiTableLayouts
 import org.kiji.schema.util.InstanceBuilder
 import org.kiji.spark.connector.serialization.KijiSparkRegistrator
 
-object TestKryoSerializerSuite {
-  private final val PRIMITIVE_FAMILY: String = "primitive"
-  private final val STRING_MAP_FAMILY: String = "string_map"
-  private final val PRIMITIVE_STRING: KijiColumnName = KijiColumnName
-    .create(PRIMITIVE_FAMILY, "string_column")
-  private final val STRING_MAP_1: KijiColumnName = KijiColumnName
-    .create(STRING_MAP_FAMILY, "smap_1")
-  private final val ROW: Integer = 1
-
-  def writeData(kiji: Kiji): Unit = {
-    new InstanceBuilder(kiji)
-        .withTable(KijiTableLayouts.getLayout("org/kiji/schema/layout/all-types-schema.json"))
-            .withRow(ROW)
-                .withFamily(PRIMITIVE_FAMILY)
-                    .withQualifier("string_column")
-                        .withValue(10L, new Utf8("ten"))
-                        .withValue(5L, new Utf8("five"))
-                        .withValue(4L, new Utf8("four"))
-                        .withValue(3L, new Utf8("three"))
-                        .withValue(2L, new Utf8("two"))
-                        .withValue(1L, new Utf8("one"))
-                .withFamily(STRING_MAP_FAMILY)
-                    .withQualifier("smap_1")
-                        .withValue(10L, new Utf8("sm1-ten"))
-                        .withValue(5L, new Utf8("sm1-five"))
-                        .withValue(4L, new Utf8("sm1-four"))
-                        .withValue(3L, new Utf8("sm1-three"))
-                        .withValue(2L, new Utf8("sm1-two"))
-                        .withValue(1L, new Utf8("sm1-one"))
-      .build
-
-  }
-}
-
 class TestKryoSerializerSuite extends KijiClientTest {
   import org.kiji.spark.TestKryoSerializerSuite._
   @Before def setupTestHBaseKijiResult {
@@ -144,3 +110,36 @@ class TestKryoSerializerSuite extends KijiClientTest {
   private var mReader: HBaseKijiTableReader = null
 }
 
+object TestKryoSerializerSuite {
+  private final val PRIMITIVE_FAMILY: String = "primitive"
+  private final val STRING_MAP_FAMILY: String = "string_map"
+  private final val PRIMITIVE_STRING: KijiColumnName = KijiColumnName
+      .create(PRIMITIVE_FAMILY, "string_column")
+  private final val STRING_MAP_1: KijiColumnName = KijiColumnName
+      .create(STRING_MAP_FAMILY, "smap_1")
+  private final val ROW: Integer = 1
+
+  def writeData(kiji: Kiji): Unit = {
+    new InstanceBuilder(kiji)
+        .withTable(KijiTableLayouts.getLayout("org/kiji/schema/layout/all-types-schema.json"))
+        .withRow(ROW)
+        .withFamily(PRIMITIVE_FAMILY)
+        .withQualifier("string_column")
+        .withValue(10L, new Utf8("ten"))
+        .withValue(5L, new Utf8("five"))
+        .withValue(4L, new Utf8("four"))
+        .withValue(3L, new Utf8("three"))
+        .withValue(2L, new Utf8("two"))
+        .withValue(1L, new Utf8("one"))
+        .withFamily(STRING_MAP_FAMILY)
+        .withQualifier("smap_1")
+        .withValue(10L, new Utf8("sm1-ten"))
+        .withValue(5L, new Utf8("sm1-five"))
+        .withValue(4L, new Utf8("sm1-four"))
+        .withValue(3L, new Utf8("sm1-three"))
+        .withValue(2L, new Utf8("sm1-two"))
+        .withValue(1L, new Utf8("sm1-one"))
+        .build
+
+  }
+}
