@@ -283,7 +283,7 @@ class CassandraKijiRDD[T] private (
 
 /** Companion object containing static members used by the KijiRDD class. */
 object CassandraKijiRDD {
-  private final val Log = LoggerFactory.getLogger(classOf[CassandraKijiRDD])
+  private final val Log = LoggerFactory.getLogger(classOf[CassandraKijiRDD[_]])
 
   /**
    *
