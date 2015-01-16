@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.kiji.spark
+package org.kiji.spark.connector.serialization
 
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -32,6 +32,7 @@ import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import org.junit.Ignore
 
 import org.kiji.schema.EntityId
 import org.kiji.schema.Kiji
@@ -50,21 +51,26 @@ import org.kiji.schema.util.InstanceBuilder
 import org.kiji.spark.connector.serialization.KijiSparkRegistrator
 
 class TestKryoSerializerSuite extends KijiClientTest {
-  import org.kiji.spark.TestKryoSerializerSuite._
-  @Before def setupTestHBaseKijiResult {
+  import TestKryoSerializerSuite._
+
+  @Ignore("Until testKryoSerializer is reenabled")
+  @Before
+  def setupTestHBaseKijiResult() {
     writeData(getKiji)
     mTable = HBaseKijiTable.downcast(getKiji.openTable("all_types_table"))
     mReader = mTable.openTableReader.asInstanceOf[HBaseKijiTableReader]
   }
 
-  @After def cleanupTestHBaseKijiRowView {
+  @Ignore("Until testKryoSerializer is reenabled")
+  @After
+  def cleanupTestHBaseKijiRowView() {
     mTable.release
     mReader.close
     //created to test the kryo serializer
     Files.delete(Paths.get("file.bin"))
   }
 
-
+  @Ignore("Broken, the fix is pending an overhaul to KijiSpark testing framework")
   @Test
   def testKryoSerializer[T]() = {
     val instance: ScalaKryoInstantiator = new ScalaKryoInstantiator()

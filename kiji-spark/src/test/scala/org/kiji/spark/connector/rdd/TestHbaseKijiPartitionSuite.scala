@@ -1,11 +1,8 @@
 // (c) Copyright 2014 WibiData, Inc.
-package org.kiji.spark
-
-import scala.collection.JavaConverters.seqAsJavaListConverter
+package org.kiji.spark.connector.rdd
 
 import org.junit.Assert
 import org.junit.Test
-
 import org.kiji.schema.EntityId
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.avro.ComponentType
@@ -15,8 +12,10 @@ import org.kiji.schema.avro.RowKeyEncoding
 import org.kiji.schema.avro.RowKeyFormat2
 import org.kiji.spark.connector.rdd.hbase.HBaseKijiPartition
 
-class TestKijiPartition {
-  import org.kiji.spark.TestKijiPartition._
+import scala.collection.JavaConverters.seqAsJavaListConverter
+
+class TestHbaseKijiPartitionSuite {
+  import org.kiji.spark.connector.rdd.TestHbaseKijiPartitionSuite._
 
   @Test
   def simpleKijiPartition() {
@@ -31,7 +30,7 @@ class TestKijiPartition {
   }
 }
 
-object TestKijiPartition {
+object TestHbaseKijiPartitionSuite {
   val COMPONENTS = List(
       RowKeyComponent.newBuilder().setName("astring").setType(ComponentType.STRING).build(),
       RowKeyComponent.newBuilder().setName("anint").setType(ComponentType.INTEGER).build(),
