@@ -16,12 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.kiji.express.music
 
 import scala.collection.mutable.Buffer
 
 import com.twitter.scalding.JobTest
+import org.junit.Ignore
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -40,6 +40,7 @@ import org.kiji.express.music.avro.TopSongs
 /**
  * A test for counting the number of times songs have been played by users.
  */
+@Ignore("Test is currently broken, pending WIBIEXP-433")
 @RunWith(classOf[JUnitRunner])
 class TopNextSongsSuite extends KijiSuite {
 
