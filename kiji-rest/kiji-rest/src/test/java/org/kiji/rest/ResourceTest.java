@@ -40,9 +40,9 @@ import org.junit.Before;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 /**
- * A base test class for testing Dropwizard resources. Copied from Dropwizard 0.6.2 with changes made
- * for compatibility with 0.7.x.  This is useful for writing tests without using the new Dropwizard
- * JUnit Rule helper, which does not interact well with Kiji's KijiClientTest.
+ * A base test class for testing Dropwizard resources. Copied from Dropwizard 0.6.2 with changes
+ * made for compatibility with 0.7.x.  This is useful for writing tests without using the new
+ * Dropwizard JUnit Rule helper, which does not interact well with Kiji's KijiClientTest.
  */
 public abstract class ResourceTest {
   static {
