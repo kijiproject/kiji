@@ -24,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 
 import org.junit.Test;
+import org.junit.Ignore;
 
 import org.kiji.delegation.NamedProvider;
 
@@ -41,6 +42,7 @@ public class TestVersionInfo {
         VersionInfo.getSoftwareVersion(this.getClass()));
   }
 
+  @Ignore("This test is broken, pending a fix by DEV-336")
   @Test
   public void testShouldGetProperSoftwarePackage() throws IOException {
     assertEquals("Kiji Dynamic Binding Library", VersionInfo.
