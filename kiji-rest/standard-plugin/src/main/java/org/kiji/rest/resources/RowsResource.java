@@ -51,7 +51,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
@@ -62,7 +61,6 @@ import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
@@ -72,7 +70,6 @@ import org.apache.hadoop.hbase.HConstants;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
-import org.kiji.rest.FresheningConfiguration;
 import org.kiji.rest.KijiClient;
 import org.kiji.rest.representations.KijiRestEntityId;
 import org.kiji.rest.representations.KijiRestRow;
@@ -123,11 +120,6 @@ public class RowsResource {
   private final ObjectMapper mJsonObjectMapper;
 
   /**
-   * Configuration values to use while freshening.
-   */
-  private final FresheningConfiguration mFreshenConfig;
-
-  /**
    * Special constant to denote that all columns are to be selected.
    */
   public static final String ALL_COLS = "*";
@@ -138,13 +130,10 @@ public class RowsResource {
    * @param kijiClient that this should use for connecting to Kiji.
    * @param jsonObjectMapper is the ObjectMapper used by DropWizard to convert from Java
    *        objects to JSON.
-   * @param freshenConfig to use with freshening reader.
    */
-  public RowsResource(KijiClient kijiClient, ObjectMapper jsonObjectMapper,
-      FresheningConfiguration freshenConfig) {
+  public RowsResource(final KijiClient kijiClient, final ObjectMapper jsonObjectMapper) {
     mKijiClient = kijiClient;
     mJsonObjectMapper = jsonObjectMapper;
-    mFreshenConfig = freshenConfig;
   }
 
   /**
@@ -229,33 +218,6 @@ public class RowsResource {
     }
   }
 
-  /** Prefix for per-request freshening parameters. */
-  private static final String FRESH_PARAMETER_PREFIX = "fresh.";
-
-  /**
-   * Extracts map of freshening parameters out of REST query.
-   *
-   * @param queryParameters of request from which to extract the freshening parameters.
-   * @return a map of strings to strings of freshening parameters.
-   */
-  private Map<String, String> getFresheningParameters(
-      final MultivaluedMap<String, String> queryParameters) {
-    final Map<String, String> fresheningParameters = Maps.newHashMap();
-    for (final Map.Entry<String, List<String>> query : queryParameters.entrySet()) {
-      final String queryKey = query.getKey();
-      if (queryKey.startsWith(FRESH_PARAMETER_PREFIX)) {
-        // Make sure the parameter was constructed acceptably, i.e.: fresh.key=value
-        Preconditions.checkNotNull(query.getValue());
-        Preconditions.checkArgument(1 == query.getValue().size());
-        final String queryValue = query.getValue().get(0);
-        fresheningParameters.put(
-            queryKey.substring(FRESH_PARAMETER_PREFIX.length()),
-            queryValue);
-      }
-    }
-    return fresheningParameters;
-  }
-
   /**
    * Resolves an iterable collection of KijiRestEntityIds to EntityId object.
    * This does not handle wildcards
@@ -315,9 +277,6 @@ public class RowsResource {
    * @param timeRange is the time range of cells to return (specified by min..max where min/max is
    *        the ms since UNIX epoch. min and max are both optional; however, if something is
    *        specified, at least one of min/max must be present.)
-   * @param freshen determines whether freshening should be done as part of the request.
-   * @param timeout amount of time in ms to wait for freshening to finish before returning the
-   *        old/stale/previous value of the column(s).
    * @param uriInfo contains all the query parameters.
    * @return the Response object containing the rows requested in JSON
    */
@@ -335,8 +294,6 @@ public class RowsResource {
       @QueryParam("cols") @DefaultValue(ALL_COLS) String columns,
       @QueryParam("versions") @DefaultValue("1") String maxVersionsString,
       @QueryParam("timerange") String timeRange,
-      @QueryParam("freshen") Boolean freshen,
-      @QueryParam("timeout") Long timeout,
       @Context UriInfo uriInfo) {
     // CSON: ParameterNumberCheck - There are a bunch of query param options
     long[] timeRanges = null;
@@ -395,14 +352,7 @@ public class RowsResource {
           // Continue scanning point row.
           final EntityId eid = kijiRestEntityId.resolve(layout);
           final KijiDataRequest request = dataBuilder.build();
-          // Give priority to request freshness parameter; if not set use default
-          scanner = ImmutableList.of(getKijiRowData(
-              kijiTable,
-              eid,
-              request,
-              freshen != null ? freshen : mFreshenConfig.isFreshen(),
-              timeout != null ? timeout : mFreshenConfig.getTimeout(),
-              getFresheningParameters(uriInfo.getQueryParameters())));
+          scanner = ImmutableList.of(RowResourceUtil.getKijiRowData(kijiTable, eid, request));
         }
       } else if (jsonEntityIds != null) {
         // If there are wildcards in the json array, creating and entity id list will
@@ -447,28 +397,6 @@ public class RowsResource {
         schemaTable)).build();
   }
 
-  /**
-   * Get potentially fresh row.
-   *
-   * @param table to query from.
-   * @param eid of the row to query.
-   * @param request for data.
-   * @param freshen is true iff we prefer to freshen.
-   * @param timeout at which the freshener returns preexisting data.
-   * @param fresheningParameters is the map of strings to strings of freshening parameters.
-   * @return row data.
-   * @throws IOException in case the data can not be fetched.
-   */
-  private KijiRowData getKijiRowData(
-      final KijiTable table,
-      final EntityId eid,
-      final KijiDataRequest request,
-      final boolean freshen,
-      final long timeout,
-      final Map<String, String> fresheningParameters) throws IOException {
-    // TODO: remove freshen, timeout and fresheningParameters
-    return RowResourceUtil.getKijiRowData(table, eid, request);
-  }
 
   /**
    * Commits a KijiRestRow representation to the kiji table: performs create and update.
@@ -685,5 +613,4 @@ public class RowsResource {
     }
     return true;
   }
-
 }

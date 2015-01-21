@@ -55,10 +55,6 @@ public class StandardKijiRestPlugin implements KijiRestPlugin {
     jersey.register(new InstanceResource(kijiClient));
     jersey.register(new TableResource(kijiClient));
     jersey.register(new TablesResource(kijiClient));
-    jersey.register(
-        new RowsResource(
-            kijiClient,
-            environment.getObjectMapper(),
-            configuration.getFresheningConfiguration()));
+    jersey.register(new RowsResource(kijiClient, environment.getObjectMapper()));
   }
 }

@@ -98,7 +98,6 @@ public class TestRowsResource extends ResourceTest {
 
   // Some commonly used schema options.
   private SchemaOption mStringOption = null;
-  private SchemaOption mLongOption = null;
 
   /**
    * {@inheritDoc}
@@ -111,7 +110,6 @@ public class TestRowsResource extends ResourceTest {
     mSchemaTable = mFakeKiji.getSchemaTable();
 
     mStringOption = new SchemaOption(Schema.create(Type.STRING).toString());
-    mLongOption = new SchemaOption(Schema.create(Type.LONG).toString());
 
     Set<KijiURI> mValidInstances = Sets.newHashSet();
 
@@ -215,8 +213,7 @@ public class TestRowsResource extends ResourceTest {
     mKijiClient = new ManagedKijiClient(mFakeKiji.getURI());
     mKijiClient.start();
 
-    RowsResource resource =
-        new RowsResource(mKijiClient, getObjectMapper(), new FresheningConfiguration(false, 0));
+    RowsResource resource = new RowsResource(mKijiClient, getObjectMapper());
     addResource(resource);
   }
 
@@ -259,7 +256,7 @@ public class TestRowsResource extends ResourceTest {
 
   protected final JsonNode stringToJsonNode(String input) throws IOException {
     ObjectMapper mapper = new ObjectMapper();
-    final JsonParser parser = new JsonFactory().createJsonParser(input)
+    final JsonParser parser = new JsonFactory().createParser(input)
         .enable(Feature.ALLOW_COMMENTS)
         .enable(Feature.ALLOW_SINGLE_QUOTES)
         .enable(Feature.ALLOW_UNQUOTED_FIELD_NAMES);
@@ -886,7 +883,7 @@ public class TestRowsResource extends ResourceTest {
 
     KijiTableLayout layout = KijiTableLayouts
         .getTableLayout("org/kiji/rest/layouts/sample_table.json");
-    CellSpec spec = layout.getCellSpec(new KijiColumnName("group_family:inline_record"));
+    CellSpec spec = layout.getCellSpec(KijiColumnName.create("group_family", "inline_record"));
     GenericData.Record genericRecord = new GenericData.Record(spec.getAvroSchema());
     genericRecord.put("username", "gumshoe");
     genericRecord.put("num_purchases", 5647382910L);
@@ -1095,7 +1092,10 @@ public class TestRowsResource extends ResourceTest {
 
   private static <T> KijiCell<T> fromInputs(String family, String qualifier,
       Long timestamp, T value, Schema writerSchema) {
-    return new KijiCell<T>(family, qualifier, timestamp, new DecodedCell<T>(writerSchema, value));
+    return KijiCell.create(
+        KijiColumnName.create(family, qualifier),
+        timestamp,
+        new DecodedCell<T>(writerSchema, value));
   }
 
   @Test

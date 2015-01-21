@@ -37,10 +37,6 @@ public class KijiRESTConfiguration extends Configuration {
   @JsonProperty("cluster")
   private String mCluster;
 
-  /** Subconfiguration for freshening. */
-  @JsonProperty("freshening")
-  private FresheningConfiguration mFresheningConfiguration = new FresheningConfiguration();
-
   /** Set cache timeout in minutes. */
   @JsonProperty("cacheTimeout")
   private long mCacheTimeout = 10;
@@ -68,11 +64,6 @@ public class KijiRESTConfiguration extends Configuration {
   /** @return The cluster address. */
   public final String getClusterURI() {
     return mCluster;
-  }
-
-  /** @return The freshening configuration. */
-  public FresheningConfiguration getFresheningConfiguration() {
-    return mFresheningConfiguration;
   }
 
   /** @return The caching timeout. */
