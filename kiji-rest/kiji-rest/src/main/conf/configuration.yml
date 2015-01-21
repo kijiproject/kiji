@@ -14,37 +14,33 @@ remote-shutdown: true    # enable/disable admin command that allows the server t
 # Set default port and path to REST URI and let logs divert to ./logs/ instead of
 # printing to the console. This is recommended for production systems. For more
 # information on Dropwizard logging options and defaults, see
-# http://dropwizard.codahale.com/manual/core/#configuration-defaults
+# http://dropwizard.io/manual/configuration.html
 
-http:
-  port: 8080
-  adminPort: 8081
+server:
+  applicationConnectors:
+    - type: http
+      port: 8080
+  adminConnectors:
+    - type: http
+      port: 8081
   requestLog:
-    console:
-      # If true, log requests to stdout.
-      enabled: false
-      timeZone: UTC
-      logFormat: null
-    file:
-      enabled: true
-      timeZone: UTC
-      logFormat: null
-      currentLogFilename: ./logs/requests.log
-      archive: true
-      archivedLogFilenamePattern: ./logs/requests-%d.log.gz
-      archivedFileCount: 5
+    timeZone: UTC
+    appenders:
+      - type: file
+        currentLogFilename: logs/requests.log
+        archive: true
+        archivedLogFilenamePattern: logs/archive/requests-%d.log
+        archivedFileCount: 7 # 1 week
+
 logging:
-  console:
-    enabled: false
-    threshold: ALL
-    timeZone: UTC
-    logFormat: null
-  file:
-    enabled: true
-    threshold: ALL
-    timeZone: UTC
-    logFormat: null
-    currentLogFilename: ./logs/app.log
-    archive: true
-    archivedLogFilenamePattern: ./logs/app-%d.log.gz
-    archivedFileCount: 5
+  level: INFO
+  loggers:
+    org.apache.zookeeper: WARN
+    org.apache.curator: WARN
+  appenders:
+    - type: file
+      currentLogFilename: logs/app.log
+      archive: true
+      archivedLogFilenamePattern: logs/archive/app-%d.log
+      archivedFileCount: 7 # 1 week
+      timeZone: UTC
