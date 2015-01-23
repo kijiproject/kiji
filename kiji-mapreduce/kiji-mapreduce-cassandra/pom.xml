@@ -95,11 +95,6 @@
       <groupId>org.kiji.annotations</groupId>
       <artifactId>annotations</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.datastax.cassandra</groupId>
-      <artifactId>cassandra-driver-core</artifactId>
-      <version>2.0.4</version>
-    </dependency>
 
     <!-- Schema and Cassandra Schema -->
     <dependency>
@@ -130,7 +125,7 @@
     </dependency>
     <dependency>
       <groupId>org.kiji.platforms</groupId>
-      <artifactId>kiji-compile-platform</artifactId>
+      <artifactId>kiji-cassandra-platform</artifactId>
       <type>pom</type>
       <version>${kiji-platforms.version}</version>
       <scope>provided</scope>
@@ -153,7 +148,7 @@
 
     <dependency>
       <groupId>org.kiji.platforms</groupId>
-      <artifactId>kiji-test-platform</artifactId>
+      <artifactId>kiji-cassandra-test-platform</artifactId>
       <type>pom</type>
       <version>${kiji-platforms.version}</version>
       <scope>test</scope>

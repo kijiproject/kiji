@@ -123,9 +123,6 @@ public final class CassandraKijiInstaller extends KijiInstaller {
         CassandraSystemTable.uninstall(admin, cassandraURI);
         CassandraMetaTable.uninstall(admin, cassandraURI);
         CassandraSchemaTable.uninstall(admin, cassandraURI);
-
-        // Assert that there are no tables left and delete the keyspace.
-        assert (admin.keyspaceIsEmpty());
         admin.deleteKeyspace();
       }
 
