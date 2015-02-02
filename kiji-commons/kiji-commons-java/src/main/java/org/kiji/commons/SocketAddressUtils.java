@@ -59,6 +59,15 @@ public final class SocketAddressUtils {
     }
   }
 
+  /**
+   * Get the publicly resolvable hostname of the current host machine.
+   *
+   * @return The publicly resolvable hostname of the current host machine.
+   */
+  public static InetAddress getPublicLocalHost() {
+    return localToPublic(new InetSocketAddress(0)).getAddress();
+  }
+
   /** Private constructor for utility class. */
   private SocketAddressUtils() { }
 }
