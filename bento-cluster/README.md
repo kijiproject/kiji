@@ -5,13 +5,7 @@ and Cassandra 2 in pseudo-distributed mode.
 
 ## Installation
 
-The Bento Cluster can be installed using pip:
-
-    pip3 install kiji-bento-cluster
-
-To upgrade your installation:
-
-    pip3 install --upgrade kiji-bento-cluster
+The Bento Cluster can be built using KijiBuild v2.
 
 ## Usage
 

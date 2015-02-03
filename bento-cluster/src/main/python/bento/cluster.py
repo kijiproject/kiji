@@ -34,13 +34,14 @@ for bento_instance in bento_system.list_bentos():
 import json
 import logging
 import os
-import pkgutil
 import socket
 import subprocess
 import sys
 import tempfile
 import time
 import xmlrpc.client
+
+from base import base
 
 import docker
 
@@ -59,14 +60,11 @@ DEFAULT_POLL_INTERVAL = 0.1
 
 
 def _load_resource(resource_name):
-    loader = pkgutil.get_loader("bento")
-    avpr_path = os.path.join(os.path.dirname(loader.path), resource_name)
-    return loader.get_data(avpr_path).decode()
+    return base.get_resource("bento", resource_name).decode("utf-8")
 
 
 BENTO_ENV_TEMPLATE = _load_resource("bento-env-template.sh")
 CORE_SITE_TEMPLATE = _load_resource("core-site-template.xml")
-HDFS_SITE_TEMPLATE = _load_resource("hdfs-site-template.xml")
 MAPRED_SITE_TEMPLATE = _load_resource("mapred-site-template.xml")
 YARN_SITE_TEMPLATE = _load_resource("yarn-site-template.xml")
 HBASE_SITE_TEMPLATE = _load_resource("hbase-site-template.xml")
@@ -452,9 +450,6 @@ class Bento(object):
         with open(os.path.join(hadoop_output_dir, 'core-site.xml'), 'wt', encoding='utf-8') \
                 as core_site_file:
             core_site_file.write(CORE_SITE_TEMPLATE % dict(bento_host=self.bento_hostname))
-        with open(os.path.join(hadoop_output_dir, 'hdfs-site.xml'), 'wt', encoding='utf-8') \
-                as hdfs_site_file:
-            hdfs_site_file.write(HDFS_SITE_TEMPLATE)
         with open(os.path.join(hadoop_output_dir, 'mapred-site.xml'), 'wt', encoding='utf-8') \
                 as mapred_site_file:
             mapred_site_file.write(MAPRED_SITE_TEMPLATE % dict(bento_host=self.bento_hostname))
