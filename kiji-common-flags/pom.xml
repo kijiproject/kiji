@@ -1,76 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-<!--
-   Licensed to WibiData, Inc. under one or more contributor license
-   agreements.  See the NOTICE file distributed with this work for
-   additional information regarding copyright ownership.  WibiData, Inc.
-   licenses this file to you under the Apache License, Version 2.0
-   (the "License"); you may not use this file except in compliance
-   with the License.  You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-   implied.  See the License for the specific language governing
-   permissions and limitations under the License.
--->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.kiji.common</groupId>
   <artifactId>kiji-common-flags</artifactId>
-  <version>1.1.1-SNAPSHOT</version>
+  <version>3.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <parent>
-    <groupId>org.kiji.pom</groupId>
-    <artifactId>root-pom</artifactId>
-    <version>1.2.1-SNAPSHOT</version>
-  </parent>
+  <!-- Unresolved dependency list: -->
 
-  <name>kiji-common-flags</name>
-  <url>http://www.kiji.org</url>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </build>
 
+  <!-- Resolved dependency list: -->
   <dependencies>
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.delegation</groupId>
-      <artifactId>kiji-delegation</artifactId>
-      <version>1.1.2-SNAPSHOT</version>
-      <scope>compile</scope>
-    </dependency>
-
-    <!-- Following dependencies are used in test only: -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <scope>test</scope>
-    </dependency>
+    <dependency> <groupId>com.google.guava</groupId>                          <artifactId>guava</artifactId>                               <type>jar</type>               <version>15.0</version>                  <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.kiji.annotations</groupId>                      <artifactId>annotations</artifactId>                         <type>jar</type>               <version>3.0.0-SNAPSHOT</version>        <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.kiji.delegation</groupId>                       <artifactId>kiji-delegation</artifactId>                     <type>jar</type>               <version>3.0.0-SNAPSHOT</version>        <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.slf4j</groupId>                                 <artifactId>slf4j-api</artifactId>                           <type>jar</type>               <version>1.7.5</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>junit</groupId>                                     <artifactId>junit</artifactId>                               <type>jar</type>               <version>4.10</version>                  <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.hamcrest</groupId>                              <artifactId>hamcrest-core</artifactId>                       <type>jar</type>               <version>1.1</version>                   <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>testing</groupId>                                   <artifactId>test-annotation-collector</artifactId>           <type>jar</type>               <version>3.0.0-SNAPSHOT</version>        <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
   </dependencies>
-
-  <scm>
-    <connection>scm:git:git@github.com:kijiproject/kiji-common-flags.git</connection>
-    <url>scm:git:git@github.com:kijiproject/kiji-common-flags.git</url>
-    <developerConnection>scm:git:git@github.com:kijiproject/kiji-common-flags.git</developerConnection>
-  </scm>
 
 </project>

@@ -1,123 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <!-- (c) Copyright 2012 WibiData, Inc. See the NOTICE file distributed
-    with this work for additional information regarding copyright ownership.
-    Licensed under the Apache License, Version 2.0 (the "License"); you may not
-    use this file except in compliance with the License. You may obtain a copy
-    of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required
-    by applicable law or agreed to in writing, software distributed under the
-    License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
-    OF ANY KIND, either express or implied. See the License for the specific
-    language governing permissions and limitations under the License. -->
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.kiji.checkin</groupId>
   <artifactId>kiji-checkin</artifactId>
-  <version>1.1.0-SNAPSHOT</version>
+  <version>3.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <parent>
-    <groupId>org.kiji.pom</groupId>
-    <artifactId>root-pom</artifactId>
-    <version>1.2.1-SNAPSHOT</version>
-  </parent>
+  <!-- Unresolved dependency list: -->
 
-  <name>Kiji Checkins Library</name>
-  <description>Checkin library for kiji components. Provides libraries for easy logging to
-  remote server of commands.</description>
-  <inceptionYear>2012</inceptionYear>
 
-  <properties>
-    <annotations.version>1.0.2</annotations.version>
-  </properties>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <!-- must supply src/main/checkstyle/checkstyle.xml and suppressions.xml
-          to use this -->
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <!-- must supply src/main/findbugs/excludeFilter.xml and includeFilter.xml -->
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>findbugs-maven-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </build>
-
+  <!-- Resolved dependency list: -->
   <dependencies>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>4.2.3</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.common</groupId>
-      <artifactId>kiji-common-flags</artifactId>
-      <version>1.1.1-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-    </dependency>
-    <!-- Testing Dependencies -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.easymock</groupId>
-      <artifactId>easymock</artifactId>
-    </dependency>
+    <dependency> <groupId>com.google.code.gson</groupId>                      <artifactId>gson</artifactId>                                <type>jar</type>               <version>2.2.2</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>com.google.guava</groupId>                          <artifactId>guava</artifactId>                               <type>jar</type>               <version>15.0</version>                  <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>commons-codec</groupId>                             <artifactId>commons-codec</artifactId>                       <type>jar</type>               <version>1.6</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>commons-io</groupId>                                <artifactId>commons-io</artifactId>                          <type>jar</type>               <version>2.1</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>commons-lang</groupId>                              <artifactId>commons-lang</artifactId>                        <type>jar</type>               <version>2.6</version>                   <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>commons-logging</groupId>                           <artifactId>commons-logging</artifactId>                     <type>jar</type>               <version>1.1.1</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.apache.httpcomponents</groupId>                 <artifactId>httpclient</artifactId>                          <type>jar</type>               <version>4.2.3</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.apache.httpcomponents</groupId>                 <artifactId>httpcore</artifactId>                            <type>jar</type>               <version>4.2.2</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.kiji.annotations</groupId>                      <artifactId>annotations</artifactId>                         <type>jar</type>               <version>3.0.0-SNAPSHOT</version>        <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.kiji.common</groupId>                           <artifactId>kiji-common-flags</artifactId>                   <type>jar</type>               <version>3.0.0-SNAPSHOT</version>        <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.kiji.delegation</groupId>                       <artifactId>kiji-delegation</artifactId>                     <type>jar</type>               <version>3.0.0-SNAPSHOT</version>        <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.slf4j</groupId>                                 <artifactId>slf4j-api</artifactId>                           <type>jar</type>               <version>1.7.5</version>                 <scope>compile</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>cglib</groupId>                                     <artifactId>cglib-nodep</artifactId>                         <type>jar</type>               <version>2.2</version>                   <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>junit</groupId>                                     <artifactId>junit</artifactId>                               <type>jar</type>               <version>4.10</version>                  <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.easymock</groupId>                              <artifactId>easymock</artifactId>                            <type>jar</type>               <version>3.0</version>                   <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.hamcrest</groupId>                              <artifactId>hamcrest-core</artifactId>                       <type>jar</type>               <version>1.1</version>                   <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>org.objenesis</groupId>                             <artifactId>objenesis</artifactId>                           <type>jar</type>               <version>1.2</version>                   <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
+    <dependency> <groupId>testing</groupId>                                   <artifactId>test-annotation-collector</artifactId>           <type>jar</type>               <version>3.0.0-SNAPSHOT</version>        <scope>test</scope> <exclusions> <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion> </exclusions></dependency>
   </dependencies>
-
-  <scm>
-    <connection>scm:git:git@github.com:kijiproject/kiji-checkin.git</connection>
-    <url>scm:git:git@github.com:kijiproject/kiji-checkin.git</url>
-    <developerConnection>scm:git:git@github.com:kijiproject/kiji-checkin.git</developerConnection>
-  </scm>
 
 </project>
