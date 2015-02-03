@@ -111,8 +111,12 @@ $docker build -t "kijiproject/bento-cluster:cdh5" ${BENTO_CLUSTER_HOME}/docker-c
 $docker build -t "kijiproject/bento-cluster:cdh5.1.0" ${BENTO_CLUSTER_HOME}/docker-cdh5.1.0
 $docker build -t "kijiproject/bento-cluster:cdh5.1.2" ${BENTO_CLUSTER_HOME}/docker-cdh5.1.2
 $docker build -t "kijiproject/bento-cluster:cdh5.1.3" ${BENTO_CLUSTER_HOME}/docker-cdh5.1.3
+$docker build -t "kijiproject/bento-cluster:cdh5.2.1" ${BENTO_CLUSTER_HOME}/docker-cdh5.2.1
+$docker build -t "kijiproject/bento-cluster:cdh5.3.0" ${BENTO_CLUSTER_HOME}/docker-cdh5.3.0
 
 $docker push kijiproject/bento-cluster:cdh5
 $docker push kijiproject/bento-cluster:cdh5.1.0
 $docker push kijiproject/bento-cluster:cdh5.1.2
 $docker push kijiproject/bento-cluster:cdh5.1.3
+$docker push kijiproject/bento-cluster:cdh5.2.1
+$docker push kijiproject/bento-cluster:cdh5.3.0
