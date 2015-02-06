@@ -244,6 +244,9 @@ public final class HBaseMaterializedKijiResult<T> implements KijiResult<T> {
       final HBaseColumnNameTranslator translator,
       final Result result
   ) {
+    if (result.isEmpty()) {
+      return ImmutableList.of();
+    }
     final KijiColumnName column = columnRequest.getColumnName();
     final List<KeyValue> keyValues = Arrays.asList(result.raw());
 
