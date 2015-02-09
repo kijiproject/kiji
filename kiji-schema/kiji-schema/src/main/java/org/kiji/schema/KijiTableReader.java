@@ -174,6 +174,24 @@ public interface KijiTableReader extends Closeable {
       throws IOException;
 
   /**
+   * Get a KijiResultScanner over the given partition using the specified data request.
+   *
+   * <p>
+   *   The partition must belong to the same table as the scanner.
+   * </p>
+   *
+   * @param dataRequest Specifies the data to request from each row.
+   * @param partition The partition of the table to scan.
+   * @param <T> Type of the data in the requested cells.
+   * @return A KijiResultScanner for the requested data.
+   * @throws IOException In case of an error reading from the table.
+   */
+  <T> KijiResultScanner<T> getKijiResultScanner(
+      KijiDataRequest dataRequest,
+      KijiPartition partition
+  ) throws IOException;
+
+  /**
    * Options for KijiRowScanners.
    */
   @ApiAudience.Public

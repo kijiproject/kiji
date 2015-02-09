@@ -20,6 +20,7 @@
 package org.kiji.schema;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 
 import org.kiji.annotations.ApiAudience;
@@ -177,8 +178,24 @@ public interface KijiTable extends ReferenceCountable<KijiTable> {
    *
    * @return An ordered list of the table regions.
    * @throws IOException If there is an error retrieving the regions of this table.
+   * @deprecated Use {@link #getPartitions()}.
    */
+  @Deprecated
   List<KijiRegion> getRegions() throws IOException;
+
+  /**
+   * Get the complete and non-overlapping group of partitions in the table.
+   *
+   * <p>
+   *   These partitions may be used to perform efficient scans over the rows of the table.
+   *   Performing a scan for each returned partition will yield all of the rows in the table exactly
+   *   once.
+   * </p>
+   *
+   * @return The partitions of this Kiji table.
+   * @throws IOException If there is an error retrieving the partitions of this table.
+   */
+  Collection<? extends KijiPartition> getPartitions() throws IOException;
 
   /**
    * Get a table and column annotator for this table.

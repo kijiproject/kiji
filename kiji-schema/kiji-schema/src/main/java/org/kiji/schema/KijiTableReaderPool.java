@@ -796,6 +796,15 @@ public final class KijiTableReaderPool
 
     /** {@inheritDoc} */
     @Override
+    public <T> KijiResultScanner<T> getKijiResultScanner(
+        final KijiDataRequest dataRequest,
+        final KijiPartition partition
+    ) throws IOException {
+      return mInnerReader.getKijiResultScanner(dataRequest, partition);
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public void close() throws IOException {
       try {
         mPool.returnObject(this);

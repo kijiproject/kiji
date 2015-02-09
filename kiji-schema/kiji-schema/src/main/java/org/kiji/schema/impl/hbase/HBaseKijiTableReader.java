@@ -44,11 +44,14 @@ import org.slf4j.LoggerFactory;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.commons.ResourceTracker;
 import org.kiji.schema.EntityId;
+import org.kiji.schema.HBaseEntityId;
 import org.kiji.schema.InternalKijiError;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestValidator;
+import org.kiji.schema.KijiPartition;
 import org.kiji.schema.KijiResult;
+import org.kiji.schema.KijiResultScanner;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTableReader;
@@ -622,6 +625,22 @@ public final class HBaseKijiTableReader implements KijiTableReader {
         capsule.getCellDecoderProvider(),
         capsule.getColumnNameTranslator(),
         scannerOptions.getReopenScannerOnTimeout());
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public <T> KijiResultScanner<T> getKijiResultScanner(
+      final KijiDataRequest dataRequest,
+      final KijiPartition partition
+  ) throws IOException {
+    Preconditions.checkArgument(partition instanceof HBaseKijiPartition,
+        "Can not scan an HBase table with a non-HBase partition.");
+    final HBaseKijiPartition hbasePartition = (HBaseKijiPartition) partition;
+
+    final KijiScannerOptions options = new KijiScannerOptions();
+    options.setStartRow(HBaseEntityId.fromHBaseRowKey(hbasePartition.getStartKey()));
+    options.setStopRow(HBaseEntityId.fromHBaseRowKey(hbasePartition.getEndKey()));
+    return getKijiResultScanner(dataRequest, options);
   }
 
   /** {@inheritDoc} */

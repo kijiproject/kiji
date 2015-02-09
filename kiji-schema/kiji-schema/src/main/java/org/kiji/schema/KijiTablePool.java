@@ -22,6 +22,7 @@ package org.kiji.schema;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayDeque;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -594,6 +595,12 @@ public final class KijiTablePool implements Closeable {
     @Override
     public List<KijiRegion> getRegions() throws IOException {
       return mTable.getRegions();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Collection<? extends KijiPartition> getPartitions() throws IOException {
+      return mTable.getPartitions();
     }
 
     /** {@inheritDoc} */

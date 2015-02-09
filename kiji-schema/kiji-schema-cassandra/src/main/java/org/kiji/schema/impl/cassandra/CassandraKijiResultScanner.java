@@ -31,6 +31,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
 import org.mortbay.io.RuntimeIOException;
 import org.slf4j.Logger;
@@ -85,7 +86,7 @@ public class CassandraKijiResultScanner<T> implements KijiResultScanner<T> {
    * Create a {@link KijiResultScanner} over a Cassandra Kiji table with the provided options.
    *
    * @param request The data request defining the columns to scan.
-   * @param options Scan options optionally including start and stop tokens.
+   * @param tokenRange The range of tokens to scan.
    * @param table The table to scan.
    * @param layout The layout of the table.
    * @param decoderProvider A cell decoder provider for the table.
@@ -94,7 +95,7 @@ public class CassandraKijiResultScanner<T> implements KijiResultScanner<T> {
    */
   public CassandraKijiResultScanner(
       final KijiDataRequest request,
-      final CassandraKijiScannerOptions options,
+      final Range<Long> tokenRange,
       final CassandraKijiTable table,
       final KijiTableLayout layout,
       final CellDecoderProvider decoderProvider,
@@ -119,7 +120,7 @@ public class CassandraKijiResultScanner<T> implements KijiResultScanner<T> {
     }
 
     mIterator = Iterators.transform(
-        getEntityIDs(tableNames, options, table, layout),
+        getEntityIDs(tableNames, tokenRange, table, layout),
         new Function<EntityId, KijiResult<T>>() {
           /** {@inheritDoc} */
           @Override
@@ -144,14 +145,14 @@ public class CassandraKijiResultScanner<T> implements KijiResultScanner<T> {
    * subset of cassandra tables in a Kiji table.
    *
    * @param tables The Cassandra tables to get Entity IDs from.
-   * @param options The scan options. May specify start and stop tokens.
+   * @param tokenRange The token range to scan.
    * @param table The Kiji Cassandra table which the Cassandra tables belong to.
    * @param layout The layout of the Kiji Cassandra table.
    * @return An iterator of Entity IDs.
    */
   public static Iterator<EntityId> getEntityIDs(
       final List<CassandraTableName> tables,
-      final CassandraKijiScannerOptions options,
+      final Range<Long> tokenRange,
       final CassandraKijiTable table,
       final KijiTableLayout layout
   ) {
@@ -165,7 +166,7 @@ public class CassandraKijiResultScanner<T> implements KijiResultScanner<T> {
                   /** {@inheritDoc} */
                   @Override
                   public Statement apply(final CassandraTableName tableName) {
-                    return statementCache.createEntityIDScanStatement(tableName, options);
+                    return statementCache.createEntityIDScanStatement(tableName, tokenRange);
                   }
                 })
             .transform(

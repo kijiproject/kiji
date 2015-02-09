@@ -370,7 +370,7 @@ public final class HBaseKiji implements Kiji {
 
   /** {@inheritDoc} */
   @Override
-  public KijiTable openTable(String tableName) throws IOException {
+  public HBaseKijiTable openTable(String tableName) throws IOException {
     final State state = mState.get();
     Preconditions.checkState(state == State.OPEN,
         "Cannot open table in Kiji instance %s in state %s.", this, state);

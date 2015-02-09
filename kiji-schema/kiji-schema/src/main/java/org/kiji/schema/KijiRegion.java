@@ -27,9 +27,12 @@ import org.kiji.annotations.ApiStability;
 /**
  * A KijiRegion specifies a logical region in a Kiji Table, bounded by
  * a start key (inclusive) and an end key (exclusive).
+ *
+ * @deprecated Use {@link KijiPartition}.
  */
 @ApiAudience.Public
 @ApiStability.Evolving
+@Deprecated
 public interface KijiRegion {
   /**
    * Gets the start key (inclusive) of this region.

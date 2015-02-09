@@ -639,22 +639,18 @@ class FakeHTable(
    * @param split Split boundaries (excluding the first and last null/empty).
    */
   private[fakehtable] def setSplit(split: Array[Bytes]): Unit = {
-    val fakePort = 1234
     val tableName: Bytes = Bytes.toBytes(name)
 
-    val newRegions = Buffer[HRegionLocation]()
-    for ((start, end) <- toRegions(split)) {
-      val fakeHost = "fake-location-%d".format(newRegions.size)
-      val regionInfo = new HRegionInfo(TableName.valueOf(tableName), start, end)
-      val seqNum = System.currentTimeMillis()
-      newRegions += new HRegionLocation(
-          regionInfo,
-          ServerName.valueOf(fakeHost, fakePort, /* startCode = */ 0),
-          /* seqNum = */ 0
-      )
-    }
+    val newRegions: Seq[HRegionLocation] = toRegions(split).zipWithIndex.map {
+      case (keys: (Bytes, Bytes),  port: Int) => {
+        val (start, end) = keys
+        val regionInfo: HRegionInfo = new HRegionInfo(TableName.valueOf(tableName), start, end)
+        new HRegionLocation(regionInfo, ServerName.valueOf("localhost", port, 0))
+      }
+    }.toVector
+
     synchronized {
-      this.regions = newRegions.toSeq
+      this.regions = newRegions
     }
   }
 

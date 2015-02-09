@@ -20,6 +20,7 @@
 package org.kiji.schema.impl.hbase;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -404,6 +405,14 @@ public final class HBaseKijiTable implements KijiTable {
 
     } finally {
       htable.close();
+    }
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public Collection<HBaseKijiPartition> getPartitions() throws IOException {
+    try (HTableInterface htable = mHTableFactory.create(mConf, mHBaseTableName)) {
+      return HBaseKijiPartition.getPartitions((HTable) htable);
     }
   }
 

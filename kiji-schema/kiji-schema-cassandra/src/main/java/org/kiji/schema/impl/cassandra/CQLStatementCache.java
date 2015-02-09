@@ -22,9 +22,11 @@ package org.kiji.schema.impl.cassandra;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.gt;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.gte;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.lt;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.lte;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.ttl;
 
@@ -42,12 +44,15 @@ import com.datastax.driver.core.querybuilder.Delete;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.Select;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.BoundType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -384,12 +389,12 @@ public class CQLStatementCache {
    * Kiji Table.
    *
    * @param table The translated Cassandra table name.
-   * @param options The scan options optionally including start and stop tokens.
+   * @param tokenRange A range of tokens to scan.
    * @return a statement that will get the single column.
    */
   public Statement createEntityIDScanStatement(
       final CassandraTableName table,
-      final CassandraKijiScannerOptions options
+      final Range<Long> tokenRange
   ) {
 
     // Retrieve the prepared statement from the cache
@@ -398,12 +403,18 @@ public class CQLStatementCache {
     // partition key. CQL does not allow DISTINCT over non partition-key columns.
     final boolean useDistinct = mEntityIDClusteringColumns.isEmpty();
 
+    final Optional<BoundType> lowerBound =
+        tokenRange.hasLowerBound()
+            ? Optional.of(tokenRange.lowerBoundType())
+            : Optional.<BoundType>absent();
+
+    final Optional<BoundType> upperBound =
+        tokenRange.hasUpperBound()
+            ? Optional.of(tokenRange.upperBoundType())
+            : Optional.<BoundType>absent();
+
     final EntityIDScanStatementKey key =
-        new EntityIDScanStatementKey(
-            table,
-            options.hasStartToken(),
-            options.hasStopToken(),
-            useDistinct);
+        new EntityIDScanStatementKey(table, lowerBound, upperBound, useDistinct);
     final PreparedStatement statement = mCache.getUnchecked(key);
 
     // Bind the parameters to the prepared statement
@@ -411,12 +422,12 @@ public class CQLStatementCache {
     // slots are for the min/max token
     final List<Object> values = Lists.newArrayListWithCapacity(2);
 
-    if (options.hasStartToken()) {
-      values.add(options.getStartToken());
+    if (tokenRange.hasLowerBound()) {
+      values.add(tokenRange.lowerEndpoint());
     }
 
-    if (options.hasStopToken()) {
-      values.add(options.getStopToken());
+    if (tokenRange.hasUpperBound()) {
+      values.add(tokenRange.upperEndpoint());
     }
 
     return statement.bind(values.toArray()).setFetchSize(ENTITY_ID_BATCH_SIZE);
@@ -428,27 +439,27 @@ public class CQLStatementCache {
    */
   private final class EntityIDScanStatementKey implements StatementKey {
     private final CassandraTableName mTable;
-    private final boolean mHasStartToken;
-    private final boolean mHasStopToken;
+    private final Optional<BoundType> mLowerBound;
+    private final Optional<BoundType> mUpperBound;
     private final boolean mUseDistinct;
 
     /**
      * Create a new entity ID scan statement key.
      *
      * @param table The Cassandra table name.
-     * @param hasStartToken Whether the scan contains a start token.
-     * @param hasStopToken Whether the scan contains a stop token.
+     * @param lowerBound The lower token bound type (open or closed), if present.
+     * @param upperBound The upper token bound type (open or closed), if present.
      * @param useDistinct Whether the scan can use the 'DISTINCT' clause optimization.
      */
     private EntityIDScanStatementKey(
         final CassandraTableName table,
-        final boolean hasStartToken,
-        final boolean hasStopToken,
+        final Optional<BoundType> lowerBound,
+        final Optional<BoundType> upperBound,
         final boolean useDistinct
     ) {
       mTable = table;
-      mHasStartToken = hasStartToken;
-      mHasStopToken = hasStopToken;
+      mLowerBound = lowerBound;
+      mUpperBound = upperBound;
       mUseDistinct = useDistinct;
     }
 
@@ -471,12 +482,30 @@ public class CQLStatementCache {
 
       final Select select = selection.from(mTable.getKeyspace(), mTable.getTable());
 
-      if (mHasStartToken) {
-        select.where(gte(tokenColumn, bindMarker()));
+      if (mLowerBound.isPresent()) {
+        switch (mLowerBound.get()) {
+          case OPEN: {
+            select.where(gt(tokenColumn, bindMarker()));
+            break;
+          }
+          case CLOSED: {
+            select.where(gte(tokenColumn, bindMarker()));
+            break;
+          }
+        }
       }
 
-      if (mHasStopToken) {
-        select.where(lt(tokenColumn, bindMarker()));
+      if (mUpperBound.isPresent()) {
+        switch (mUpperBound.get()) {
+          case OPEN: {
+            select.where(lt(tokenColumn, bindMarker()));
+            break;
+          }
+          case CLOSED: {
+            select.where(lte(tokenColumn, bindMarker()));
+            break;
+          }
+        }
       }
 
       return select;
@@ -487,21 +516,15 @@ public class CQLStatementCache {
     public String toString() {
       return Objects.toStringHelper(this)
           .add("table", mTable)
-          .add("hasStartToken", mHasStartToken)
-          .add("hasStopToken", mHasStopToken)
-          .add("useDistinct", mHasStopToken)
+          .add("lowerBound", mLowerBound)
+          .add("upperBound", mUpperBound)
           .toString();
     }
 
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-      return Objects.hashCode(
-          this.getClass(),
-          mTable,
-          mHasStartToken,
-          mHasStopToken,
-          mUseDistinct);
+      return Objects.hashCode(this.getClass(), mTable, mLowerBound, mUpperBound, mUseDistinct);
     }
 
     /** {@inheritDoc} */
@@ -515,8 +538,8 @@ public class CQLStatementCache {
       }
       final EntityIDScanStatementKey other = (EntityIDScanStatementKey) obj;
       return Objects.equal(this.mTable, other.mTable)
-          && Objects.equal(this.mHasStartToken, other.mHasStartToken)
-          && Objects.equal(this.mHasStopToken, other.mHasStopToken)
+          && Objects.equal(this.mLowerBound, other.mLowerBound)
+          && Objects.equal(this.mUpperBound, other.mUpperBound)
           && Objects.equal(this.mUseDistinct, other.mUseDistinct);
     }
   }

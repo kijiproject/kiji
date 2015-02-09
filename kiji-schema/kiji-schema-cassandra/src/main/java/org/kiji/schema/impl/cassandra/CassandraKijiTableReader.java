@@ -31,6 +31,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +42,9 @@ import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestValidator;
+import org.kiji.schema.KijiPartition;
 import org.kiji.schema.KijiResult;
+import org.kiji.schema.KijiResultScanner;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTableReader;
@@ -439,9 +442,7 @@ public final class CassandraKijiTableReader implements KijiTableReader {
       final KijiDataRequest dataRequest,
       final KijiScannerOptions kijiScannerOptions
   ) throws IOException {
-    throw new UnsupportedOperationException(
-        "Cassandra Kiji cannot use KijiScannerOptions"
-    );
+    throw new UnsupportedOperationException("Cassandra Kiji cannot use KijiScannerOptions.");
   }
 
   /**
@@ -469,26 +470,39 @@ public final class CassandraKijiTableReader implements KijiTableReader {
     return getKijiResultScanner(request, CassandraKijiScannerOptions.withoutBounds());
   }
 
-  /**
-   * Get a KijiResultScanner for the given data request and scan options.
-   *
-   * <p>
-   *   This method allows the caller to specify a type-bound on the values of the {@code KijiCell}s
-   *   of the returned {@code KijiResult}s. The caller should be careful to only specify an
-   *   appropriate type. If the type is too specific (or wrong), a runtime
-   *   {@link java.lang.ClassCastException} will be thrown when the returned {@code KijiResult} is
-   *   used. See the 'Type Safety' section of {@code KijiResult}'s documentation for more details.
-   * </p>
-   *
-   * @param request Data request defining the data to retrieve from each row.
-   * @param scannerOptions Options to control the operation of the scanner.
-   * @param <T> type {@code KijiCell} value returned by the {@code KijiResult}.
-   * @return A new KijiResultScanner.
-   * @throws IOException in case of an error creating the scanner.
-   */
+  /** {@inheritDoc} */
+  @Override
+  public <T> KijiResultScanner<T> getKijiResultScanner(
+      final KijiDataRequest dataRequest,
+      final KijiPartition partition
+  ) throws IOException {
+    final State state = mState.get();
+    Preconditions.checkState(state == State.OPEN,
+        "Can not get scanner from KijiTableReader instance %s in state %s.", this, state);
+
+    Preconditions.checkArgument(partition instanceof CassandraKijiPartition,
+        "Can not scan a Cassandra table with a non-Cassandra partition.");
+    final CassandraKijiPartition cassandraPartition = (CassandraKijiPartition) partition;
+
+    final ReaderLayoutCapsule capsule = mReaderLayoutCapsule;
+
+    // Make sure the request validates against the layout of the table.
+    final KijiTableLayout layout = capsule.getLayout();
+    validateRequestAgainstLayout(dataRequest, layout);
+
+    return new CassandraKijiResultScanner<>(
+        dataRequest,
+        cassandraPartition.getTokenRange(),
+        mTable,
+        layout,
+        capsule.getCellDecoderProvider(),
+        capsule.getColumnNameTranslator());
+  }
+
+  /** {@inheritDoc} */
   public <T> CassandraKijiResultScanner<T> getKijiResultScanner(
       final KijiDataRequest request,
-      final CassandraKijiScannerOptions scannerOptions
+      final CassandraKijiScannerOptions options
   ) throws IOException {
     final State state = mState.get();
     Preconditions.checkState(state == State.OPEN,
@@ -500,9 +514,20 @@ public final class CassandraKijiTableReader implements KijiTableReader {
     final KijiTableLayout layout = capsule.getLayout();
     validateRequestAgainstLayout(request, layout);
 
-    return new CassandraKijiResultScanner<T>(
+    final Range<Long> tokenRange;
+    if (options.hasStartToken() && options.hasStopToken()) {
+      tokenRange = Range.closedOpen(options.getStartToken(), options.getStopToken());
+    } else if (options.hasStartToken()) {
+      tokenRange = Range.atLeast(options.getStartToken());
+    } else if (options.hasStopToken()) {
+      tokenRange = Range.lessThan(options.getStopToken());
+    } else {
+      tokenRange = Range.all();
+    }
+
+    return new CassandraKijiResultScanner<>(
         request,
-        scannerOptions,
+        tokenRange,
         mTable,
         layout,
         capsule.getCellDecoderProvider(),

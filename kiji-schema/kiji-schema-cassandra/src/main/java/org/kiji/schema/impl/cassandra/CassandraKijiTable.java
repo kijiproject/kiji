@@ -20,6 +20,7 @@
 package org.kiji.schema.impl.cassandra;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -281,6 +282,12 @@ public final class CassandraKijiTable implements KijiTable {
     Preconditions.checkState(state == State.OPEN,
         "Cannot get the regions for a KijiTable in state %s.", state);
     throw new UnsupportedOperationException("Cassandra-backed Kiji tables do not have regions.");
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public Collection<CassandraKijiPartition> getPartitions() throws IOException {
+    return CassandraKijiPartition.getPartitions(mAdmin.getSession());
   }
 
   /** {@inheritDoc} */
