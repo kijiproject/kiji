@@ -492,6 +492,8 @@ public class CQLStatementCache {
             select.where(gte(tokenColumn, bindMarker()));
             break;
           }
+          default:
+            throw new EnumConstantNotPresentException(BoundType.class, mLowerBound.get().name());
         }
       }
 
@@ -505,6 +507,8 @@ public class CQLStatementCache {
             select.where(lte(tokenColumn, bindMarker()));
             break;
           }
+          default:
+            throw new EnumConstantNotPresentException(BoundType.class, mUpperBound.get().name());
         }
       }
 

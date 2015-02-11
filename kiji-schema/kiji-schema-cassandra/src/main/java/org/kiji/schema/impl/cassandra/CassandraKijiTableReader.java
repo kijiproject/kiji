@@ -499,9 +499,18 @@ public final class CassandraKijiTableReader implements KijiTableReader {
         capsule.getColumnNameTranslator());
   }
 
-  /** {@inheritDoc} */
+  /**
+   * Get a CassandraKijiResultScanner using the specified data request and
+   * CassandraKijiScannerOptions.
+   *
+   * @param dataRequest Specifies the data to request from each row.
+   * @param options Other Cassandra options for the scanner.
+   * @param <T> Type of the data in the requested cells.
+   * @return A KijiResultScanner for the requested data.
+   * @throws IOException In case of an error reading from the table.
+   */
   public <T> CassandraKijiResultScanner<T> getKijiResultScanner(
-      final KijiDataRequest request,
+      final KijiDataRequest dataRequest,
       final CassandraKijiScannerOptions options
   ) throws IOException {
     final State state = mState.get();
@@ -512,7 +521,7 @@ public final class CassandraKijiTableReader implements KijiTableReader {
 
     // Make sure the request validates against the layout of the table.
     final KijiTableLayout layout = capsule.getLayout();
-    validateRequestAgainstLayout(request, layout);
+    validateRequestAgainstLayout(dataRequest, layout);
 
     final Range<Long> tokenRange;
     if (options.hasStartToken() && options.hasStopToken()) {
@@ -526,7 +535,7 @@ public final class CassandraKijiTableReader implements KijiTableReader {
     }
 
     return new CassandraKijiResultScanner<>(
-        request,
+        dataRequest,
         tokenRange,
         mTable,
         layout,

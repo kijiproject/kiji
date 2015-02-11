@@ -41,7 +41,7 @@ import org.kiji.schema.KijiPartition;
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
-public class HBaseKijiPartition implements KijiPartition {
+public final class HBaseKijiPartition implements KijiPartition {
   private static final Logger LOG = LoggerFactory.getLogger(HBaseKijiPartition.class);
 
   /** Host of the region. */
@@ -102,6 +102,7 @@ public class HBaseKijiPartition implements KijiPartition {
    *
    * @param htable An open connection to the HBase table.
    * @return The collection of Kiji partitions.
+   * @throws IOException if a remote or network exception occurs.
    */
   public static Collection<HBaseKijiPartition> getPartitions(
       final HTable htable
