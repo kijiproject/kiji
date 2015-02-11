@@ -34,8 +34,8 @@ import com.datastax.driver.core.Session;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Maps;
 import com.google.common.collect.PeekingIterator;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
@@ -144,7 +144,7 @@ public class CassandraKijiPartition implements KijiPartition {
     final ResultSet peerTokens = peerTokensFuture.getUninterruptibly();
 
     // If this assert ever fails in practice, we may need to implement auto-retry.
-    if (localTokens
+    if (!localTokens
         .getExecutionInfo()
         .getQueriedHost()
         .equals(peerTokens.getExecutionInfo().getQueriedHost())) {
@@ -156,7 +156,7 @@ public class CassandraKijiPartition implements KijiPartition {
     final InetAddress coordinator =
         localTokens.getExecutionInfo().getQueriedHost().getSocketAddress().getAddress();
 
-    ImmutableSortedMap.Builder<Long, InetAddress> tokens = ImmutableSortedMap.naturalOrder();
+    SortedMap<Long, InetAddress> tokens = Maps.newTreeMap();
 
     for (Row row : localTokens.all()) {
       for (String token : row.getSet("tokens", String.class)) {
@@ -171,7 +171,7 @@ public class CassandraKijiPartition implements KijiPartition {
       }
     }
 
-    return tokens.build();
+    return tokens;
   }
 
   /**
@@ -217,7 +217,7 @@ public class CassandraKijiPartition implements KijiPartition {
     // Check that the returned ranges are coherent; most importantly that all possible tokens fall
     // within the returned range set.
 
-    if (startTokens.size() + 1 == tokenRanges.size()) {
+    if (startTokens.size() + 1 != tokenRanges.size()) {
       throw new InternalKijiError(
           String.format("Unexpected number of token ranges. start-tokens: %s, token-ranges: %s.",
               startTokens.size(), tokenRanges.size()));
@@ -228,7 +228,7 @@ public class CassandraKijiPartition implements KijiPartition {
       ranges.add(tokenRange);
     }
 
-    if (ranges.encloses(Range.closed(Long.MIN_VALUE, Long.MAX_VALUE))) {
+    if (!ranges.encloses(Range.closed(Long.MIN_VALUE, Long.MAX_VALUE))) {
       throw new InternalKijiError("Token range does not include all possible tokens.");
     }
 
