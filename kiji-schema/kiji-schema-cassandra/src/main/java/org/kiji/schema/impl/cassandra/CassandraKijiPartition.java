@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 
+import com.datastax.driver.core.Host;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Row;
@@ -129,27 +130,40 @@ public class CassandraKijiPartition implements KijiPartition {
   static SortedMap<Long, InetAddress> getStartTokens(
       Session session
   ) {
+    // TODO(WDSCHEMA-383): Replace all of this logic with the Cassandra driver api
+
     // Cassandra lets us query for the coordinator-local tokens as well as the coordinator peer
     // tokens, but they are split up into different tables. Accordingly, we have to make sure that
-    // when the two queries are executed, the coordinator node is consistent.
-    // For more information on Cassandra system tables:
+    // when the two queries are executed, the coordinator nodes are consistent. In a typical
+    // Cassandra installation with multiple nodes, the Cassandra driver will round robin between
+    // nodes, so we counteract this by requesting the peers from two different nodes and merging the
+    // results. For more information on Cassandra system tables:
     //    https://www.datastax.com/documentation/cql/3.0/cql/cql_using/use_query_system_c.html
 
     final ResultSetFuture localTokensFuture =
         session.executeAsync(select("tokens").from("system", "local"));
-    final ResultSetFuture peerTokensFuture =
+    final ResultSetFuture peerTokensFuture1 =
+        session.executeAsync(select("rpc_address", "tokens").from("system", "peers"));
+    final ResultSetFuture peerTokensFuture2 =
         session.executeAsync(select("rpc_address", "tokens").from("system", "peers"));
 
     final ResultSet localTokens = localTokensFuture.getUninterruptibly();
-    final ResultSet peerTokens = peerTokensFuture.getUninterruptibly();
+    final ResultSet peerTokens1 = peerTokensFuture1.getUninterruptibly();
+    final ResultSet peerTokens2 = peerTokensFuture2.getUninterruptibly();
+
+    final Host localHost = localTokens.getExecutionInfo().getQueriedHost();
+    final Host peerHost1 = peerTokens1.getExecutionInfo().getQueriedHost();
+    final Host peerHost2 = peerTokens2.getExecutionInfo().getQueriedHost();
 
     // If this assert ever fails in practice, we may need to implement auto-retry.
-    if (!localTokens
-        .getExecutionInfo()
-        .getQueriedHost()
-        .equals(peerTokens.getExecutionInfo().getQueriedHost())) {
+    if (!(!peerHost1.equals(peerHost2) // consistent because peer1/peer2 sets will be comprehensive
+        || localHost.equals(peerHost1) // consistent because local/peer1 sets will be comprehensive
+        || localHost.equals(peerHost2) // consistent because local/peer2 sets will be comprehensive
+    )) {
       throw new InternalKijiError(
-          "Coordinator node must be consistent across local and peer token range queries."
+          "Coordinator nodes must be consistent across local and peer token range queries."
+              + String.format(" local host: %s, peer host 1: %s, peer host 2: %s.",
+              localHost, peerHost1, peerHost2)
               + " Please retry.");
     }
 
@@ -164,7 +178,14 @@ public class CassandraKijiPartition implements KijiPartition {
       }
     }
 
-    for (Row row : peerTokens.all()) {
+    for (Row row : peerTokens1.all()) {
+      final InetAddress peer = row.getInet("rpc_address");
+      for (String token : row.getSet("tokens", String.class)) {
+        tokens.put(Long.parseLong(token), peer);
+      }
+    }
+
+    for (Row row : peerTokens2.all()) {
       final InetAddress peer = row.getInet("rpc_address");
       for (String token : row.getSet("tokens", String.class)) {
         tokens.put(Long.parseLong(token), peer);
