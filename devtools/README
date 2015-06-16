@@ -1,0 +1,54 @@
+This place is for engineers to share and contribute developer tools.
+For more documentation on using these tools consult the wiki:
+https://wiki.wibidata.com/display/ENG/Developer+tools+and+Engineer+tricks
+
+To use all the available tools, add the bin/ directory to your path.
+You may also symlink/alias the scripts in bin/* into another directory
+on your path.
+You can append to your path with:
+    $ export PATH=$PATH:$DEVTOOLS_HOME/bin
+In particular, bin/devtools_python_launcher.sh must be on your path.
+
+### Installing Python
+
+We use Python 3.4.
+See https://wiki.wibidata.com/display/ENG/Tool+chain+requirements for more details.
+
+The recommended way to install Python is to use pyenv
+    https://github.com/yyuu/pyenv:
+
+To install pyenv (on a Mac, install with `brew install pyenv`:
+    $ git clone http://github.com/yyuu/pyenv.git ~/.pyenv
+    $ cat << EOF >> ~/.bash_profile
+    export PYENV_ROOT="$HOME/.pyenv"
+    export PATH="$PYENV_ROOT/bin:$PATH"
+    eval "$(pyenv init -)"
+    EOF
+
+Python3 itself has dependencies on the following development libraries:
+    $ sudo aptitude install libreadline-dev libsqlite3-dev libbz2-dev libssl-dev
+
+To install Python 3.4:
+    $ pyenv install 3.4.2
+
+Configure the Python version to use by default:
+    $ pyenv global 3.4.2
+
+
+Finally, devtools requires the python-base module:
+    $ pip install python-base
+
+### Troubleshooting on a Mac:
+
+After setting the python version to use, you may need to install pip.
+You can use brew for this.
+    $ brew install brew-pip
+
+If you have python2 and python3 on your system, you need to explicitly use pip3
+in the last step:
+    $ pip3 install python-base
+
+### Dependencies
+
+Devtools depend on python-base and python-workflow, also available in the workspace
+in //python-base/src/main/python and //python-workflow/src/main/python.

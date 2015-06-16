@@ -1,3 +1,0 @@
-This is the Wibi workspace root.
-It includes both internal Wibi projects and external Kiji projects.
-The workspace includes an output/ folder containing a Maven local repository and temporary files.

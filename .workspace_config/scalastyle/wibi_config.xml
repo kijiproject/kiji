@@ -1,0 +1,56 @@
+<!-- (c) Copyright 2014 WibiData, Inc. -->
+<scalastyle>
+  <name>Wibi scalastyle configuration</name>
+  <check enabled="true" class="org.scalastyle.file.FileLineLengthChecker" level="error">
+    <parameters>
+      <parameter name="maxLineLength"><![CDATA[100]]></parameter>
+      <parameter name="tabSize"><![CDATA[2]]></parameter>
+    </parameters>
+  </check>
+  <check enabled="true" class="org.scalastyle.file.FileTabChecker" level="error"/>
+  <check enabled="true" class="org.scalastyle.file.HeaderMatchesChecker" level="error">
+    <parameters>
+      <parameter name="regex">true</parameter>
+      <parameter name="header">// \(c\) Copyright 20\d\d WibiData, Inc\.</parameter>
+    </parameters>
+  </check>
+  <check enabled="true" class="org.scalastyle.file.NewLineAtEofChecker" level="error"/>
+  <check enabled="true" class="org.scalastyle.file.WhitespaceEndOfLineChecker" level="error"/>
+  <check enabled="true" class="org.scalastyle.scalariform.BlockImportChecker" level="error"/>
+  <check enabled="true" class="org.scalastyle.scalariform.ClassNamesChecker" level="error">
+    <parameters>
+      <parameter name="regex"><![CDATA[^[A-Z][A-Za-z0-9]*$]]></parameter>
+    </parameters>
+  </check>
+  <check enabled="true" class="org.scalastyle.scalariform.ClassTypeParameterChecker" level="error">
+    <parameters>
+      <parameter name="regex"><![CDATA[^[A-Z][A-Z_]*$]]></parameter>
+    </parameters>
+  </check>
+  <check enabled="true" class="org.scalastyle.scalariform.ObjectNamesChecker" level="error">
+    <parameters>
+      <parameter name="regex"><![CDATA[^[A-Z][A-Za-z0-9]*$]]></parameter>
+    </parameters>
+  </check>
+  <check enabled="true" class="org.scalastyle.scalariform.PackageObjectNamesChecker" level="error">
+    <parameters>
+      <parameter name="regex"><![CDATA[^[a-z][A-Za-z0-9]*$]]></parameter>
+    </parameters>
+  </check>
+  <check enabled="true" class="org.scalastyle.scalariform.MethodNamesChecker" level="warning">
+    <parameters>
+      <parameter name="regex"><![CDATA[^[a-z][A-Za-z0-9]*$]]></parameter>
+    </parameters>
+  </check>
+  <check enabled="true" class="org.scalastyle.scalariform.DeprecatedJavaChecker" level="error"/>
+  <check enabled="true" class="org.scalastyle.scalariform.EqualsHashCodeChecker" level="error"/>
+  <check enabled="true" class="org.scalastyle.scalariform.IfBraceChecker" level="error"/>
+  <check enabled="true" class="org.scalastyle.scalariform.NoFinalizeChecker" level="error"/>
+  <check enabled="true" class="org.scalastyle.scalariform.NoCloneChecker" level="error"/>
+  <check enabled="true" class="org.scalastyle.scalariform.NoWhitespaceBeforeLeftBracketChecker" level="error"/>
+  <check enabled="true" class="org.scalastyle.scalariform.ProcedureDeclarationChecker" level="error"/>
+  <check enabled="true" class="org.scalastyle.scalariform.PublicMethodsHaveTypeChecker" level="error"/>
+  <check enabled="true" class="org.scalastyle.scalariform.SpaceAfterPlusChecker" level="error"/>
+  <check enabled="true" class="org.scalastyle.scalariform.SpaceBeforePlusChecker" level="error"/>
+  <check enabled="true" class="org.scalastyle.scalariform.NonASCIICharacterChecker" level="error"/>
+</scalastyle>

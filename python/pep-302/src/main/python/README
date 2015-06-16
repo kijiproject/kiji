@@ -1,0 +1,8 @@
+The vanilla Python distribution does not provide good support for namespace packages.
+setuptools includes the top-level module pkg_resources which implements PEP-302.
+This folder include the pkg_resources module from setuptools 2.1.
+See https://pypi.python.org/pypi/setuptools/2.1
+
+setuptools is distributed under the Python Software Foundation License, which:
+    << allows Python to be included in non-open applications,
+       either in unmodified or modified form. >>

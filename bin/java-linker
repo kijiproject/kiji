@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# -*- coding: utf-8; mode: shell -*-
+
+# (c) Copyright 2015 WibiData, Inc.
+
+# Constructs a PYTHONPATH and runs kiji-build.
+
+# ------------------------------------------------------------------------------
+
+set -o nounset   # Fail when referencing undefined variables
+set -o errexit   # Script exits on the first error
+set -o pipefail  # Pipeline status failure if any command fails
+if [[ ! -z "${DEBUG:-}" ]]; then
+  source=$(basename "${BASH_SOURCE}")
+  PS4="# ${source}":'${LINENO}: '
+  set -x
+fi
+
+# ------------------------------------------------------------------------------
+
+# Canonicalize a path into an absolute, symlink free path.
+#
+# Portable implementation of the GNU coreutils "readlink -f path".
+# The '-f' option of readlink does not exist on MacOS, for instance.
+#
+# Args:
+#   param $1: path to canonicalize.
+# Stdout:
+#   Prints the canonicalized path on stdout.
+function resolve_symlink() {
+  local target_file=$1
+
+  if [[ -z "${target_file}" ]]; then
+    echo ""
+    return 0
+  fi
+
+  cd "$(dirname "${target_file}")"
+  target_file=$(basename "${target_file}")
+
+  # Iterate down a (possible) chain of symlinks
+  local count=0
+  while [[ -L "${target_file}" ]]; do
+    if [[ "${count}" -gt 1000 ]]; then
+      # Just stop here, we've hit 1,000 recursive symlinks. (cycle?)
+      break
+    fi
+
+    target_file=$(readlink "${target_file}")
+    cd $(dirname "${target_file}")
+    target_file=$(basename "${target_file}")
+    count=$(( ${count} + 1 ))
+  done
+
+  # Compute the canonicalized name by finding the physical path
+  # for the directory we're in and appending the target file.
+  local phys_dir=$(pwd -P)
+  echo "${phys_dir}/${target_file}"
+}
+
+# ------------------------------------------------------------------------------
+
+wkspc="${BASH_SOURCE:-$0}"
+wkspc=$(resolve_symlink "${wkspc}")
+wkspc=$(dirname "$(dirname "${wkspc}")")
+
+mkdir -p "${wkspc}"/output/temp
+venv_root="${wkspc}"/output/temp/bootstrap.python3.4
+if [ ! -d "${venv_root}" ]; then
+  pyvenv-3.4 "${venv_root}"
+fi
+set +o nounset   # Virtualenv activate scripts access unbound variables.
+source "${venv_root}"/bin/activate
+set -o nounset
+
+PYTHONPATH="${wkspc}"/python/base/src/main/python
+PYTHONPATH="${PYTHONPATH}":"${wkspc}"/python/workflow/src/main/python
+PYTHONPATH="${PYTHONPATH}":"${wkspc}"/devtools/src/main/python
+export PYTHONPATH
+
+"${venv_root}"/bin/python3 -m wibi.scripts.java_linker "$@"
